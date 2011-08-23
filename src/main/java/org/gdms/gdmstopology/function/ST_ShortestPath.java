@@ -7,8 +7,8 @@ import java.util.logging.Logger;
 import org.gdms.data.DataSourceFactory;
 import org.gdms.data.SQLDataSourceFactory;
 import org.gdms.data.SpatialDataSourceDecorator;
-import org.gdms.data.metadata.DefaultMetadata;
-import org.gdms.data.metadata.Metadata;
+import org.gdms.data.schema.DefaultMetadata;
+import org.gdms.data.schema.Metadata;
 import org.gdms.data.types.Type;
 import org.gdms.data.types.TypeFactory;
 import org.gdms.data.values.Value;
@@ -22,11 +22,12 @@ import org.gdms.gdmstopology.model.GraphEdge;
 import org.gdms.gdmstopology.model.GraphSchema;
 import org.gdms.gdmstopology.model.WMultigraphDataSource;
 import org.gdms.gdmstopology.process.GraphAnalysis;
-import org.gdms.sql.customQuery.TableDefinition;
-import org.gdms.sql.function.Argument;
 import org.gdms.sql.function.FunctionException;
 import org.gdms.sql.function.FunctionSignature;
+import org.gdms.sql.function.ScalarArgument;
 import org.gdms.sql.function.table.AbstractTableFunction;
+import org.gdms.sql.function.table.TableDefinition;
+import org.gdms.sql.function.table.TableFunctionSignature;
 import org.orbisgis.progress.ProgressMonitor;
 
 /**
@@ -81,13 +82,11 @@ public class ST_ShortestPath extends AbstractTableFunction {
         }
 
         @Override
-        public TableDefinition[] getTablesDefinitions() {
-                return new TableDefinition[]{TableDefinition.GEOMETRY};
-        }
-
-        @Override
-        public Arguments[] getFunctionArguments() {
-                return new Arguments[]{new Arguments(Argument.INT, Argument.INT), new Arguments(Argument.INT, Argument.INT, Argument.BOOLEAN)};
+        public FunctionSignature[] getFunctionSignatures() {
+                return new FunctionSignature[]{
+                        new TableFunctionSignature(TableDefinition.GEOMETRY, ScalarArgument.INT, ScalarArgument.INT), 
+                        new TableFunctionSignature(TableDefinition.GEOMETRY, ScalarArgument.INT, ScalarArgument.INT, ScalarArgument.BOOLEAN)
+                };
         }
 
         private ObjectDriver computeDWMPath(DataSourceFactory dsf, SpatialDataSourceDecorator sds, Integer source, Integer target, ProgressMonitor pm) {
@@ -143,10 +142,5 @@ public class ST_ShortestPath extends AbstractTableFunction {
                         Logger.getLogger(ST_ShortestPath.class.getName()).log(Level.SEVERE, null, ex);
                 }
                 return null;
-        }
-
-        @Override
-        public FunctionSignature[] getFunctionSignatures() {
-                throw new UnsupportedOperationException("Not supported yet.");
         }
 }

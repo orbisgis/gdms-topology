@@ -40,8 +40,6 @@ import com.vividsolutions.jts.geom.Geometry;
 import java.util.Collection;
 import java.util.List;
 
-import org.gdms.data.DataSource;
-import org.gdms.data.DataSourceFactory;
 import org.gdms.data.SQLDataSourceFactory;
 import org.gdms.data.SpatialDataSourceDecorator;
 import org.gdms.data.schema.DefaultMetadata;
@@ -51,24 +49,24 @@ import org.gdms.data.types.TypeFactory;
 import org.gdms.data.values.Value;
 import org.gdms.data.values.ValueFactory;
 import org.gdms.driver.DriverException;
-import org.gdms.driver.ObjectDriver;
 import org.gdms.driver.ReadAccess;
 import org.gdms.driver.driverManager.DriverLoadException;
 import org.gdms.driver.generic.GenericObjectDriver;
 import org.gdms.gdmstopology.process.LineNoder;
-import org.gdms.sql.function.Argument;
 import org.gdms.sql.function.FunctionSignature;
 import org.orbisgis.progress.ProgressMonitor;
 
 import org.gdms.sql.function.FunctionException;
-import org.gdms.sql.function.executor.AbstractExecutorFunction;
+import org.gdms.sql.function.ScalarArgument;
+import org.gdms.sql.function.table.AbstractTableFunction;
 import org.gdms.sql.function.table.TableDefinition;
+import org.gdms.sql.function.table.TableFunctionSignature;
 
-public class ST_ToLineNoder extends AbstractExecutorFunction {
+public class ST_ToLineNoder extends AbstractTableFunction {
         
 	@SuppressWarnings( { "unchecked", "static-access" })
-	public ObjectDriver evaluate(DataSourceFactory dsf, DataSource[] tables,
-			Value[] values, ProgressMonitor pm) throws FunctionException {
+	public ReadAccess evaluate(SQLDataSourceFactory dsf, ReadAccess[] tables, 
+                                Value[] values, ProgressMonitor pm) throws FunctionException {
 		try {
 			final SpatialDataSourceDecorator inSds = new SpatialDataSourceDecorator(
 					tables[0]);
@@ -123,6 +121,7 @@ public class ST_ToLineNoder extends AbstractExecutorFunction {
 		return "ST_ToLineNoder";
 	}
 
+        @Override
 	public Metadata getMetadata(Metadata[] tables) throws DriverException {
 		return new DefaultMetadata(new Type[] {
 				TypeFactory.createType(Type.INT),
@@ -134,17 +133,9 @@ public class ST_ToLineNoder extends AbstractExecutorFunction {
 		return new TableDefinition[] { TableDefinition.GEOMETRY };
 	}
 
-	public Arguments[] getFunctionArguments() {
-		return new Arguments[] { new Arguments(Argument.GEOMETRY) };
-	}
-
-        @Override
-        public void evaluate(SQLDataSourceFactory dsf, ReadAccess[] tables, Value[] args, ProgressMonitor pm) throws FunctionException {
-                throw new UnsupportedOperationException("Not supported yet.");
-        }
 
         @Override
         public FunctionSignature[] getFunctionSignatures() {
-                throw new UnsupportedOperationException("Not supported yet.");
+                return new FunctionSignature[]{new TableFunctionSignature(TableDefinition.GEOMETRY, ScalarArgument.GEOMETRY)};
         }
 }

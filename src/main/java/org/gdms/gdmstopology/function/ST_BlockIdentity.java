@@ -44,9 +44,6 @@ import com.vividsolutions.jts.operation.distance.DistanceOp;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-import org.gdms.data.DataSource;
-import org.gdms.data.DataSourceFactory;
-import org.gdms.data.NoSuchTableException;
 import org.gdms.data.SQLDataSourceFactory;
 import org.gdms.data.SpatialDataSourceDecorator;
 import org.gdms.data.indexes.DefaultSpatialIndexQuery;
@@ -253,11 +250,12 @@ public class ST_BlockIdentity extends AbstractTableFunction {
         @Override
         public FunctionSignature[] getFunctionSignatures() {
                 return new FunctionSignature[]{
-                                new TableFunctionSignature(TableDefinition.GEOMETRY,
+                        new TableFunctionSignature(TableDefinition.GEOMETRY, 
                                 new TableArgument(TableDefinition.GEOMETRY),
-                                ScalarArgument.STRING), new TableFunctionSignature(TableDefinition.GEOMETRY,
+                                ScalarArgument.STRING), 
+                        new TableFunctionSignature(TableDefinition.GEOMETRY,
                                 new TableArgument(TableDefinition.GEOMETRY),
                                 ScalarArgument.STRING, ScalarArgument.STRING)
-                        };
+                };
         }
 }
