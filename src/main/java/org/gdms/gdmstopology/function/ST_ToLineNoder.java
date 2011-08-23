@@ -36,36 +36,39 @@
  */
 package org.gdms.gdmstopology.function;
 
-import org.gdms.gdmstopology.process.LineNoder;
+import com.vividsolutions.jts.geom.Geometry;
 import java.util.Collection;
 import java.util.List;
 
 import org.gdms.data.DataSource;
 import org.gdms.data.DataSourceFactory;
-import org.gdms.data.ExecutionException;
+import org.gdms.data.SQLDataSourceFactory;
 import org.gdms.data.SpatialDataSourceDecorator;
-import org.gdms.data.metadata.DefaultMetadata;
-import org.gdms.data.metadata.Metadata;
+import org.gdms.data.schema.DefaultMetadata;
+import org.gdms.data.schema.Metadata;
 import org.gdms.data.types.Type;
 import org.gdms.data.types.TypeFactory;
 import org.gdms.data.values.Value;
 import org.gdms.data.values.ValueFactory;
 import org.gdms.driver.DriverException;
 import org.gdms.driver.ObjectDriver;
+import org.gdms.driver.ReadAccess;
 import org.gdms.driver.driverManager.DriverLoadException;
 import org.gdms.driver.generic.GenericObjectDriver;
-import org.gdms.sql.customQuery.CustomQuery;
-import org.gdms.sql.customQuery.TableDefinition;
+import org.gdms.gdmstopology.process.LineNoder;
 import org.gdms.sql.function.Argument;
-import org.gdms.sql.function.Arguments;
-import org.orbisgis.progress.IProgressMonitor;
+import org.gdms.sql.function.FunctionSignature;
+import org.orbisgis.progress.ProgressMonitor;
 
-import com.vividsolutions.jts.geom.Geometry;
+import org.gdms.sql.function.FunctionException;
+import org.gdms.sql.function.executor.AbstractExecutorFunction;
+import org.gdms.sql.function.table.TableDefinition;
 
-public class ST_ToLineNoder implements CustomQuery {
+public class ST_ToLineNoder extends AbstractExecutorFunction {
+        
 	@SuppressWarnings( { "unchecked", "static-access" })
 	public ObjectDriver evaluate(DataSourceFactory dsf, DataSource[] tables,
-			Value[] values, IProgressMonitor pm) throws ExecutionException {
+			Value[] values, ProgressMonitor pm) throws FunctionException {
 		try {
 			final SpatialDataSourceDecorator inSds = new SpatialDataSourceDecorator(
 					tables[0]);
@@ -99,20 +102,23 @@ public class ST_ToLineNoder implements CustomQuery {
 			}
 			return driver;
 		} catch (DriverException e) {
-			throw new ExecutionException(e);
+			throw new FunctionException(e);
 		} catch (DriverLoadException e) {
-			throw new ExecutionException(e);
+			throw new FunctionException(e);
 		}
 	}
 
+        @Override
 	public String getDescription() {
 		return "Build all intersection and convert the geometries into lines ";
 	}
 
+        @Override
 	public String getSqlOrder() {
 		return "select ST_ToLineNoder(the_geom) from myTable;";
 	}
 
+        @Override
 	public String getName() {
 		return "ST_ToLineNoder";
 	}
@@ -131,4 +137,14 @@ public class ST_ToLineNoder implements CustomQuery {
 	public Arguments[] getFunctionArguments() {
 		return new Arguments[] { new Arguments(Argument.GEOMETRY) };
 	}
+
+        @Override
+        public void evaluate(SQLDataSourceFactory dsf, ReadAccess[] tables, Value[] args, ProgressMonitor pm) throws FunctionException {
+                throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        @Override
+        public FunctionSignature[] getFunctionSignatures() {
+                throw new UnsupportedOperationException("Not supported yet.");
+        }
 }

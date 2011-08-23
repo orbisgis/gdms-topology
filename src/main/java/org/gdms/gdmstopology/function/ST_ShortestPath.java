@@ -32,16 +32,17 @@ import org.gdms.sql.customQuery.CustomQuery;
 import org.gdms.sql.customQuery.TableDefinition;
 import org.gdms.sql.function.Argument;
 import org.gdms.sql.function.Arguments;
-import org.orbisgis.progress.IProgressMonitor;
+import org.gdms.sql.function.executor.AbstractExecutorFunction;
+import org.orbisgis.progress.ProgressMonitor;
 
 /**
  *
  * @author ebocher
  */
-public class ST_ShortestPath implements CustomQuery {
+public class ST_ShortestPath extends AbstractExecutorFunction {
 
         @Override
-        public ObjectDriver evaluate(DataSourceFactory dsf, DataSource[] tables, Value[] values, IProgressMonitor pm) throws ExecutionException {
+        public ObjectDriver evaluate(DataSourceFactory dsf, DataSource[] tables, Value[] values, ProgressMonitor pm) throws ExecutionException {
                 int source = values[0].getAsInt();
                 int target = values[1].getAsInt();
 
@@ -95,7 +96,7 @@ public class ST_ShortestPath implements CustomQuery {
                 return new Arguments[]{new Arguments(Argument.INT, Argument.INT), new Arguments(Argument.INT, Argument.INT, Argument.BOOLEAN)};
         }
 
-        private ObjectDriver computeDWMPath(DataSourceFactory dsf, SpatialDataSourceDecorator sds, Integer source, Integer target, IProgressMonitor pm) {
+        private ObjectDriver computeDWMPath(DataSourceFactory dsf, SpatialDataSourceDecorator sds, Integer source, Integer target, ProgressMonitor pm) {
                 DWMultigraphDataSource dWMultigraphDataSource = new DWMultigraphDataSource(sds, pm);
                 try {
                         dWMultigraphDataSource.open();
@@ -122,7 +123,7 @@ public class ST_ShortestPath implements CustomQuery {
                 return null;
         }
 
-        private ObjectDriver computeWMPath(DataSourceFactory dsf, SpatialDataSourceDecorator sds, int source, int target, IProgressMonitor pm) {
+        private ObjectDriver computeWMPath(DataSourceFactory dsf, SpatialDataSourceDecorator sds, int source, int target, ProgressMonitor pm) {
                 WMultigraphDataSource wMultigraphDataSource = new WMultigraphDataSource(sds, pm);
                 try {
                         wMultigraphDataSource.open();
