@@ -1,21 +1,14 @@
 package org.gdms.gdmstopology.function;
 
 import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.LineString;
-import com.vividsolutions.jts.geom.MultiLineString;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.gdms.data.DataSource;
 import org.gdms.data.DataSourceFactory;
-import org.gdms.data.ExecutionException;
+import org.gdms.data.SQLDataSourceFactory;
 import org.gdms.data.SpatialDataSourceDecorator;
 import org.gdms.data.metadata.DefaultMetadata;
 import org.gdms.data.metadata.Metadata;
-import org.gdms.data.types.DimensionConstraint;
-import org.gdms.data.types.GeometryConstraint;
 import org.gdms.data.types.Type;
 import org.gdms.data.types.TypeFactory;
 import org.gdms.data.values.Value;
@@ -23,26 +16,27 @@ import org.gdms.data.values.ValueFactory;
 import org.gdms.driver.DiskBufferDriver;
 import org.gdms.driver.DriverException;
 import org.gdms.driver.ObjectDriver;
+import org.gdms.driver.ReadAccess;
 import org.gdms.gdmstopology.model.DWMultigraphDataSource;
 import org.gdms.gdmstopology.model.GraphEdge;
 import org.gdms.gdmstopology.model.GraphSchema;
 import org.gdms.gdmstopology.model.WMultigraphDataSource;
 import org.gdms.gdmstopology.process.GraphAnalysis;
-import org.gdms.sql.customQuery.CustomQuery;
 import org.gdms.sql.customQuery.TableDefinition;
 import org.gdms.sql.function.Argument;
-import org.gdms.sql.function.Arguments;
-import org.gdms.sql.function.executor.AbstractExecutorFunction;
+import org.gdms.sql.function.FunctionException;
+import org.gdms.sql.function.FunctionSignature;
+import org.gdms.sql.function.table.AbstractTableFunction;
 import org.orbisgis.progress.ProgressMonitor;
 
 /**
  *
  * @author ebocher
  */
-public class ST_ShortestPath extends AbstractExecutorFunction {
+public class ST_ShortestPath extends AbstractTableFunction {
 
         @Override
-        public ObjectDriver evaluate(DataSourceFactory dsf, DataSource[] tables, Value[] values, ProgressMonitor pm) throws ExecutionException {
+        public ReadAccess evaluate(SQLDataSourceFactory dsf, ReadAccess[] tables, Value[] values, ProgressMonitor pm) throws FunctionException {
                 int source = values[0].getAsInt();
                 int target = values[1].getAsInt();
 
@@ -149,5 +143,10 @@ public class ST_ShortestPath extends AbstractExecutorFunction {
                         Logger.getLogger(ST_ShortestPath.class.getName()).log(Level.SEVERE, null, ex);
                 }
                 return null;
+        }
+
+        @Override
+        public FunctionSignature[] getFunctionSignatures() {
+                throw new UnsupportedOperationException("Not supported yet.");
         }
 }

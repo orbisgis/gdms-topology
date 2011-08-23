@@ -44,8 +44,6 @@ import org.gdms.data.schema.Metadata;
 import org.gdms.data.values.Value;
 import org.gdms.driver.DriverException;
 import org.gdms.driver.driverManager.DriverLoadException;
-import org.gdms.sql.function.Argument;
-import org.gdms.sql.function.Arguments;
 import org.gdms.sql.function.FunctionSignature;
 import org.orbisgis.progress.ProgressMonitor;
 import org.gdms.data.types.Type;
@@ -110,20 +108,13 @@ public class ST_Graph extends AbstractExecutorFunction {
                 return new TableDefinition[]{TableDefinition.GEOMETRY};
         }
 
-        public Arguments[] getFunctionArguments() {
-                return new Arguments[]{new Arguments(Argument.GEOMETRY), 
-                        new Arguments(Argument.GEOMETRY, Argument.BOOLEAN), 
-                        new Arguments(Argument.GEOMETRY, Argument.NUMERIC), 
-                        new Arguments(Argument.GEOMETRY, Argument.NUMERIC, Argument.BOOLEAN)};
-        }
-
         @Override
         public FunctionSignature[] getFunctionSignatures() {
                 return new FunctionSignature[]{
                                 new ExecutorFunctionSignature(ScalarArgument.GEOMETRY),
                                 new ExecutorFunctionSignature(ScalarArgument.GEOMETRY, ScalarArgument.BOOLEAN),
-                                new ExecutorFunctionSignature(ScalarArgument.GEOMETRY, ScalarArgument.),
-                                new ExecutorFunctionSignature(ScalarArgument.GEOMETRY, ScalarArgument., ScalarArgument.BOOLEAN),
+                                new ExecutorFunctionSignature(ScalarArgument.GEOMETRY, ScalarArgument.DOUBLE),
+                                new ExecutorFunctionSignature(ScalarArgument.GEOMETRY, ScalarArgument.DOUBLE, ScalarArgument.BOOLEAN),
                 };
         }
 }
