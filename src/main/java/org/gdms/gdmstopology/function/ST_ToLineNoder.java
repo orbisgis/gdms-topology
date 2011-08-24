@@ -41,7 +41,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.gdms.data.SQLDataSourceFactory;
-import org.gdms.data.SpatialDataSourceDecorator;
+import org.gdms.data.DataSource;
 import org.gdms.data.schema.DefaultMetadata;
 import org.gdms.data.schema.Metadata;
 import org.gdms.data.types.Type;
@@ -65,11 +65,12 @@ import org.gdms.sql.function.table.TableFunctionSignature;
 public class ST_ToLineNoder extends AbstractTableFunction {
         
 	@SuppressWarnings( { "unchecked", "static-access" })
+        @Override
 	public DataSet evaluate(SQLDataSourceFactory dsf, DataSet[] tables, 
                                 Value[] values, ProgressMonitor pm) throws FunctionException {
 		try {
-			final SpatialDataSourceDecorator inSds = new SpatialDataSourceDecorator(
-					tables[0]);
+			final DataSet inSds = 
+					tables[0];
 			inSds.open();
 			final LineNoder lineNoder = new LineNoder(inSds);
 			inSds.close();

@@ -6,7 +6,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.gdms.data.DataSourceFactory;
 import org.gdms.data.SQLDataSourceFactory;
-import org.gdms.data.SpatialDataSourceDecorator;
 import org.gdms.data.schema.DefaultMetadata;
 import org.gdms.data.schema.Metadata;
 import org.gdms.data.types.Type;
@@ -15,7 +14,6 @@ import org.gdms.data.values.Value;
 import org.gdms.data.values.ValueFactory;
 import org.gdms.driver.DiskBufferDriver;
 import org.gdms.driver.DriverException;
-import org.gdms.driver.ObjectDriver;
 import org.gdms.driver.DataSet;
 import org.gdms.gdmstopology.model.DWMultigraphDataSource;
 import org.gdms.gdmstopology.model.GraphEdge;
@@ -41,7 +39,7 @@ public class ST_ShortestPath extends AbstractTableFunction {
                 int source = values[0].getAsInt();
                 int target = values[1].getAsInt();
 
-                SpatialDataSourceDecorator sdsEdges = new SpatialDataSourceDecorator(tables[0]);
+                DataSet sdsEdges = tables[0];
 
                 if (values.length == 3) {
                         if (values[2].getAsBoolean()) {
@@ -89,7 +87,7 @@ public class ST_ShortestPath extends AbstractTableFunction {
                 };
         }
 
-        private ObjectDriver computeDWMPath(DataSourceFactory dsf, SpatialDataSourceDecorator sds, Integer source, Integer target, ProgressMonitor pm) {
+        private DataSet computeDWMPath(DataSourceFactory dsf, DataSet sds, Integer source, Integer target, ProgressMonitor pm) {
                 DWMultigraphDataSource dWMultigraphDataSource = new DWMultigraphDataSource(sds, pm);
                 try {
                         dWMultigraphDataSource.open();
@@ -116,7 +114,7 @@ public class ST_ShortestPath extends AbstractTableFunction {
                 return null;
         }
 
-        private ObjectDriver computeWMPath(DataSourceFactory dsf, SpatialDataSourceDecorator sds, int source, int target, ProgressMonitor pm) {
+        private DataSet computeWMPath(DataSourceFactory dsf, DataSet sds, int source, int target, ProgressMonitor pm) {
                 WMultigraphDataSource wMultigraphDataSource = new WMultigraphDataSource(sds, pm);
                 try {
                         wMultigraphDataSource.open();

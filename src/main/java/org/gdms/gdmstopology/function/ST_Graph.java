@@ -37,8 +37,6 @@
 package org.gdms.gdmstopology.function;
 
 import org.gdms.gdmstopology.process.NetworkGraphBuilder;
-import java.io.IOException;
-import org.gdms.data.NonEditableDataSourceException;
 import org.gdms.data.SQLDataSourceFactory;
 import org.gdms.data.schema.Metadata;
 import org.gdms.data.values.Value;
@@ -89,13 +87,7 @@ public class ST_Graph extends AbstractExecutorFunction {
                                 graphNetwork.setDim3(values[2].getAsBoolean());
                         }
                         graphNetwork.buildGraph(sds);
-                } catch (IOException e) {
-                        throw new FunctionException(e);
                 } catch (DriverLoadException e) {
-                        throw new FunctionException(e);
-                } catch (DriverException e) {
-                        throw new FunctionException(e);
-                } catch (NonEditableDataSourceException e) {
                         throw new FunctionException(e);
                 }
         }
