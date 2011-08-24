@@ -41,7 +41,6 @@ import org.gdms.data.DataSourceCreationException;
 import org.gdms.data.NoSuchTableException;
 import org.gdms.data.NonEditableDataSourceException;
 import org.gdms.data.SQLDataSourceFactory;
-import org.gdms.data.SpatialDataSourceDecorator;
 import org.gdms.data.indexes.IndexException;
 import org.gdms.data.values.Value;
 import org.gdms.driver.DriverException;
@@ -76,12 +75,8 @@ public class ST_PlanarGraph extends AbstractExecutorFunction {
         public void evaluate(SQLDataSourceFactory dsf, DataSet[] tables, 
         Value[] values, ProgressMonitor pm) throws FunctionException {
                 try {
-                        final SpatialDataSourceDecorator sds = new SpatialDataSourceDecorator(
-                                tables[0]);
-                        sds.open();
-                        final String spatialFieldName = values[0].toString();
-                        sds.setDefaultGeometry(spatialFieldName);
-                        sds.close();
+                        final DataSet sds = tables[0];
+                        //There is not default geometry anymore.
                         PlanarGraphBuilder planarGraph = new PlanarGraphBuilder(dsf, pm);
                         planarGraph.buildGraph(sds);
                         planarGraph.createPolygonAndTopology();
