@@ -41,7 +41,6 @@ import java.util.Collection;
 import java.util.List;
 
 import org.gdms.data.SQLDataSourceFactory;
-import org.gdms.data.DataSource;
 import org.gdms.data.schema.DefaultMetadata;
 import org.gdms.data.schema.Metadata;
 import org.gdms.data.types.Type;
@@ -69,11 +68,8 @@ public class ST_ToLineNoder extends AbstractTableFunction {
 	public DataSet evaluate(SQLDataSourceFactory dsf, DataSet[] tables, 
                                 Value[] values, ProgressMonitor pm) throws FunctionException {
 		try {
-			final DataSet inSds = 
-					tables[0];
-			inSds.open();
+			final DataSet inSds = tables[0];
 			final LineNoder lineNoder = new LineNoder(inSds);
-			inSds.close();
 
 			final Collection lines = lineNoder.getLines();
 			final Geometry nodedGeom = lineNoder.getNodeLines((List) lines);
