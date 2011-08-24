@@ -5,18 +5,19 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import org.gdms.data.DataSourceFactory;
-import org.gdms.data.ExecutionException;
 import org.gdms.data.NoSuchTableException;
-import org.gdms.data.SpatialDataSourceDecorator;
 import org.gdms.data.indexes.DefaultAlphaQuery;
 import org.gdms.data.indexes.IndexException;
-import org.gdms.data.metadata.Metadata;
+import org.gdms.data.schema.Metadata;
+import org.gdms.data.schema.MetadataUtilities;
 import org.gdms.data.values.Value;
 import org.gdms.data.values.ValueFactory;
+import org.gdms.driver.DataSet;
 import org.gdms.driver.DriverException;
 import org.jgrapht.graph.WeightedMultigraph;
-import org.orbisgis.progress.IProgressMonitor;
+import org.orbisgis.progress.ProgressMonitor;
 
 /**
  *
@@ -24,20 +25,20 @@ import org.orbisgis.progress.IProgressMonitor;
  */
 public class WMultigraphDataSource extends WeightedMultigraph<Integer, GraphEdge> {
 
-        private boolean init = false;
-        private final SpatialDataSourceDecorator sdsEdges;
+        private final DataSet dataSet;
         private final DataSourceFactory dsf;
         private int WEIGTH_FIELD_INDEX = -1;
         private int START_NODE_FIELD_INDEX = -1;
         private int END_NODE_FIELD_INDEX = -1;
         private int GEOMETRY_EDGES_INDEX = -1;
-        private final IProgressMonitor pm;
+        private final ProgressMonitor pm;
 
-        public WMultigraphDataSource(SpatialDataSourceDecorator sdsEdges, IProgressMonitor pm) {
+        public WMultigraphDataSource(DataSourceFactory dsf, DataSet dataSet, ProgressMonitor pm) throws DriverException {
                 super(GraphEdge.class);
-                this.sdsEdges = sdsEdges;
-                dsf = sdsEdges.getDataSourceFactory();
+                this.dataSet = dataSet;
                 this.pm = pm;
+                this.dsf = dsf;
+                initIndex();
         }
 
         @Override
@@ -48,7 +49,7 @@ public class WMultigraphDataSource extends WeightedMultigraph<Integer, GraphEdge
                                 HashSet<GraphEdge> preds = new HashSet<GraphEdge>();
                                 while (queryResult.hasNext()) {
                                         Integer rowId = queryResult.next();
-                                        Value[] values = sdsEdges.getRow(rowId);
+                                        Value[] values = dataSet.getRow(rowId);
                                         Integer pred = values[START_NODE_FIELD_INDEX].getAsInt();
                                         preds.add(new GraphEdge(pred, vertex,
                                                 values[WEIGTH_FIELD_INDEX].getAsDouble()));
@@ -69,7 +70,7 @@ public class WMultigraphDataSource extends WeightedMultigraph<Integer, GraphEdge
                                 HashSet<GraphEdge> preds = new HashSet<GraphEdge>();
                                 while (queryResult.hasNext()) {
                                         Integer rowId = queryResult.next();
-                                        Value[] values = sdsEdges.getRow(rowId);
+                                        Value[] values = dataSet.getRow(rowId);
                                         Integer dest = values[END_NODE_FIELD_INDEX].getAsInt();
                                         preds.add(new GraphEdge(vertex, dest,
                                                 values[WEIGTH_FIELD_INDEX].getAsDouble()));
@@ -88,7 +89,7 @@ public class WMultigraphDataSource extends WeightedMultigraph<Integer, GraphEdge
                         Iterator<Integer> queryResult = getIndexIterator(GraphSchema.START_NODE, sourceVertex);
                         if (queryResult.hasNext()) {
                                 Integer rowId = queryResult.next();
-                                Value[] values = sdsEdges.getRow(rowId);
+                                Value[] values = dataSet.getRow(rowId);
                                 if (values[END_NODE_FIELD_INDEX].getAsInt() == targetVertex) {
                                         return new GraphEdge(sourceVertex, targetVertex,
                                                 values[WEIGTH_FIELD_INDEX].getAsDouble());
@@ -127,7 +128,7 @@ public class WMultigraphDataSource extends WeightedMultigraph<Integer, GraphEdge
 
                         while (queryResult.hasNext()) {
                                 Integer rowId = queryResult.next();
-                                Value[] values = sdsEdges.getRow(rowId);
+                                Value[] values = dataSet.getRow(rowId);
                                 Integer dest = values[END_NODE_FIELD_INDEX].getAsInt();
                                 edgesOf.add(new GraphEdge(vertex, dest, values[WEIGTH_FIELD_INDEX].getAsDouble()));
                         }
@@ -135,7 +136,7 @@ public class WMultigraphDataSource extends WeightedMultigraph<Integer, GraphEdge
 
                         while (queryResult.hasNext()) {
                                 Integer rowId = queryResult.next();
-                                Value[] values = sdsEdges.getRow(rowId);
+                                Value[] values = dataSet.getRow(rowId);
                                 Integer source = values[START_NODE_FIELD_INDEX].getAsInt();
                                 edgesOf.add(new GraphEdge(source, vertex,
                                         values[WEIGTH_FIELD_INDEX].getAsDouble()));
@@ -166,7 +167,7 @@ public class WMultigraphDataSource extends WeightedMultigraph<Integer, GraphEdge
         public int inDegreeOf(Integer vertex) {
                 try {
                         Iterator<Integer> queryResult = getIndexIterator(GraphSchema.END_NODE, vertex);
-                        int counter = 0;                       
+                        int counter = 0;
                         while (queryResult.hasNext()) {
                                 queryResult.next();
                                 counter++;
@@ -182,11 +183,11 @@ public class WMultigraphDataSource extends WeightedMultigraph<Integer, GraphEdge
         public int outDegreeOf(Integer vertex) {
                 try {
                         Iterator<Integer> queryResult = getIndexIterator(GraphSchema.START_NODE, vertex);
-                        int counter = 0;                        
+                        int counter = 0;
                         while (queryResult.hasNext()) {
                                 queryResult.next();
-                                counter++;                                
-                        }                        
+                                counter++;
+                        }
                         return counter;
                 } catch (DriverException ex) {
                 }
@@ -202,9 +203,9 @@ public class WMultigraphDataSource extends WeightedMultigraph<Integer, GraphEdge
         public Set<Integer> vertexSet() {
                 HashSet<Integer> vertexSet = new HashSet<Integer>();
                 try {
-                        long rowCount = sdsEdges.getRowCount();
+                        long rowCount = dataSet.getRowCount();
                         for (int i = 0; i < rowCount; i++) {
-                                Value[] values = sdsEdges.getRow(i);
+                                Value[] values = dataSet.getRow(i);
                                 Integer source = values[START_NODE_FIELD_INDEX].getAsInt();
                                 Integer dest = values[END_NODE_FIELD_INDEX].getAsInt();
                                 vertexSet.add(source);
@@ -221,7 +222,7 @@ public class WMultigraphDataSource extends WeightedMultigraph<Integer, GraphEdge
                         Iterator<Integer> queryResult = getIndexIterator(GraphSchema.START_NODE, graphEdge.getSource());
                         while (queryResult.hasNext()) {
                                 Integer rowId = queryResult.next();
-                                Value[] values = sdsEdges.getRow(rowId);
+                                Value[] values = dataSet.getRow(rowId);
                                 if (values[END_NODE_FIELD_INDEX].getAsInt() == graphEdge.getTarget()) {
                                         return values[GEOMETRY_EDGES_INDEX].getAsGeometry();
                                 }
@@ -231,47 +232,27 @@ public class WMultigraphDataSource extends WeightedMultigraph<Integer, GraphEdge
                 return null;
         }
 
-        public DataSourceFactory getDataSourceFactory() {
-                return sdsEdges.getDataSourceFactory();
-        }
-
-        public void open() throws DriverException {
-                sdsEdges.open();
-                if (!init) {
-                        try {
-                                initIndex();
-                        } catch (ExecutionException ex) {
-                                throw new DriverException("Cannot create indexes", ex);
-                        }
-                }
-        }
-
-        public void close() throws DriverException {
-                sdsEdges.close();
-        }
-
         /**
          * Create indexes for start and end node.
          * @param pm
          * @throws ExecutionException
          */
-        public void initIndex() throws ExecutionException {
+        public void initIndex() throws DriverException {
                 try {
                         if (checkMetadata()) {
-                                if (!dsf.getIndexManager().isIndexed(sdsEdges.getName(), GraphSchema.START_NODE)) {
-                                        dsf.getIndexManager().buildIndex(sdsEdges.getName(), GraphSchema.START_NODE, pm);
+                                if (!dsf.getIndexManager().isIndexed(dataSet, GraphSchema.START_NODE)) {
+                                        dsf.getIndexManager().buildIndex(dataSet, GraphSchema.START_NODE, pm);
                                 }
-                                if (!dsf.getIndexManager().isIndexed(sdsEdges.getName(), GraphSchema.END_NODE)) {
-                                        dsf.getIndexManager().buildIndex(sdsEdges.getName(), GraphSchema.END_NODE, pm);
+                                if (!dsf.getIndexManager().isIndexed(dataSet, GraphSchema.END_NODE)) {
+                                        dsf.getIndexManager().buildIndex(dataSet, GraphSchema.END_NODE, pm);
                                 }
-                                init = true;
                         }
                 } catch (DriverException ex) {
-                        throw new ExecutionException("Unable to get metadata.", ex);
+                        throw new DriverException("Unable to get metadata.", ex);
                 } catch (IndexException ex) {
-                        throw new ExecutionException("Unable to create index.", ex);
+                        throw new DriverException("Unable to create index.", ex);
                 } catch (NoSuchTableException ex) {
-                        throw new ExecutionException("Unable to find the table.", ex);
+                        throw new DriverException("Unable to find the table.", ex);
                 }
         }
 
@@ -282,22 +263,19 @@ public class WMultigraphDataSource extends WeightedMultigraph<Integer, GraphEdge
          * @throws DriverException
          */
         private boolean checkMetadata() throws DriverException {
-                Metadata edgesMetadata = sdsEdges.getMetadata();
-                GEOMETRY_EDGES_INDEX = sdsEdges.getSpatialFieldIndex();
+                Metadata edgesMetadata = dataSet.getMetadata();
+                GEOMETRY_EDGES_INDEX = MetadataUtilities.getSpatialFieldIndex(edgesMetadata);
                 WEIGTH_FIELD_INDEX = edgesMetadata.getFieldIndex(GraphSchema.WEIGTH);
                 START_NODE_FIELD_INDEX = edgesMetadata.getFieldIndex(GraphSchema.START_NODE);
                 END_NODE_FIELD_INDEX = edgesMetadata.getFieldIndex(GraphSchema.END_NODE);
                 if (WEIGTH_FIELD_INDEX == -1) {
-                        throw new IllegalArgumentException("The table "
-                                + sdsEdges.getName() + " must contains a field named weigth");
+                        throw new IllegalArgumentException("The table  must contains a field named weigth");
                 }
                 if (START_NODE_FIELD_INDEX == -1) {
-                        throw new IllegalArgumentException("The table " + sdsEdges.getName()
-                                + " must contains a field named start_node");
+                        throw new IllegalArgumentException("The table must contains a field named start_node");
                 }
                 if (END_NODE_FIELD_INDEX == -1) {
-                        throw new IllegalArgumentException("The table " + sdsEdges.getName()
-                                + " must contains a field named end_node");
+                        throw new IllegalArgumentException("The table  must contains a field named end_node");
                 }
                 return true;
         }
@@ -305,10 +283,6 @@ public class WMultigraphDataSource extends WeightedMultigraph<Integer, GraphEdge
         public Iterator<Integer> getIndexIterator(String fieldToQuery, Integer valueToQuery) throws DriverException {
                 DefaultAlphaQuery defaultAlphaQuery = new DefaultAlphaQuery(
                         fieldToQuery, ValueFactory.createValue(valueToQuery));
-                return sdsEdges.queryIndex(defaultAlphaQuery);
-        }
-
-        public SpatialDataSourceDecorator getSpatialDataSourceDecorator() {
-                return sdsEdges;
+                return dataSet.queryIndex(dsf,defaultAlphaQuery);
         }
 }

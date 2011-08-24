@@ -9,10 +9,13 @@ import org.gdms.data.types.Type;
 import org.gdms.data.types.TypeFactory;
 import org.gdms.data.values.Value;
 import org.gdms.data.values.ValueFactory;
+import org.gdms.driver.DataSet;
 import org.gdms.driver.generic.GenericObjectDriver;
 import org.gdms.gdmstopology.TopologySetUpTest;
+import org.junit.Test;
 import org.orbisgis.progress.NullProgressMonitor;
 
+import static org.junit.Assert.*;
 /**
  *
  * @author ebocher
@@ -24,6 +27,7 @@ public class GraphBuilderTest extends TopologySetUpTest {
          *
          * @throws Exception
          */
+        @Test
         public void testST_PlanarGraph() throws Exception {
                 //Input datasource
                 final GenericObjectDriver driver_src = new GenericObjectDriver(
@@ -38,14 +42,12 @@ public class GraphBuilderTest extends TopologySetUpTest {
                                 ValueFactory.createValue(2)});
 
 
-                DataSource srcDS = dsf.getDataSource(driver_src);
-
                 ST_PlanarGraph st_PlanarGraph = new ST_PlanarGraph();
-                DataSource[] tables = new DataSource[]{srcDS};
-                st_PlanarGraph.evaluate(dsf, tables, new Value[]{ValueFactory.createValue("the_geom")}, new NullProgressMonitor());
+                DataSet[] tables = new DataSet[]{driver_src};
+                st_PlanarGraph.evaluate(dsf, tables, new Value[]{ValueFactory.createValue("output")}, new NullProgressMonitor());
 
 
-                DataSource dsResult_polygons = dsf.getDataSource(srcDS.getName() + "_polygons");
+                DataSource dsResult_polygons = dsf.getDataSource("output.polygons");
 
 
                 dsResult_polygons.open();
@@ -53,7 +55,7 @@ public class GraphBuilderTest extends TopologySetUpTest {
                 assertTrue(dsResult_polygons.getRowCount() == 2);
 
                 dsResult_polygons.close();
-                DataSource dsResult_edges = dsf.getDataSource(srcDS.getName() + "_edges");
+                DataSource dsResult_edges = dsf.getDataSource("output.edges");
 
                 dsResult_edges.open();
                 //The planar graph returns 3 lines
@@ -103,16 +105,18 @@ public class GraphBuilderTest extends TopologySetUpTest {
          * A test to validate the network graph method
          * @throws Exception
          */
+        @Test
         public void testST_Graph() throws Exception {
 
                 //Input datasource                
                 DataSource srcDS = dsf.getDataSource(GRAPH);
+                srcDS.open();
 
                 ST_Graph st_Graph = new ST_Graph();
                 DataSource[] tables = new DataSource[]{srcDS};
-                st_Graph.evaluate(dsf, tables, new Value[]{ValueFactory.createValue("the_geom")}, new NullProgressMonitor());
+                st_Graph.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(0), ValueFactory.createValue(false), ValueFactory.createValue("output")}, new NullProgressMonitor());
 
-                DataSource dsResult_nodes = dsf.getDataSource(srcDS.getName() + "_nodes");
+                DataSource dsResult_nodes = dsf.getDataSource("output.nodes");
 
 
                 dsResult_nodes.open();
@@ -120,7 +124,7 @@ public class GraphBuilderTest extends TopologySetUpTest {
                 assertTrue(dsResult_nodes.getRowCount() == 11);
                 dsResult_nodes.close();
 
-                DataSource dsResult_edges = dsf.getDataSource(srcDS.getName() + "_edges");
+                DataSource dsResult_edges = dsf.getDataSource("output.edges");
                 DataSource expectedDS = dsf.getDataSource(GRAPH_EDGES);
 
                 dsResult_edges.open();
@@ -135,6 +139,7 @@ public class GraphBuilderTest extends TopologySetUpTest {
                 }
                 expectedDS.close();
                 dsResult_edges.close();
+                srcDS.close();
 
 
 

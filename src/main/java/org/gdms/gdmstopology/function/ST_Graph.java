@@ -37,76 +37,75 @@
 package org.gdms.gdmstopology.function;
 
 import org.gdms.gdmstopology.process.NetworkGraphBuilder;
+import java.io.IOException;
+import org.gdms.data.NonEditableDataSourceException;
 import org.gdms.data.SQLDataSourceFactory;
-import org.gdms.data.schema.Metadata;
 import org.gdms.data.values.Value;
 import org.gdms.driver.DriverException;
 import org.gdms.driver.driverManager.DriverLoadException;
 import org.gdms.sql.function.FunctionSignature;
 import org.orbisgis.progress.ProgressMonitor;
-import org.gdms.data.types.Type;
 import org.gdms.driver.DataSet;
 import org.gdms.sql.function.FunctionException;
 import org.gdms.sql.function.ScalarArgument;
 import org.gdms.sql.function.executor.AbstractExecutorFunction;
 import org.gdms.sql.function.executor.ExecutorFunctionSignature;
+import org.gdms.sql.function.table.TableArgument;
 import org.gdms.sql.function.table.TableDefinition;
 
 public class ST_Graph extends AbstractExecutorFunction {
 
-        @Override
         public String getName() {
                 return "ST_Graph";
         }
 
-        @Override
         public String getSqlOrder() {
                 return "select ST_Graph(the_geom [,tolerance]) from myTable;";
         }
 
-        @Override
         public String getDescription() {
                 return "Build a graph based on geometries order. A tolerance can be used to snap vertex.";
         }
 
         @Override
-        public void evaluate(SQLDataSourceFactory dsf, DataSet[] tables, 
-                        Value[] values, ProgressMonitor pm) throws FunctionException {
+        public void evaluate(SQLDataSourceFactory dsf, DataSet[] tables,
+                Value[] values, ProgressMonitor pm) throws FunctionException {
                 try {
-                        final DataSet sds = tables[0];                       
-                        
+                        final DataSet dataSet = tables[0];
                         NetworkGraphBuilder graphNetwork = new NetworkGraphBuilder(dsf, pm);
-                        if (values.length == 2) {
-                                if (values[1].getType() == Type.BOOLEAN) {
-                                        graphNetwork.setDim3(values[1].getAsBoolean());
-                                } else {
-                                        graphNetwork.setTolerance(values[1].getAsDouble());
-                                }
+                        graphNetwork.setOutput_name(dsf.getUID());
+                        if (values.length == 1) {
+                                graphNetwork.setTolerance(values[0].getAsDouble());
+                        } else if (values.length == 2) {
+                                graphNetwork.setDim3(values[1].getAsBoolean());
+                                graphNetwork.setTolerance(values[0].getAsDouble());
+
                         } else if (values.length == 3) {
-                                graphNetwork.setTolerance(values[1].getAsDouble());
-                                graphNetwork.setDim3(values[2].getAsBoolean());
+                                graphNetwork.setTolerance(values[0].getAsDouble());
+                                graphNetwork.setDim3(values[1].getAsBoolean());
+                                graphNetwork.setOutput_name(values[2].getAsString());
                         }
-                        graphNetwork.buildGraph(sds);
+                        graphNetwork.buildGraph(dataSet);
+                } catch (IOException e) {
+                        throw new FunctionException(e);
                 } catch (DriverLoadException e) {
                         throw new FunctionException(e);
+                } catch (DriverException e) {
+                        throw new FunctionException(e);
+                } catch (NonEditableDataSourceException e) {
+                        throw new FunctionException(e);
                 }
-        }
-
-        public Metadata getMetadata(Metadata[] tables) throws DriverException {
-                return null;
-        }
-
-        public TableDefinition[] getTablesDefinitions() {
-                return new TableDefinition[]{TableDefinition.GEOMETRY};
         }
 
         @Override
         public FunctionSignature[] getFunctionSignatures() {
                 return new FunctionSignature[]{
-                                new ExecutorFunctionSignature(ScalarArgument.GEOMETRY),
-                                new ExecutorFunctionSignature(ScalarArgument.GEOMETRY, ScalarArgument.BOOLEAN),
-                                new ExecutorFunctionSignature(ScalarArgument.GEOMETRY, ScalarArgument.DOUBLE),
-                                new ExecutorFunctionSignature(ScalarArgument.GEOMETRY, ScalarArgument.DOUBLE, ScalarArgument.BOOLEAN),
-                };
+                                new ExecutorFunctionSignature(new TableArgument(TableDefinition.GEOMETRY)),
+                                new ExecutorFunctionSignature(new TableArgument(TableDefinition.GEOMETRY),
+                                ScalarArgument.DOUBLE),
+                                new ExecutorFunctionSignature(new TableArgument(TableDefinition.GEOMETRY),
+                                ScalarArgument.DOUBLE, ScalarArgument.BOOLEAN),
+                                new ExecutorFunctionSignature(new TableArgument(TableDefinition.GEOMETRY),
+                                ScalarArgument.DOUBLE, ScalarArgument.BOOLEAN, ScalarArgument.STRING)};
         }
 }

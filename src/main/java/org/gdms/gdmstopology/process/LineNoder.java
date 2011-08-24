@@ -65,7 +65,6 @@
  * (250)385-6040
  * www.vividsolutions.com
  */
-
 package org.gdms.gdmstopology.process;
 
 import java.util.ArrayList;
@@ -73,75 +72,80 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
-import org.gdms.data.DataSource;
 import org.gdms.driver.DriverException;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.util.LinearComponentExtracter;
+import org.gdms.data.schema.MetadataUtilities;
+import org.gdms.driver.DataSet;
 
 public class LineNoder {
-	private DataSource sds;
-	private GeometryFactory geometryFactory = new GeometryFactory();
 
-	public LineNoder(final DataSource sds) {
-		this.sds = sds;
-	}
+        private DataSet dataSet;
+        private GeometryFactory geometryFactory = new GeometryFactory();
 
-	public Collection getLines() throws DriverException {
-		List linesList = new ArrayList();
-		LinearComponentExtracter lineFilter = new LinearComponentExtracter(
-				linesList);
-		for (int i = 0; i < sds.getRowCount(); i++) {
-			Geometry g = sds.getGeometry(i);
-			g.apply(lineFilter);
-		}
-		return linesList;
-	}
+        public LineNoder(final DataSet dataSet) {
+                this.dataSet = dataSet;
+        }
 
-	/**
-	 * Nodes a collection of linestrings. Noding is done via JTS union, which is
-	 * reasonably effective but may exhibit robustness failures.
-	 * 
-	 * @param lines
-	 *            the linear geometries to node
-	 * @return a collection of linear geometries, noded together
-	 */
-	public Geometry getNodeLines(Collection lines) {
-		Geometry linesGeom = geometryFactory.createMultiLineString(geometryFactory
-				.toLineStringArray(lines));
+        public Collection getLines() throws DriverException {
+                int geomFieldIndex = MetadataUtilities.getSpatialFieldIndex(dataSet.getMetadata());
+                if (geomFieldIndex != -1) {
+                        List linesList = new ArrayList();
+                        LinearComponentExtracter lineFilter = new LinearComponentExtracter(
+                                linesList);
+                        for (int i = 0; i < dataSet.getRowCount(); i++) {
+                                Geometry g = dataSet.getFieldValue(i, geomFieldIndex).getAsGeometry();
+                                g.apply(lineFilter);
+                        }
+                        return linesList;
+                } else {
+                        throw new DriverException("The table must contains a geometry field");
+                }
+        }
 
-		Geometry unionInput = geometryFactory.createMultiLineString(null);
-		// force the unionInput to be non-empty if possible, to ensure union is
-		// not optimized away
-		Geometry minLine = extractPoint(lines);
-		if (minLine != null) {
+        /**
+         * Nodes a collection of linestrings. Noding is done via JTS union, which is
+         * reasonably effective but may exhibit robustness failures.
+         *
+         * @param lines
+         *            the linear geometries to node
+         * @return a collection of linear geometries, noded together
+         */
+        public Geometry getNodeLines(Collection lines) {
+                Geometry linesGeom = geometryFactory.createMultiLineString(geometryFactory.toLineStringArray(lines));
+
+                Geometry unionInput = geometryFactory.createMultiLineString(null);
+                // force the unionInput to be non-empty if possible, to ensure union is
+                // not optimized away
+                Geometry minLine = extractPoint(lines);
+                if (minLine != null) {
                         unionInput = minLine;
                 }
-		Geometry noded = linesGeom.union(unionInput);
-		return noded;
-	}
+                Geometry noded = linesGeom.union(unionInput);
+                return noded;
+        }
 
-	public static List toLines(Geometry geom) {
-		List linesList = new ArrayList();
-		LinearComponentExtracter lineFilter = new LinearComponentExtracter(
-				linesList);
-		geom.apply(lineFilter);
-		return linesList;
-	}
+        public static List toLines(Geometry geom) {
+                List linesList = new ArrayList();
+                LinearComponentExtracter lineFilter = new LinearComponentExtracter(
+                        linesList);
+                geom.apply(lineFilter);
+                return linesList;
+        }
 
-	private Geometry extractPoint(Collection lines) {
-		Geometry point = null;
-		// extract first point from first non-empty geometry
-		for (Iterator i = lines.iterator(); i.hasNext();) {
-			Geometry g = (Geometry) i.next();
-			if (!g.isEmpty()) {
-				Coordinate p = g.getCoordinate();
-				point = g.getFactory().createPoint(p);
-			}
-		}
-		return point;
-	}
-
+        private Geometry extractPoint(Collection lines) {
+                Geometry point = null;
+                // extract first point from first non-empty geometry
+                for (Iterator i = lines.iterator(); i.hasNext();) {
+                        Geometry g = (Geometry) i.next();
+                        if (!g.isEmpty()) {
+                                Coordinate p = g.getCoordinate();
+                                point = g.getFactory().createPoint(p);
+                        }
+                }
+                return point;
+        }
 }

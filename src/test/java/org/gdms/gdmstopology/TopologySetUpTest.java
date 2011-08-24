@@ -4,31 +4,33 @@ import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.io.WKTReader;
 import java.io.File;
 import junit.framework.TestCase;
-import org.gdms.data.DataSourceFactory;
+import org.gdms.data.SQLDataSourceFactory;
+import org.junit.After;
+import org.junit.Before;
 import org.orbisgis.utils.FileUtils;
 
 /**
  *
  * @author ebocher
  */
-public class TopologySetUpTest extends TestCase {
+public class TopologySetUpTest {
 
         protected static final GeometryFactory gf = new GeometryFactory();
-        protected DataSourceFactory dsf;
+        protected SQLDataSourceFactory dsf;
         protected WKTReader wktReader;
         protected String GRAPH = "graph";
         protected String GRAPH_EDGES = "graph_edges";
         protected String GRAPH_NODES = "graph_nodes";
         public static String internalData = new String("src/test/resources/");
 
-        @Override
-        protected void setUp() throws Exception {
+        @Before
+        public  void setUp() throws Exception {
                 //Create a folder to save all results
                 File backUpFile = new File("target/backup");
                 FileUtils.deleteDir(backUpFile);
                 backUpFile.mkdir();
                 //Create the datasourcefactory that uses the folder
-                dsf = new DataSourceFactory("target/backup", "target/backup");
+                dsf = new SQLDataSourceFactory("target/backup", "target/backup");
 
                 //Create some geometries
                 wktReader = new WKTReader();
@@ -37,8 +39,8 @@ public class TopologySetUpTest extends TestCase {
                 dsf.getSourceManager().register(GRAPH_NODES, new File(internalData + "graph_nodes.shp"));
         }
 
-        @Override
-        protected void tearDown() throws Exception {
+        @After
+        public  void tearDown() throws Exception {
                 //Delete the folder that contains result
                 File backUpFile = new File("target/backup");
                 FileUtils.deleteDir(backUpFile);

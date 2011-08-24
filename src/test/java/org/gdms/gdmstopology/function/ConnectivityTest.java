@@ -37,18 +37,21 @@
  */
 package org.gdms.gdmstopology.function;
 
-import org.gdms.data.DataSource;
 import org.gdms.data.types.Type;
 import org.gdms.data.types.TypeFactory;
 import org.gdms.data.values.Value;
 import org.gdms.data.values.ValueFactory;
-import org.gdms.driver.ObjectDriver;
+import org.gdms.driver.DataSet;
 import org.gdms.driver.generic.GenericObjectDriver;
 import org.gdms.gdmstopology.TopologySetUpTest;
+import org.junit.Test;
 import org.orbisgis.progress.NullProgressMonitor;
+
+import static org.junit.Assert.*;
 
 public class ConnectivityTest extends TopologySetUpTest {
 
+        @Test
         public void testST_BlockIdentity() throws Exception {
                 // first datasource
                 final GenericObjectDriver driver1 = new GenericObjectDriver(
@@ -73,10 +76,9 @@ public class ConnectivityTest extends TopologySetUpTest {
                                 ValueFactory.createValue(6), ValueFactory.createValue(3)});
 
                 ST_BlockIdentity blockIdentity = new ST_BlockIdentity();
-                DataSource[] tables = new DataSource[]{dsf.getDataSource(driver1)};
-                ObjectDriver evaluate = blockIdentity.evaluate(dsf, tables, new Value[]{ValueFactory.createValue("the_geom")}, new NullProgressMonitor());
+                DataSet[] tables = new DataSet[]{driver1};
+                DataSet evaluate = blockIdentity.evaluate(dsf, tables, new Value[]{ValueFactory.createValue("the_geom")}, new NullProgressMonitor());
 
-                evaluate.start();
                 assertTrue(evaluate.getRowCount() == driver1.getRowCount());
                 int maxBlockId = 0;
                 for (int i = 0; i < evaluate.getRowCount(); i++) {
@@ -86,7 +88,6 @@ public class ConnectivityTest extends TopologySetUpTest {
                         }
                 }
                 assertTrue(maxBlockId == 3);
-                evaluate.stop();
 
         }
 }

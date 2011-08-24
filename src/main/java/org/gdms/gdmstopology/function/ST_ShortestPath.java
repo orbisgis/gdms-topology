@@ -2,8 +2,6 @@ package org.gdms.gdmstopology.function;
 
 import com.vividsolutions.jts.geom.Geometry;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.gdms.data.DataSourceFactory;
 import org.gdms.data.SQLDataSourceFactory;
 import org.gdms.data.schema.DefaultMetadata;
@@ -22,10 +20,7 @@ import org.gdms.gdmstopology.model.WMultigraphDataSource;
 import org.gdms.gdmstopology.process.GraphAnalysis;
 import org.gdms.sql.function.FunctionException;
 import org.gdms.sql.function.FunctionSignature;
-import org.gdms.sql.function.ScalarArgument;
 import org.gdms.sql.function.table.AbstractTableFunction;
-import org.gdms.sql.function.table.TableDefinition;
-import org.gdms.sql.function.table.TableFunctionSignature;
 import org.orbisgis.progress.ProgressMonitor;
 
 /**
@@ -34,22 +29,32 @@ import org.orbisgis.progress.ProgressMonitor;
  */
 public class ST_ShortestPath extends AbstractTableFunction {
 
+        private DiskBufferDriver dataSet;
+
         @Override
         public DataSet evaluate(SQLDataSourceFactory dsf, DataSet[] tables, Value[] values, ProgressMonitor pm) throws FunctionException {
                 int source = values[0].getAsInt();
                 int target = values[1].getAsInt();
+                try {
+                        if (values.length == 3) {
+                                if (values[2].getAsBoolean()) {
+                                        dataSet = computeWMPath(dsf, tables[0], source, target, pm);
+                                        dataSet.start();
+                                        return dataSet;
 
-                DataSet sdsEdges = tables[0];
+                                } else {
+                                        dataSet = computeDWMPath(dsf, tables[0], source, target, pm);
+                                        dataSet.start();
+                                        return dataSet;
+                                }
 
-                if (values.length == 3) {
-                        if (values[2].getAsBoolean()) {
-                                return computeWMPath(dsf, sdsEdges, source, target, pm);
                         } else {
-                                return computeDWMPath(dsf, sdsEdges, source, target, pm);
+                                dataSet = computeDWMPath(dsf, tables[0], source, target, pm);
+                                dataSet.start();
+                                return dataSet;
                         }
-
-                } else {
-                        return computeDWMPath(dsf, sdsEdges, source, target, pm);
+                } catch (DriverException ex) {
+                        throw new FunctionException("Cannot compute the shortest path", ex);
                 }
 
 
@@ -80,65 +85,54 @@ public class ST_ShortestPath extends AbstractTableFunction {
         }
 
         @Override
+        public void workFinished() throws DriverException {
+                dataSet.stop();
+        }
+
+        /* public Arguments[] getFunctionArguments() {
+        return new Arguments[]{new Arguments(Argument.INT, Argument.INT), new Arguments(Argument.INT, Argument.INT, Argument.BOOLEAN)};
+        }*/
+        @Override
         public FunctionSignature[] getFunctionSignatures() {
-                return new FunctionSignature[]{
-                        new TableFunctionSignature(TableDefinition.GEOMETRY, ScalarArgument.INT, ScalarArgument.INT), 
-                        new TableFunctionSignature(TableDefinition.GEOMETRY, ScalarArgument.INT, ScalarArgument.INT, ScalarArgument.BOOLEAN)
-                };
+                throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        private DataSet computeDWMPath(DataSourceFactory dsf, DataSet sds, Integer source, Integer target, ProgressMonitor pm) {
-                DWMultigraphDataSource dWMultigraphDataSource = new DWMultigraphDataSource(sds, pm);
-                try {
-                        dWMultigraphDataSource.open();
-                        List<GraphEdge> result = GraphAnalysis.getShortestPath(dWMultigraphDataSource, source, target);
-                        if (result != null) {
-                                DiskBufferDriver diskBufferDriver = new DiskBufferDriver(dsf, getMetadata(null));
-                                int k = 0;
-                                for (GraphEdge graphEdge : result) {
-                                        Geometry geometry = dWMultigraphDataSource.getGeometry(graphEdge);
-                                        diskBufferDriver.addValues(new Value[]{ValueFactory.createValue(geometry),
-                                                        ValueFactory.createValue(k++),
-                                                        ValueFactory.createValue(graphEdge.getSource()),
-                                                        ValueFactory.createValue(graphEdge.getTarget()),
-                                                        ValueFactory.createValue(graphEdge.getWeight())});
-                                }
-                                diskBufferDriver.writingFinished();
-                                return diskBufferDriver;
+        private DiskBufferDriver computeDWMPath(DataSourceFactory dsf, DataSet dataSet, Integer source, Integer target, ProgressMonitor pm) throws DriverException {
+                DWMultigraphDataSource dWMultigraphDataSource = new DWMultigraphDataSource(dsf, dataSet, pm);
+                List<GraphEdge> result = GraphAnalysis.getShortestPath(dWMultigraphDataSource, source, target);
+                DiskBufferDriver diskBufferDriver = new DiskBufferDriver(dsf, getMetadata(null));
+                if (result != null) {
+                        int k = 0;
+                        for (GraphEdge graphEdge : result) {
+                                Geometry geometry = dWMultigraphDataSource.getGeometry(graphEdge);
+                                diskBufferDriver.addValues(new Value[]{ValueFactory.createValue(geometry),
+                                                ValueFactory.createValue(k++),
+                                                ValueFactory.createValue(graphEdge.getSource()),
+                                                ValueFactory.createValue(graphEdge.getTarget()),
+                                                ValueFactory.createValue(graphEdge.getWeight())});
                         }
-                        dWMultigraphDataSource.close();
-
-                } catch (DriverException ex) {
-                        Logger.getLogger(ST_ShortestPath.class.getName()).log(Level.SEVERE, null, ex);
                 }
-                return null;
+                diskBufferDriver.writingFinished();
+                return diskBufferDriver;
         }
 
-        private DataSet computeWMPath(DataSourceFactory dsf, DataSet sds, int source, int target, ProgressMonitor pm) {
-                WMultigraphDataSource wMultigraphDataSource = new WMultigraphDataSource(sds, pm);
-                try {
-                        wMultigraphDataSource.open();
-                        List<GraphEdge> result = GraphAnalysis.getShortestPath(wMultigraphDataSource, source, target);
-                        if (result != null) {
-                                DiskBufferDriver diskBufferDriver = new DiskBufferDriver(dsf, getMetadata(null));
-                                int k = 0;
-                                for (GraphEdge graphEdge : result) {
-                                        Geometry geometry = wMultigraphDataSource.getGeometry(graphEdge);
-                                        diskBufferDriver.addValues(new Value[]{ValueFactory.createValue(geometry),
-                                                        ValueFactory.createValue(k++),
-                                                        ValueFactory.createValue(graphEdge.getSource()),
-                                                        ValueFactory.createValue(graphEdge.getTarget()),
-                                                        ValueFactory.createValue(graphEdge.getWeight())});
+        private DiskBufferDriver computeWMPath(DataSourceFactory dsf, DataSet dataSet, int source, int target, ProgressMonitor pm) throws DriverException {
+                WMultigraphDataSource wMultigraphDataSource = new WMultigraphDataSource(dsf, dataSet, pm);
+                List<GraphEdge> result = GraphAnalysis.getShortestPath(wMultigraphDataSource, source, target);
+                DiskBufferDriver diskBufferDriver = new DiskBufferDriver(dsf, getMetadata(null));
+                if (result != null) {
+                        int k = 0;
+                        for (GraphEdge graphEdge : result) {
+                                Geometry geometry = wMultigraphDataSource.getGeometry(graphEdge);
+                                diskBufferDriver.addValues(new Value[]{ValueFactory.createValue(geometry),
+                                                ValueFactory.createValue(k++),
+                                                ValueFactory.createValue(graphEdge.getSource()),
+                                                ValueFactory.createValue(graphEdge.getTarget()),
+                                                ValueFactory.createValue(graphEdge.getWeight())});
 
-                                }
-                                diskBufferDriver.writingFinished();
-                                return diskBufferDriver;
                         }
-                        wMultigraphDataSource.close();
-
-                } catch (DriverException ex) {
-                        Logger.getLogger(ST_ShortestPath.class.getName()).log(Level.SEVERE, null, ex);
                 }
-                return null;
+                diskBufferDriver.writingFinished();
+                return diskBufferDriver;
         }
 }

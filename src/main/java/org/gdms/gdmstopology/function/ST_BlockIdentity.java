@@ -44,9 +44,8 @@ import com.vividsolutions.jts.operation.distance.DistanceOp;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-import org.gdms.data.SQLDataSourceFactory;
-import org.gdms.data.DataSource;
 import org.gdms.data.NoSuchTableException;
+import org.gdms.data.SQLDataSourceFactory;
 import org.gdms.data.indexes.DefaultSpatialIndexQuery;
 import org.gdms.data.indexes.IndexException;
 import org.gdms.data.schema.DefaultMetadata;
@@ -91,105 +90,120 @@ import org.orbisgis.progress.ProgressMonitor;
 public class ST_BlockIdentity extends AbstractTableFunction {
 
         private HashSet<Integer> idsToProcess;
-        private DataSource sds;
         private int[] fieldIds;
+        private DataSet dataSet;
+        private int geomFieldIndex;
+        private String geomField;
+        private DiskBufferDriver diskBufferDriver;
 
         @Override
         public DataSet evaluate(SQLDataSourceFactory dsf, DataSet[] tables,
-			Value[] values, ProgressMonitor pm) throws
-                 FunctionException {
-                DataSet tab = tables[0];
+                Value[] values, ProgressMonitor pm) throws
+                FunctionException {
+                dataSet = tables[0];
                 //We need to read our source.                
-                try {                      
-
+                try {
+                        Metadata metadata = dataSet.getMetadata();
                         String[] fieldNames;
-                        String geomField;
+
                         if (values.length == 2) {
                                 geomField = values[0].getAsString();
                                 fieldNames = values[1].getAsString().split(", *");
                         } else {
                                 geomField = values[0].getAsString();
-                                fieldNames = tab.getMetadata().getFieldNames();
+                                fieldNames = metadata.getFieldNames();
                         }
 
-                        fieldIds = new int[fieldNames.length];
-                        for (int i = 0; i < fieldNames.length; i++) {
-                                fieldIds[i] = tab.getMetadata().getFieldIndex(fieldNames[i]);
-                        }
-
-                        pm.startTask("Building indexes", 100);
-                        // build indexes
-                        if (!dsf.getIndexManager().isIndexed(tab, geomField)) {
-                                dsf.getIndexManager().buildIndex(tab, geomField, pm);
-                        }
-                        pm.endTask();
-
-
-                        //Populate a hashset with all row ids
-                        idsToProcess = new HashSet<Integer>();
-                        for (int i = 0; i < tab.getRowCount(); i++) {
-                                idsToProcess.add(i);
-                        }
-
-                        // results
-                        DefaultMetadata met = new DefaultMetadata();
-                        for (int i = 0; i < fieldIds.length; i++) {
-                                met.addField(fieldNames[i], tab.getMetadata().getFieldType(fieldIds[i]));
-                        }
-                        met.addField("block_id", TypeFactory.createType(Type.LONG));
-
-                        DiskBufferDriver diskBufferDriver = new DiskBufferDriver(dsf, met);
-
-
-                        int blockId = 1;
-                        while (!idsToProcess.isEmpty()) {
-
-                                // starts the block
-                                int start = idsToProcess.iterator().next();
-                                HashSet<Integer> block = new HashSet<Integer>();
-                                block.add(start);
-
-                                // aggregates the block
-                                aggregateNeighbours(start, block);
-
-                                // writes the block
-                                Iterator<Integer> it = block.iterator();
-                                while (it.hasNext()) {
-                                        final Integer next = it.next();
-                                        Value[] res = new Value[fieldIds.length + 1];
-                                        for (int i = 0; i < fieldIds.length; i++) {
-                                                res[i] = tab.getFieldValue(next, fieldIds[i]);
-                                        }
-                                        res[fieldIds.length] = ValueFactory.createValue(blockId);
-                                        diskBufferDriver.addValues(res);
+                        geomFieldIndex = metadata.getFieldIndex(geomField);
+                        if (geomFieldIndex != -1) {
+                                fieldIds = new int[fieldNames.length];
+                                for (int i = 0; i < fieldNames.length; i++) {
+                                        fieldIds[i] = metadata.getFieldIndex(fieldNames[i]);
                                 }
 
-                                // mark all those geometries as processed
-                                idsToProcess.removeAll(block);
 
-                                blockId++;
+
+
+                                pm.startTask("Building indexes", 100);
+                                // build indexes
+                                if (!dsf.getIndexManager().isIndexed(dataSet, geomField)) {
+                                        dsf.getIndexManager().buildIndex(dataSet, geomField, pm);
+                                }
+                                pm.endTask();
+
+
+                                //Populate a hashset with all row ids
+                                idsToProcess = new HashSet<Integer>();
+                                for (int i = 0; i < dataSet.getRowCount(); i++) {
+                                        idsToProcess.add(i);
+                                }
+
+                                // results
+                                DefaultMetadata met = new DefaultMetadata();
+                                for (int i = 0; i < fieldIds.length; i++) {
+                                        met.addField(fieldNames[i], metadata.getFieldType(fieldIds[i]));
+                                }
+                                met.addField("block_id", TypeFactory.createType(Type.LONG));
+
+                                 diskBufferDriver = new DiskBufferDriver(dsf, met);
+
+
+                                int blockId = 1;
+                                while (!idsToProcess.isEmpty()) {
+
+                                        // starts the block
+                                        int start = idsToProcess.iterator().next();
+                                        HashSet<Integer> block = new HashSet<Integer>();
+                                        block.add(start);
+
+                                        // aggregates the block
+                                        aggregateNeighbours(dsf, start, block);
+
+                                        // writes the block
+                                        Iterator<Integer> it = block.iterator();
+                                        while (it.hasNext()) {
+                                                final Integer next = it.next();
+                                                Value[] res = new Value[fieldIds.length + 1];
+                                                for (int i = 0; i < fieldIds.length; i++) {
+                                                        res[i] = dataSet.getFieldValue(next, fieldIds[i]);
+                                                }
+                                                res[fieldIds.length] = ValueFactory.createValue(blockId);
+                                                diskBufferDriver.addValues(res);
+                                        }
+
+                                        // mark all those geometries as processed
+                                        idsToProcess.removeAll(block);
+
+                                        blockId++;
+                                }
+                                pm.endTask();
+                                diskBufferDriver.writingFinished();
+                                pm.endTask();
+                                diskBufferDriver.start();
+                                return diskBufferDriver;
+                        } else {
+                                throw new FunctionException("The table doesn't contain the geometry field " + geomField);
                         }
-                        pm.endTask();
-
-                        diskBufferDriver.writingFinished();
-                        pm.endTask();
-
-                        return diskBufferDriver;
-
 
                 } catch (DriverException ex) {
                         throw new FunctionException(ex);
-                } catch(NoSuchTableException nst){
-                        throw new FunctionException(nst);
-                } catch(IndexException ie){
-                        throw new FunctionException(ie);
+                } catch (NoSuchTableException ex) {
+                        throw new FunctionException(ex);
+                } catch (IndexException ex) {
+                        throw new FunctionException(ex);
                 }
         }
 
-        private void aggregateNeighbours(int id, Set<Integer> agg) throws DriverException {
+        @Override
+        public void workFinished() throws DriverException {
+                diskBufferDriver.stop();
+        }
+
+
+        private void aggregateNeighbours(SQLDataSourceFactory dsf, int id, Set<Integer> agg) throws DriverException {
                 int size = agg.size();
 
-                Set<Integer> re = relativesOf(id, agg);
+                Set<Integer> re = relativesOf(dsf, id, agg);
                 agg.addAll(re);
                 int nSize = agg.size();
 
@@ -200,18 +214,17 @@ public class ST_BlockIdentity extends AbstractTableFunction {
                 } else {
                         Iterator<Integer> it = re.iterator();
                         while (it.hasNext()) {
-                                aggregateNeighbours(it.next(), agg);
+                                aggregateNeighbours(dsf, it.next(), agg);
                         }
                 }
         }
 
-        private Set<Integer> relativesOf(int id, Set<Integer> excluded) throws DriverException {
-                Geometry geom = sds.getGeometry(id);
+        private Set<Integer> relativesOf(SQLDataSourceFactory dsf, int id, Set<Integer> excluded) throws DriverException {
+                Geometry geom = dataSet.getFieldValue(id, geomFieldIndex).getAsGeometry();
 
                 // query index
-                DefaultSpatialIndexQuery query = new DefaultSpatialIndexQuery(geom.getEnvelopeInternal(), 
-                        sds.getMetadata().getFieldName(sds.getSpatialFieldIndex()));
-                Iterator<Integer> s = sds.queryIndex(query);
+                DefaultSpatialIndexQuery query = new DefaultSpatialIndexQuery(geom.getEnvelopeInternal(), geomField);
+                Iterator<Integer> s = dataSet.queryIndex(dsf, query);
 
                 HashSet<Integer> h = new HashSet<Integer>();
                 while (s.hasNext()) {
@@ -221,7 +234,7 @@ public class ST_BlockIdentity extends AbstractTableFunction {
                         // !excluded.contains(i) to filter already added geometries
                         //      (this is O(1) while the next test is far from it...)
                         // test if both geoms are at 0 distance, i.e. touches
-                        if (i != id && !excluded.contains(i) && DistanceOp.isWithinDistance(geom, sds.getGeometry(i), 0)) {
+                        if (i != id && !excluded.contains(i) && DistanceOp.isWithinDistance(geom, dataSet.getFieldValue(i, geomFieldIndex).getAsGeometry(), 0)) {
                                 h.add(i);
                         }
                 }
@@ -247,18 +260,17 @@ public class ST_BlockIdentity extends AbstractTableFunction {
         @Override
         public Metadata getMetadata(Metadata[] tables) throws DriverException {
                 // hack to be able to inject into the map without a CREATE TABLE
-                return new DefaultMetadata(new Type[] { TypeFactory.createType(Type.GEOMETRY) }, new String[] { "the_geom" });
+                return new DefaultMetadata(new Type[]{TypeFactory.createType(Type.GEOMETRY)}, new String[]{"the_geom"});
         }
 
         @Override
         public FunctionSignature[] getFunctionSignatures() {
                 return new FunctionSignature[]{
-                        new TableFunctionSignature(TableDefinition.GEOMETRY, 
+                                new TableFunctionSignature(TableDefinition.GEOMETRY,
                                 new TableArgument(TableDefinition.GEOMETRY),
-                                ScalarArgument.STRING), 
-                        new TableFunctionSignature(TableDefinition.GEOMETRY,
+                                ScalarArgument.STRING), new TableFunctionSignature(TableDefinition.GEOMETRY,
                                 new TableArgument(TableDefinition.GEOMETRY),
                                 ScalarArgument.STRING, ScalarArgument.STRING)
-                };
+                        };
         }
 }

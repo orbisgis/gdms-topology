@@ -35,18 +35,22 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
         @Override
         public DataSet evaluate(SQLDataSourceFactory dsf, DataSet[] tables, Value[] values, ProgressMonitor pm) throws FunctionException {
                 int source = values[0].getAsInt();
+                try {
+                        DataSet sdsEdges = tables[0];
 
-                DataSet sdsEdges = tables[0];
+                        if (values.length == 2) {
+                                if (values[1].getAsBoolean()) {
+                                        return computeWMPath(dsf, sdsEdges, source, pm);
+                                } else {
+                                        return computeDWMPath(dsf, sdsEdges, source, pm);
+                                }
 
-                if (values.length == 2) {
-                        if (values[1].getAsBoolean()) {
-                                return computeWMPath(dsf, sdsEdges, source, pm);
                         } else {
-                                return computeDWMPath(dsf, sdsEdges, source,pm);
+                                return computeDWMPath(dsf, sdsEdges, source, pm);
                         }
 
-                } else {
-                        return computeDWMPath(dsf, sdsEdges, source,pm);
+                } catch (DriverException ex) {
+                        throw new FunctionException("Cannot compute the shortest path length", ex);
                 }
 
 
@@ -78,16 +82,14 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
         @Override
         public FunctionSignature[] getFunctionSignatures() {
                 return new FunctionSignature[]{
-                        new TableFunctionSignature(TableDefinition.ANY, ScalarArgument.INT), 
-                        new TableFunctionSignature(TableDefinition.ANY, ScalarArgument.INT, ScalarArgument.BOOLEAN)
-                };
+                                new TableFunctionSignature(TableDefinition.ANY, ScalarArgument.INT),
+                                new TableFunctionSignature(TableDefinition.ANY, ScalarArgument.INT, ScalarArgument.BOOLEAN)
+                        };
         }
 
-        private DataSet computeWMPath(DataSourceFactory dsf, DataSet sds, int source, ProgressMonitor pm) {
-                WMultigraphDataSource wMultigraphDataSource = new WMultigraphDataSource(sds, pm);
+        private DataSet computeWMPath(DataSourceFactory dsf, DataSet sds, int source, ProgressMonitor pm) throws DriverException {
+                WMultigraphDataSource wMultigraphDataSource = new WMultigraphDataSource(dsf, sds, pm);
                 try {
-                        wMultigraphDataSource.open();
-
                         ClosestFirstIterator<Integer, GraphEdge> cl = new ClosestFirstIterator<Integer, GraphEdge>(
                                 wMultigraphDataSource, source);
 
@@ -102,7 +104,6 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
                                 }
                         }
                         diskBufferDriver.writingFinished();
-                        wMultigraphDataSource.close();
                         return diskBufferDriver;
 
                 } catch (DriverException ex) {
@@ -111,11 +112,9 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
                 return null;
         }
 
-        private DataSet computeDWMPath(DataSourceFactory dsf, DataSet sds, int source, ProgressMonitor pm) {
-                DWMultigraphDataSource dwMultigraphDataSource = new DWMultigraphDataSource(sds, pm);
+        private DataSet computeDWMPath(DataSourceFactory dsf, DataSet sds, int source, ProgressMonitor pm) throws DriverException {
+                DWMultigraphDataSource dwMultigraphDataSource = new DWMultigraphDataSource(dsf, sds, pm);
                 try {
-                        dwMultigraphDataSource.open();
-
                         ClosestFirstIterator<Integer, GraphEdge> cl = new ClosestFirstIterator<Integer, GraphEdge>(
                                 dwMultigraphDataSource, source);
 
@@ -130,7 +129,6 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
                                 }
                         }
                         diskBufferDriver.writingFinished();
-                        dwMultigraphDataSource.close();
                         return diskBufferDriver;
 
                 } catch (DriverException ex) {

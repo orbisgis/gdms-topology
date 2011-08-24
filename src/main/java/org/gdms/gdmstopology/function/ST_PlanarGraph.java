@@ -42,9 +42,10 @@ import org.gdms.data.NoSuchTableException;
 import org.gdms.data.NonEditableDataSourceException;
 import org.gdms.data.SQLDataSourceFactory;
 import org.gdms.data.indexes.IndexException;
+import org.gdms.data.schema.Metadata;
 import org.gdms.data.values.Value;
-import org.gdms.driver.DriverException;
 import org.gdms.driver.DataSet;
+import org.gdms.driver.DriverException;
 import org.gdms.driver.driverManager.DriverLoadException;
 import org.gdms.gdmstopology.process.PlanarGraphBuilder;
 import org.gdms.sql.function.FunctionException;
@@ -52,6 +53,8 @@ import org.gdms.sql.function.FunctionSignature;
 import org.gdms.sql.function.ScalarArgument;
 import org.gdms.sql.function.executor.AbstractExecutorFunction;
 import org.gdms.sql.function.executor.ExecutorFunctionSignature;
+import org.gdms.sql.function.table.TableArgument;
+import org.gdms.sql.function.table.TableDefinition;
 import org.orbisgis.progress.ProgressMonitor;
 
 public class ST_PlanarGraph extends AbstractExecutorFunction {
@@ -63,7 +66,7 @@ public class ST_PlanarGraph extends AbstractExecutorFunction {
 
         @Override
         public String getSqlOrder() {
-                return "select ST_PlanarGraph(the_geom) from myTable;";
+                return "EXECUTE ST_PlanarGraph(mytable, 'output_table_name');";
         }
 
         @Override
@@ -72,13 +75,16 @@ public class ST_PlanarGraph extends AbstractExecutorFunction {
         }
 
         @Override
-        public void evaluate(SQLDataSourceFactory dsf, DataSet[] tables, 
-        Value[] values, ProgressMonitor pm) throws FunctionException {
+        public void evaluate(SQLDataSourceFactory dsf, DataSet[] tables,
+                Value[] values, ProgressMonitor pm) throws FunctionException {
                 try {
-                        final DataSet sds = tables[0];
-                        //There is not default geometry anymore.
                         PlanarGraphBuilder planarGraph = new PlanarGraphBuilder(dsf, pm);
-                        planarGraph.buildGraph(sds);
+                        if (values.length == 1) {
+                                planarGraph.setOutput_name(values[0].getAsString());
+                        } else {
+                                planarGraph.setOutput_name(dsf.getUID());
+                        }
+                        planarGraph.buildGraph(tables[0]);
                         planarGraph.createPolygonAndTopology();
                 } catch (IOException e) {
                         throw new FunctionException(e);
@@ -99,6 +105,8 @@ public class ST_PlanarGraph extends AbstractExecutorFunction {
 
         @Override
         public FunctionSignature[] getFunctionSignatures() {
-                return new FunctionSignature[]{new ExecutorFunctionSignature(ScalarArgument.GEOMETRY)};
+                return new FunctionSignature[]{
+                                new ExecutorFunctionSignature(new TableArgument(TableDefinition.GEOMETRY)),
+                                new ExecutorFunctionSignature(new TableArgument(TableDefinition.GEOMETRY), ScalarArgument.STRING)};
         }
 }

@@ -3,7 +3,6 @@ package org.gdms.gdmstopology.model;
 import java.io.File;
 import org.gdms.data.DataSource;
 import org.gdms.data.DataSourceFactory;
-import org.gdms.data.SpatialDataSourceDecorator;
 import org.jgrapht.traverse.ClosestFirstIterator;
 import org.orbisgis.progress.NullProgressMonitor;
 
@@ -14,26 +13,24 @@ import org.orbisgis.progress.NullProgressMonitor;
 public class DemoGraph {
 
         private static DataSourceFactory dsf;
-
         public static String path_edges = "/tmp/graph_edges.shp";
-         public static String path_nodes = "/tmp/graph_nodes.shp";
+        public static String path_nodes = "/tmp/graph_nodes.shp";
 
-       
         /**
          * @param args the command line arguments
          */
         public static void main(String[] args) throws Exception {
 
-                
-                dsf = new DataSourceFactory();          
-                
+
+                dsf = new DataSourceFactory();
+
                 DataSource dsEdges = dsf.getDataSource(new File(path_edges));
 
-                SpatialDataSourceDecorator sdsEdges = new SpatialDataSourceDecorator(dsEdges);
+                dsEdges.open();
 
-                WMultigraphDataSource wMultigraphDataSource = new WMultigraphDataSource(sdsEdges, new NullProgressMonitor());
+                WMultigraphDataSource wMultigraphDataSource = new WMultigraphDataSource(dsf, dsEdges, new NullProgressMonitor());
 
-                wMultigraphDataSource.open();
+
 
                 int source = 44772;
                 int target = 100;
@@ -55,15 +52,15 @@ public class DemoGraph {
                 }*/
 
                 ClosestFirstIterator<Integer, GraphEdge> cl = new ClosestFirstIterator<Integer, GraphEdge>(
-                wMultigraphDataSource, source);
+                        wMultigraphDataSource, source);
 
                 int k = 0;
                 while (cl.hasNext()) {
-                Integer node = cl.next();
-                if (node != source) {
-                double length = cl.getShortestPathLength(node);
-                System.out.println("For node : "+ node +" lenght : "+  length + " : " + k++);
-                }
+                        Integer node = cl.next();
+                        if (node != source) {
+                                double length = cl.getShortestPathLength(node);
+                                System.out.println("For node : " + node + " lenght : " + length + " : " + k++);
+                        }
                 }
                 /*
                 HashSet<Integer> srcNodes = new HashSet<Integer>();
@@ -77,31 +74,31 @@ public class DemoGraph {
                 HashSet<Integer> targetNodes = new HashSet<Integer>();
 
                 for (int i = 2; i < 10000; i++) {
-                        targetNodes.add(i);
+                targetNodes.add(i);
                 }
 
                 for (Integer srcNode : srcNodes) {
-                        if (wMultigraphDataSource.containsVertex(srcNode)) {
-                                ClosestFirstIterator<Integer, GraphEdge> cl = new ClosestFirstIterator<Integer, GraphEdge>(
-                                        wMultigraphDataSource, srcNode);
-                                int k = 0;
-                                while (cl.hasNext()) {
-                                        Integer node = cl.next();
-                                        if (node != srcNode) {
-                                                if (targetNodes.contains(node)) {
-                                                        double length = cl.getShortestPathLength(node);
-                                                        System.out.println(length + " : " + k++);
-                                                }
-                                        }
+                if (wMultigraphDataSource.containsVertex(srcNode)) {
+                ClosestFirstIterator<Integer, GraphEdge> cl = new ClosestFirstIterator<Integer, GraphEdge>(
+                wMultigraphDataSource, srcNode);
+                int k = 0;
+                while (cl.hasNext()) {
+                Integer node = cl.next();
+                if (node != srcNode) {
+                if (targetNodes.contains(node)) {
+                double length = cl.getShortestPathLength(node);
+                System.out.println(length + " : " + k++);
+                }
+                }
 
-                                }
+                }
 
-                        } else {
-                        }
-
+                } else {
+                }
+                
                 }*/
 
-                wMultigraphDataSource.close();
+                dsEdges.close();
 
                 long end = System.currentTimeMillis();
                 System.out.println("Duration " + (end - start));

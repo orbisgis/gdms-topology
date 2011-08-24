@@ -46,16 +46,16 @@ import java.io.File;
 import java.io.IOException;
 import org.gdms.data.DataSourceFactory;
 import org.gdms.data.NonEditableDataSourceException;
-import org.gdms.data.SpatialDataSourceDecorator;
 import org.gdms.data.indexes.rtree.DiskRTree;
 import org.gdms.data.schema.DefaultMetadata;
+import org.gdms.data.schema.MetadataUtilities;
 import org.gdms.data.types.Type;
 import org.gdms.data.types.TypeFactory;
 import org.gdms.data.values.Value;
 import org.gdms.data.values.ValueFactory;
+import org.gdms.driver.DataSet;
 import org.gdms.driver.DiskBufferDriver;
 import org.gdms.driver.DriverException;
-import org.gdms.driver.ReadAccess;
 import org.gdms.gdmstopology.model.GraphSchema;
 import org.orbisgis.progress.ProgressMonitor;
 
@@ -71,6 +71,7 @@ public class NetworkGraphBuilder {
         private double tolerance = 0;
         private boolean expand = false;
         boolean dim3 = false;
+        private String output_name;
 
         /**
          * This class is used to order edges and create requiered nodes to build a network graph
@@ -98,6 +99,11 @@ public class NetworkGraphBuilder {
                 this.tolerance = tolerance;
         }
 
+        public void setOutput_name(String output_name) {
+                this.output_name = output_name;
+        }
+        
+
         /**
          * Create the two data structure nodes and edges using a RTree disk.
          * This method limits the overhead when the all nodes are ordered.
@@ -106,10 +112,11 @@ public class NetworkGraphBuilder {
          * @throws IOException
          * @throws NonEditableDataSourceException
          */
-        public void buildGraph(ReadAccess sds) throws DriverException, IOException, NonEditableDataSourceException {
-                String src_sds_Name = sds.getName();
-                pm.startTask("Create edges graph", 100);
-                sds.open();
+        public void buildGraph(DataSet dataSet) throws DriverException, IOException, NonEditableDataSourceException {                
+                pm.startTask("Create the graph", 100);
+                int geomFieldIndex = MetadataUtilities.getSpatialFieldIndex(dataSet.getMetadata());
+
+                if (geomFieldIndex!=-1){
                 DefaultMetadata nodeMedata = new DefaultMetadata(new Type[]{
                                 TypeFactory.createType(Type.GEOMETRY),
                                 TypeFactory.createType(Type.INT)}, new String[]{"the_geom",
@@ -121,7 +128,7 @@ public class NetworkGraphBuilder {
                 DiskRTree diskRTree = new DiskRTree();
                 diskRTree.newIndex(new File(diskTreePath));
 
-                DefaultMetadata edgeMedata = new DefaultMetadata(sds.getMetadata());
+                DefaultMetadata edgeMedata = new DefaultMetadata(dataSet.getMetadata());
                 int srcFieldsCount = edgeMedata.getFieldCount();
 
                 edgeMedata.addField(GraphSchema.ID, TypeFactory.createType(Type.INT));
@@ -135,9 +142,9 @@ public class NetworkGraphBuilder {
                 int finalIndex = srcFieldsCount + 2;
                 int weigthIndex = srcFieldsCount + 3;
 
-                DiskBufferDriver edgesDriver = new DiskBufferDriver( dsf.getResultFile("gdms"), edgeMedata);
+                DiskBufferDriver edgesDriver = new DiskBufferDriver(dsf.getResultFile("gdms"), edgeMedata);
 
-                long rowCount = sds.getRowCount();
+                long rowCount = dataSet.getRowCount();
                 int gidNode = 1;
 
                 for (int rowIndex = 0; rowIndex < rowCount; rowIndex++) {
@@ -148,12 +155,12 @@ public class NetworkGraphBuilder {
                                         pm.progressTo((int) (100 * rowIndex / rowCount));
                                 }
                         }
-                        final Value[] fieldsValues = sds.getRow(rowIndex);
+                        final Value[] fieldsValues = dataSet.getRow(rowIndex);
                         final Value[] newValues = new Value[fieldsCount];
                         System.arraycopy(fieldsValues, 0, newValues, 0,
                                 srcFieldsCount);
                         newValues[idIndex] = ValueFactory.createValue(rowIndex + 1);
-                        Geometry geom = sds.getGeometry(rowIndex);
+                        Geometry geom = fieldsValues[geomFieldIndex].getAsGeometry();
                         double length = geom.getLength();
                         newValues[weigthIndex] = ValueFactory.createValue(length);
                         if (tolerance > 0 && length >= tolerance) {
@@ -206,18 +213,22 @@ public class NetworkGraphBuilder {
                         edgesDriver.addValues(newValues);
 
                 }
-                sds.close();
                 nodesDriver.writingFinished();
                 edgesDriver.writingFinished();
 
 
-                String ds_nodes_name = dsf.getSourceManager().getUniqueName(dsf.getUID()+ ".nodes");
-                dsf.getSourceManager().register(ds_nodes_name, nodesDriver);
+                //The datasources will be registered as a schema
+                String ds_nodes_name = dsf.getSourceManager().getUniqueName(output_name+ ".nodes");
+                dsf.getSourceManager().register(ds_nodes_name, nodesDriver.getFile());
 
-                String ds_edges_name = dsf.getSourceManager().getUniqueName(src_sds_Name + ".edges");
-                dsf.getSourceManager().register(ds_edges_name, edgesDriver);
+                String ds_edges_name = dsf.getSourceManager().getUniqueName(output_name + ".edges");
+                dsf.getSourceManager().register(ds_edges_name, edgesDriver.getFile());
 
                 //Remove the Rtree on disk
                 new File(diskTreePath).delete();
+                }
+                else {
+                      throw new DriverException("The table must contains a geometry field");
+                }
         }
 }

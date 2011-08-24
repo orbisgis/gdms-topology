@@ -45,11 +45,10 @@ import org.gdms.data.DataSourceCreationException;
 import org.gdms.data.DataSourceFactory;
 import org.gdms.data.NoSuchTableException;
 import org.gdms.data.NonEditableDataSourceException;
-import org.gdms.data.SpatialDataSourceDecorator;
 import org.gdms.data.indexes.IndexException;
 import org.gdms.data.schema.DefaultMetadata;
 import org.gdms.data.types.Constraint;
-import org.gdms.data.types.GeometryConstraint;
+import org.gdms.data.types.GeometryTypeConstraint;
 import org.gdms.data.types.Type;
 import org.gdms.data.types.TypeFactory;
 import org.gdms.data.values.Value;
@@ -66,10 +65,12 @@ import com.vividsolutions.jts.geom.IntersectionMatrix;
 import com.vividsolutions.jts.operation.linemerge.LineMerger;
 import com.vividsolutions.jts.operation.polygonize.Polygonizer;
 import java.io.File;
+import org.gdms.data.DataSource;
 import org.gdms.data.indexes.DefaultSpatialIndexQuery;
 import org.gdms.data.indexes.rtree.DiskRTree;
+import org.gdms.data.types.ConstraintFactory;
+import org.gdms.driver.DataSet;
 import org.gdms.driver.DiskBufferDriver;
-import org.gdms.driver.gdms.GdmsWriter;
 import org.gdms.gdmstopology.model.GraphSchema;
 
 public class PlanarGraphBuilder {
@@ -77,12 +78,12 @@ public class PlanarGraphBuilder {
         GeometryFactory gf = new GeometryFactory();
         public Collection edges;
         private DataSourceFactory dsf;
-        private ProgressMonitor pm;        
+        private ProgressMonitor pm;
         public final static Integer MINUS_ONE = new Integer(-1);
-        private String ds_edges_name = "_edges";
-        private String ds_nodes_name = "_nodes";
-        private String ds_polygons_name = "_polygons";
-        private String src_sds_Name;
+        private String ds_edges_name = ".edges";
+        private String ds_nodes_name = ".nodes";
+        private String ds_polygons_name = ".polygons";
+        private String output_name;
 
         /**
          * This class is used to computed a planar graph where spatial entities are represented in 3 datasources
@@ -97,26 +98,27 @@ public class PlanarGraphBuilder {
                 this.dsf = dsf;
         }
 
+        public void setOutput_name(String output_name) {
+                this.output_name = output_name;
+        }
+
         /**
          * Create the datasources that contains edges without self-intersection and
          * all nodes of the graph with a primary ID
          * @param sds
          * @throws DriverException, IOException
          */
-        public void buildGraph(SpatialDataSourceDecorator sds) throws DriverException, IOException {
-                sds.open();
-                src_sds_Name = sds.getName();
-                pm.startTask("Create edges graph",100);
+        public void buildGraph(DataSet dataSet) throws DriverException, IOException {
+                pm.startTask("Create edges graph", 100);
 
                 DefaultMetadata edgeMedata = new DefaultMetadata(new Type[]{
                                 TypeFactory.createType(Type.GEOMETRY,
-                                new Constraint[]{new GeometryConstraint(
-                                        GeometryConstraint.LINESTRING)}),
+                                new Constraint[]{ConstraintFactory.createConstraint(Constraint.GEOMETRY_TYPE, GeometryTypeConstraint.LINESTRING)}),
                                 TypeFactory.createType(Type.INT), TypeFactory.createType(Type.INT), TypeFactory.createType(Type.INT), TypeFactory.createType(Type.INT), TypeFactory.createType(Type.INT)}, new String[]{
                                 "the_geom", GraphSchema.ID, GraphSchema.START_NODE, GraphSchema.END_NODE, GraphSchema.RIGHT_FACE, GraphSchema.LEFT_FACE});
                 int edgesFieldsCount = edgeMedata.getFieldCount();
                 // Get linear elements from all geometries in the layer
-                Collection<Geometry> geomColl = getLines(sds);
+                Collection<Geometry> geomColl = getLines(dataSet);
 
                 // Create the edge layer by merging lines between 3+ order nodes
                 // (Merged lines are multilines)
@@ -124,34 +126,21 @@ public class PlanarGraphBuilder {
                 for (Geometry geometry : geomColl) {
                         lineMerger.add(geometry);
                 }
-                sds.close();
-
 
                 DefaultMetadata nodeMedata = new DefaultMetadata(new Type[]{
                                 TypeFactory.createType(Type.GEOMETRY),
                                 TypeFactory.createType(Type.INT)}, new String[]{"the_geom",
                                 GraphSchema.ID});
 
-                DiskBufferDriver nodeDriver = new DiskBufferDriver(dsf, nodeMedata, dsf.getResultFile("gdms"));
+                DiskBufferDriver nodeDriver = new DiskBufferDriver(dsf.getResultFile("gdms"), nodeMedata);
 
 
                 DiskRTree diskRTree = new DiskRTree();
                 diskRTree.newIndex(new File(dsf.getTempFile()));
 
-
                 edges = lineMerger.getMergedLineStrings();
 
-
-                ds_edges_name = dsf.getSourceManager().getUniqueName(src_sds_Name + ds_edges_name);
-
-                //Write the result
-                File out = new File(ds_edges_name + ".gdms");
-
-                if (out.exists()) {
-                        out.delete();
-                }
-                GdmsWriter edgesDriver = new GdmsWriter(out);
-                edgesDriver.writeMetadata(edges.size(), edgeMedata);
+                DiskBufferDriver edgesDriver = new DiskBufferDriver(dsf.getResultFile("gdms"), edgeMedata);
 
                 int gidNode = 1;
                 int i = 1;
@@ -191,30 +180,26 @@ public class PlanarGraphBuilder {
 
                 }
 
-                // write the row indexes
-                edgesDriver.writeRowIndexes();
                 // write envelope
-                edgesDriver.writeExtent();
-                edgesDriver.close();
-
+                edgesDriver.writingFinished();
                 nodeDriver.writingFinished();
-
-                ds_nodes_name = dsf.getSourceManager().getUniqueName(src_sds_Name + ds_nodes_name);
-                dsf.getSourceManager().register(ds_nodes_name, nodeDriver);
-                dsf.getSourceManager().register(ds_edges_name, out);
+                ds_nodes_name = dsf.getSourceManager().getUniqueName(output_name + ds_nodes_name);
+                dsf.getSourceManager().register(ds_nodes_name, nodeDriver.getFile());
+                ds_edges_name = dsf.getSourceManager().getUniqueName(output_name + ds_edges_name);
+                dsf.getSourceManager().register(ds_edges_name, edgesDriver.getFile());
         }
 
         /**
          * Extract all lines as a set of connected and splitted lines.
          * Self-intersection is not allowed.
-         * This method uses the union operator. It musts be changed in the futur to limit memory overhead.
-         * @param sds
+         * This method uses the union operator. It must be changed in the futur to limit memory overhead.
+         * @param dataSet
          * @return
          * @throws DriverException
          */
-        public Collection<Geometry> getLines(SpatialDataSourceDecorator sds)
+        public Collection<Geometry> getLines(DataSet dataSet)
                 throws DriverException {
-                LineNoder linenoder = new LineNoder(sds);
+                LineNoder linenoder = new LineNoder(dataSet);
                 Collection lines = linenoder.getLines();
 
                 final Geometry nodedGeom = linenoder.getNodeLines((List) lines);
@@ -245,21 +230,12 @@ public class PlanarGraphBuilder {
                                 TypeFactory.createType(Type.INT)}, new String[]{"the_geom",
                                 GraphSchema.ID});
 
-                ds_polygons_name = dsf.getSourceManager().getUniqueName(src_sds_Name + ds_polygons_name);
-
-                //Write the result
-                File out = new File(ds_polygons_name + ".gdms");
-
-                if (out.exists()) {
-                        out.delete();
-                }
-                GdmsWriter faceDriver = new GdmsWriter(out);
+                DiskBufferDriver faceDriver = new DiskBufferDriver(dsf.getResultFile("gdms"), faceMedata);
 
                 Polygonizer polygonizer = new Polygonizer();
                 polygonizer.add(edges);
                 Collection polygons = polygonizer.getPolygons();
 
-                faceDriver.writeMetadata(polygons.size(), faceMedata);
 
                 int no = 1;
                 for (Iterator it = polygons.iterator(); it.hasNext();) {
@@ -270,20 +246,14 @@ public class PlanarGraphBuilder {
 
                 }
 
+                faceDriver.writingFinished();
 
-                // write the row indexes
-                faceDriver.writeRowIndexes();
-                // write envelope
-                faceDriver.writeExtent();
-                faceDriver.close();
+                ds_polygons_name = dsf.getSourceManager().getUniqueName(output_name + ds_polygons_name);
+                dsf.getSourceManager().register(ds_polygons_name, faceDriver);
 
-                dsf.getSourceManager().register(ds_polygons_name, out);
+                DataSource sdsFaces = dsf.getDataSource(ds_polygons_name);
 
-                SpatialDataSourceDecorator sdsFaces = new SpatialDataSourceDecorator(
-                        dsf.getDataSource(ds_polygons_name));
-
-                SpatialDataSourceDecorator sdsEdges = new SpatialDataSourceDecorator(
-                        dsf.getDataSource(ds_edges_name));
+                DataSource sdsEdges = dsf.getDataSource(ds_edges_name);
 
                 sdsFaces.open();
                 sdsEdges.open();
@@ -344,7 +314,6 @@ public class PlanarGraphBuilder {
                         }
 
                 }
-
                 sdsEdges.commit();
                 sdsEdges.close();
                 sdsFaces.close();
@@ -369,7 +338,7 @@ public class PlanarGraphBuilder {
          *            the envelope to query against
          * @return geometries whose envelopes intersect the given envelope
          */
-        public Iterator<Integer> query(SpatialDataSourceDecorator sdsFaces, Envelope envelope)
+        public Iterator<Integer> query(DataSource sdsFaces, Envelope envelope)
                 throws DriverException, NoSuchTableException, IndexException {
 
                 if (!dsf.getIndexManager().isIndexed(ds_polygons_name, "the_geom")) {
