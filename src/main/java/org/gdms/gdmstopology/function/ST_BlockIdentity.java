@@ -45,7 +45,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import org.gdms.data.SQLDataSourceFactory;
-import org.gdms.data.SpatialDataSourceDecorator;
+import org.gdms.data.DataSource;
+import org.gdms.data.NoSuchTableException;
 import org.gdms.data.indexes.DefaultSpatialIndexQuery;
 import org.gdms.data.indexes.IndexException;
 import org.gdms.data.schema.DefaultMetadata;
@@ -56,9 +57,7 @@ import org.gdms.data.values.Value;
 import org.gdms.data.values.ValueFactory;
 import org.gdms.driver.DiskBufferDriver;
 import org.gdms.driver.DriverException;
-import org.gdms.driver.ObjectDriver;
 import org.gdms.driver.DataSet;
-import org.gdms.sql.function.Argument;
 import org.gdms.sql.function.FunctionException;
 import org.gdms.sql.function.FunctionSignature;
 import org.gdms.sql.function.ScalarArgument;
@@ -92,14 +91,14 @@ import org.orbisgis.progress.ProgressMonitor;
 public class ST_BlockIdentity extends AbstractTableFunction {
 
         private HashSet<Integer> idsToProcess;
-        private SpatialDataSourceDecorator sds;
+        private DataSource sds;
         private int[] fieldIds;
 
         @Override
         public DataSet evaluate(SQLDataSourceFactory dsf, DataSet[] tables,
 			Value[] values, ProgressMonitor pm) throws
                  FunctionException {
-                DataSet sds = tables[0];
+                DataSet tab = tables[0];
                 //We need to read our source.                
                 try {                      
 
@@ -110,32 +109,32 @@ public class ST_BlockIdentity extends AbstractTableFunction {
                                 fieldNames = values[1].getAsString().split(", *");
                         } else {
                                 geomField = values[0].getAsString();
-                                fieldNames = sds.getMetadata().getFieldNames();
+                                fieldNames = tab.getMetadata().getFieldNames();
                         }
 
                         fieldIds = new int[fieldNames.length];
                         for (int i = 0; i < fieldNames.length; i++) {
-                                fieldIds[i] = sds.getFieldIndexByName(fieldNames[i]);
+                                fieldIds[i] = tab.getMetadata().getFieldIndex(fieldNames[i]);
                         }
 
                         pm.startTask("Building indexes", 100);
                         // build indexes
-                        if (!dsf.getIndexManager().isIndexed(sds.getName(), geomField)) {
-                                dsf.getIndexManager().buildIndex(sds.getName(), geomField, pm);
+                        if (!dsf.getIndexManager().isIndexed(tab, geomField)) {
+                                dsf.getIndexManager().buildIndex(tab, geomField, pm);
                         }
                         pm.endTask();
 
 
                         //Populate a hashset with all row ids
                         idsToProcess = new HashSet<Integer>();
-                        for (int i = 0; i < sds.getRowCount(); i++) {
+                        for (int i = 0; i < tab.getRowCount(); i++) {
                                 idsToProcess.add(i);
                         }
 
                         // results
                         DefaultMetadata met = new DefaultMetadata();
                         for (int i = 0; i < fieldIds.length; i++) {
-                                met.addField(fieldNames[i], sds.getFieldType(fieldIds[i]));
+                                met.addField(fieldNames[i], tab.getMetadata().getFieldType(fieldIds[i]));
                         }
                         met.addField("block_id", TypeFactory.createType(Type.LONG));
 
@@ -159,7 +158,7 @@ public class ST_BlockIdentity extends AbstractTableFunction {
                                         final Integer next = it.next();
                                         Value[] res = new Value[fieldIds.length + 1];
                                         for (int i = 0; i < fieldIds.length; i++) {
-                                                res[i] = sds.getFieldValue(next, fieldIds[i]);
+                                                res[i] = tab.getFieldValue(next, fieldIds[i]);
                                         }
                                         res[fieldIds.length] = ValueFactory.createValue(blockId);
                                         diskBufferDriver.addValues(res);
@@ -180,7 +179,11 @@ public class ST_BlockIdentity extends AbstractTableFunction {
 
                 } catch (DriverException ex) {
                         throw new FunctionException(ex);
-                } 
+                } catch(NoSuchTableException nst){
+                        throw new FunctionException(nst);
+                } catch(IndexException ie){
+                        throw new FunctionException(ie);
+                }
         }
 
         private void aggregateNeighbours(int id, Set<Integer> agg) throws DriverException {
@@ -206,8 +209,8 @@ public class ST_BlockIdentity extends AbstractTableFunction {
                 Geometry geom = sds.getGeometry(id);
 
                 // query index
-                DefaultSpatialIndexQuery query = new DefaultSpatialIndexQuery(geom.getEnvelopeInternal(), sds.
-                        getSpatialFieldName());
+                DefaultSpatialIndexQuery query = new DefaultSpatialIndexQuery(geom.getEnvelopeInternal(), 
+                        sds.getMetadata().getFieldName(sds.getSpatialFieldIndex()));
                 Iterator<Integer> s = sds.queryIndex(query);
 
                 HashSet<Integer> h = new HashSet<Integer>();
