@@ -21,6 +21,7 @@ import org.gdms.sql.function.FunctionException;
 import org.gdms.sql.function.FunctionSignature;
 import org.gdms.sql.function.ScalarArgument;
 import org.gdms.sql.function.table.AbstractTableFunction;
+import org.gdms.sql.function.table.TableArgument;
 import org.gdms.sql.function.table.TableDefinition;
 import org.gdms.sql.function.table.TableFunctionSignature;
 import org.orbisgis.progress.ProgressMonitor;
@@ -63,12 +64,12 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
 
         @Override
         public String getDescription() {
-                return "Return the shortest path length beetwen one vertex to all other.";
+                return "Return the shortest path length beetwen one vertex to all other based on a directed graph. True if the path is computed using an undirected graph.";
         }
 
         @Override
         public String getSqlOrder() {
-                return "SELECT ST_ShortestPathLength(12[,true]) ) from data;";
+                return "SELECT * from ST_ShortestPathLength(table, 12[,true]) );";
         }
 
         @Override
@@ -82,8 +83,8 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
         @Override
         public FunctionSignature[] getFunctionSignatures() {
                 return new FunctionSignature[]{
-                                new TableFunctionSignature(TableDefinition.ANY, ScalarArgument.INT),
-                                new TableFunctionSignature(TableDefinition.ANY, ScalarArgument.INT, ScalarArgument.BOOLEAN)
+                                new TableFunctionSignature(TableDefinition.GEOMETRY, new TableArgument(TableDefinition.GEOMETRY), ScalarArgument.INT),
+                                new TableFunctionSignature(TableDefinition.GEOMETRY, new TableArgument(TableDefinition.GEOMETRY), ScalarArgument.INT, ScalarArgument.BOOLEAN)
                         };
         }
 

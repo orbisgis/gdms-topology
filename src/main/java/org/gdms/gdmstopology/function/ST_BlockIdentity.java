@@ -254,7 +254,7 @@ public class ST_BlockIdentity extends AbstractTableFunction {
 
         @Override
         public String getSqlOrder() {
-                return "SELECT ST_BlockIdentity(the_geom [, 'the_geom, titi, toto' ]) from myTable";
+                return "SELECT * from ST_BlockIdentity(table, the_geom [, 'the_geom, titi, toto' ])";
         }
 
         @Override

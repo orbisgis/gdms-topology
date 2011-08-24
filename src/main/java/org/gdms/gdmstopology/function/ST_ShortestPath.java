@@ -20,7 +20,11 @@ import org.gdms.gdmstopology.model.WMultigraphDataSource;
 import org.gdms.gdmstopology.process.GraphAnalysis;
 import org.gdms.sql.function.FunctionException;
 import org.gdms.sql.function.FunctionSignature;
+import org.gdms.sql.function.ScalarArgument;
 import org.gdms.sql.function.table.AbstractTableFunction;
+import org.gdms.sql.function.table.TableArgument;
+import org.gdms.sql.function.table.TableDefinition;
+import org.gdms.sql.function.table.TableFunctionSignature;
 import org.orbisgis.progress.ProgressMonitor;
 
 /**
@@ -72,7 +76,7 @@ public class ST_ShortestPath extends AbstractTableFunction {
 
         @Override
         public String getSqlOrder() {
-                return "SELECT ST_ShortestPath(12, 10 [,true]) from data;";
+                return "SELECT * from  ST_ShortestPath(table,12, 10 [,true]);";
         }
 
         @Override
@@ -89,12 +93,13 @@ public class ST_ShortestPath extends AbstractTableFunction {
                 dataSet.stop();
         }
 
-        /* public Arguments[] getFunctionArguments() {
-        return new Arguments[]{new Arguments(Argument.INT, Argument.INT), new Arguments(Argument.INT, Argument.INT, Argument.BOOLEAN)};
-        }*/
         @Override
         public FunctionSignature[] getFunctionSignatures() {
-                throw new UnsupportedOperationException("Not supported yet.");
+                return new FunctionSignature[]{
+                                new TableFunctionSignature(TableDefinition.ANY, new TableArgument(TableDefinition.GEOMETRY), ScalarArgument.INT, ScalarArgument.INT),
+                                new TableFunctionSignature(TableDefinition.ANY, new TableArgument(TableDefinition.GEOMETRY), ScalarArgument.INT,
+                                ScalarArgument.INT, ScalarArgument.BOOLEAN)
+                        };
         }
 
         private DiskBufferDriver computeDWMPath(DataSourceFactory dsf, DataSet dataSet, Integer source, Integer target, ProgressMonitor pm) throws DriverException {

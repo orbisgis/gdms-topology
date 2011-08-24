@@ -56,83 +56,77 @@ import org.gdms.sql.function.FunctionSignature;
 import org.orbisgis.progress.ProgressMonitor;
 
 import org.gdms.sql.function.FunctionException;
-import org.gdms.sql.function.ScalarArgument;
 import org.gdms.sql.function.table.AbstractTableFunction;
+import org.gdms.sql.function.table.TableArgument;
 import org.gdms.sql.function.table.TableDefinition;
 import org.gdms.sql.function.table.TableFunctionSignature;
 
 public class ST_ToLineNoder extends AbstractTableFunction {
-        
-	@SuppressWarnings( { "unchecked", "static-access" })
+
+        @SuppressWarnings({"unchecked", "static-access"})
         @Override
-	public DataSet evaluate(SQLDataSourceFactory dsf, DataSet[] tables, 
-                                Value[] values, ProgressMonitor pm) throws FunctionException {
-		try {
-			final DataSet inSds = tables[0];
-			final LineNoder lineNoder = new LineNoder(inSds);
+        public DataSet evaluate(SQLDataSourceFactory dsf, DataSet[] tables,
+                Value[] values, ProgressMonitor pm) throws FunctionException {
+                try {
+                        final DataSet inSds = tables[0];
+                        final LineNoder lineNoder = new LineNoder(inSds);
 
-			final Collection lines = lineNoder.getLines();
-			final Geometry nodedGeom = lineNoder.getNodeLines((List) lines);
-			final Collection<Geometry> nodedLines = lineNoder
-					.toLines(nodedGeom);
+                        final Collection lines = lineNoder.getLines();
+                        final Geometry nodedGeom = lineNoder.getNodeLines((List) lines);
+                        final Collection<Geometry> nodedLines = lineNoder.toLines(nodedGeom);
 
-			// build and populate the resulting driver
-			final GenericObjectDriver driver = new GenericObjectDriver(
-					getMetadata(null));
+                        // build and populate the resulting driver
+                        final GenericObjectDriver driver = new GenericObjectDriver(
+                                getMetadata(null));
 
-			int k = 0;
-			final int rowCount = nodedLines.size();
-			for (Geometry geometry : nodedLines) {
-				if (k / 100 == k / 100.0) {
-					if (pm.isCancelled()) {
-						break;
-					} else {
-						pm.progressTo((int) (100 * k / rowCount));
-					}
-				}
+                        int k = 0;
+                        final int rowCount = nodedLines.size();
+                        for (Geometry geometry : nodedLines) {
+                                if (k / 100 == k / 100.0) {
+                                        if (pm.isCancelled()) {
+                                                break;
+                                        } else {
+                                                pm.progressTo((int) (100 * k / rowCount));
+                                        }
+                                }
 
-				driver.addValues(new Value[] { ValueFactory.createValue(k),
-						ValueFactory.createValue(geometry) });
-				k++;
-			}
-			return driver;
-		} catch (DriverException e) {
-			throw new FunctionException(e);
-		} catch (DriverLoadException e) {
-			throw new FunctionException(e);
-		}
-	}
-
-        @Override
-	public String getDescription() {
-		return "Build all intersection and convert the geometries into lines ";
-	}
+                                driver.addValues(new Value[]{ValueFactory.createValue(k),
+                                                ValueFactory.createValue(geometry)});
+                                k++;
+                        }
+                        return driver;
+                } catch (DriverException e) {
+                        throw new FunctionException(e);
+                } catch (DriverLoadException e) {
+                        throw new FunctionException(e);
+                }
+        }
 
         @Override
-	public String getSqlOrder() {
-		return "select ST_ToLineNoder(the_geom) from myTable;";
-	}
+        public String getDescription() {
+                return "Build all intersection and convert the geometries into lines ";
+        }
 
         @Override
-	public String getName() {
-		return "ST_ToLineNoder";
-	}
+        public String getSqlOrder() {
+                return "select * from  ST_ToLineNoder(table) from myTable;";
+        }
 
         @Override
-	public Metadata getMetadata(Metadata[] tables) throws DriverException {
-		return new DefaultMetadata(new Type[] {
-				TypeFactory.createType(Type.INT),
-				TypeFactory.createType(Type.GEOMETRY) }, new String[] { "gid",
-				"the_geom" });
-	}
+        public String getName() {
+                return "ST_ToLineNoder";
+        }
 
-	public TableDefinition[] getTablesDefinitions() {
-		return new TableDefinition[] { TableDefinition.GEOMETRY };
-	}
-
+        @Override
+        public Metadata getMetadata(Metadata[] tables) throws DriverException {
+                return new DefaultMetadata(new Type[]{
+                                TypeFactory.createType(Type.INT),
+                                TypeFactory.createType(Type.GEOMETRY)}, new String[]{"gid",
+                                "the_geom"});
+        }
 
         @Override
         public FunctionSignature[] getFunctionSignatures() {
-                return new FunctionSignature[]{new TableFunctionSignature(TableDefinition.GEOMETRY, ScalarArgument.GEOMETRY)};
+                return new FunctionSignature[]{new TableFunctionSignature(TableDefinition.GEOMETRY, new TableArgument(TableDefinition.GEOMETRY))};
         }
 }

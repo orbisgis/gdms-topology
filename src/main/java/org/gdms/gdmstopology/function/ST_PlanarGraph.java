@@ -42,7 +42,6 @@ import org.gdms.data.NoSuchTableException;
 import org.gdms.data.NonEditableDataSourceException;
 import org.gdms.data.SQLDataSourceFactory;
 import org.gdms.data.indexes.IndexException;
-import org.gdms.data.schema.Metadata;
 import org.gdms.data.values.Value;
 import org.gdms.driver.DataSet;
 import org.gdms.driver.DriverException;

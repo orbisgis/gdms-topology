@@ -60,11 +60,12 @@ public class ST_Graph extends AbstractExecutorFunction {
         }
 
         public String getSqlOrder() {
-                return "select ST_Graph(the_geom [,tolerance]) from myTable;";
+                return "EXECUTE ST_Graph(table [,tolerance, true, 'output_table_name']);";
         }
 
         public String getDescription() {
-                return "Build a graph based on geometries order. A tolerance can be used to snap vertex.";
+                return "Build a graph based on geometries order. "
+                        + "A tolerance can be used to snap vertex.True if the edge is ordered according its slope.";
         }
 
         @Override
