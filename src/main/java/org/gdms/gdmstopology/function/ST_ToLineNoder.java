@@ -49,7 +49,7 @@ import org.gdms.data.types.TypeFactory;
 import org.gdms.data.values.Value;
 import org.gdms.data.values.ValueFactory;
 import org.gdms.driver.DriverException;
-import org.gdms.driver.ReadAccess;
+import org.gdms.driver.DataSet;
 import org.gdms.driver.driverManager.DriverLoadException;
 import org.gdms.driver.generic.GenericObjectDriver;
 import org.gdms.gdmstopology.process.LineNoder;
@@ -65,7 +65,7 @@ import org.gdms.sql.function.table.TableFunctionSignature;
 public class ST_ToLineNoder extends AbstractTableFunction {
         
 	@SuppressWarnings( { "unchecked", "static-access" })
-	public ReadAccess evaluate(SQLDataSourceFactory dsf, ReadAccess[] tables, 
+	public DataSet evaluate(SQLDataSourceFactory dsf, DataSet[] tables, 
                                 Value[] values, ProgressMonitor pm) throws FunctionException {
 		try {
 			final SpatialDataSourceDecorator inSds = new SpatialDataSourceDecorator(

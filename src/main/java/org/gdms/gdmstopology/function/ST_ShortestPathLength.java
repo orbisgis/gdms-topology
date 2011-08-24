@@ -15,7 +15,7 @@ import org.gdms.data.values.ValueFactory;
 import org.gdms.driver.DiskBufferDriver;
 import org.gdms.driver.DriverException;
 import org.gdms.driver.ObjectDriver;
-import org.gdms.driver.ReadAccess;
+import org.gdms.driver.DataSet;
 import org.gdms.gdmstopology.model.DWMultigraphDataSource;
 import org.gdms.gdmstopology.model.GraphEdge;
 import org.gdms.gdmstopology.model.GraphSchema;
@@ -36,7 +36,7 @@ import org.jgrapht.traverse.ClosestFirstIterator;
 public class ST_ShortestPathLength extends AbstractTableFunction {
 
         @Override
-        public ReadAccess evaluate(SQLDataSourceFactory dsf, ReadAccess[] tables, Value[] values, ProgressMonitor pm) throws FunctionException {
+        public DataSet evaluate(SQLDataSourceFactory dsf, DataSet[] tables, Value[] values, ProgressMonitor pm) throws FunctionException {
                 int source = values[0].getAsInt();
 
                 SpatialDataSourceDecorator sdsEdges = new SpatialDataSourceDecorator(tables[0]);

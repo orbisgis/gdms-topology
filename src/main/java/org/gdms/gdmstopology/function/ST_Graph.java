@@ -47,7 +47,7 @@ import org.gdms.driver.driverManager.DriverLoadException;
 import org.gdms.sql.function.FunctionSignature;
 import org.orbisgis.progress.ProgressMonitor;
 import org.gdms.data.types.Type;
-import org.gdms.driver.ReadAccess;
+import org.gdms.driver.DataSet;
 import org.gdms.sql.function.FunctionException;
 import org.gdms.sql.function.ScalarArgument;
 import org.gdms.sql.function.executor.AbstractExecutorFunction;
@@ -72,10 +72,10 @@ public class ST_Graph extends AbstractExecutorFunction {
         }
 
         @Override
-        public void evaluate(SQLDataSourceFactory dsf, ReadAccess[] tables, 
+        public void evaluate(SQLDataSourceFactory dsf, DataSet[] tables, 
                         Value[] values, ProgressMonitor pm) throws FunctionException {
                 try {
-                        final ReadAccess sds = tables[0];                       
+                        final DataSet sds = tables[0];                       
                         
                         NetworkGraphBuilder graphNetwork = new NetworkGraphBuilder(dsf, pm);
                         if (values.length == 2) {

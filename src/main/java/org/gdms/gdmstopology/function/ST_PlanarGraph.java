@@ -45,7 +45,7 @@ import org.gdms.data.SpatialDataSourceDecorator;
 import org.gdms.data.indexes.IndexException;
 import org.gdms.data.values.Value;
 import org.gdms.driver.DriverException;
-import org.gdms.driver.ReadAccess;
+import org.gdms.driver.DataSet;
 import org.gdms.driver.driverManager.DriverLoadException;
 import org.gdms.gdmstopology.process.PlanarGraphBuilder;
 import org.gdms.sql.function.FunctionException;
@@ -73,7 +73,7 @@ public class ST_PlanarGraph extends AbstractExecutorFunction {
         }
 
         @Override
-        public void evaluate(SQLDataSourceFactory dsf, ReadAccess[] tables, 
+        public void evaluate(SQLDataSourceFactory dsf, DataSet[] tables, 
         Value[] values, ProgressMonitor pm) throws FunctionException {
                 try {
                         final SpatialDataSourceDecorator sds = new SpatialDataSourceDecorator(
