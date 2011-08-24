@@ -73,7 +73,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
-import org.gdms.data.SpatialDataSourceDecorator;
+import org.gdms.data.DataSource;
 import org.gdms.driver.DriverException;
 
 import com.vividsolutions.jts.geom.Coordinate;
@@ -82,10 +82,10 @@ import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.util.LinearComponentExtracter;
 
 public class LineNoder {
-	private SpatialDataSourceDecorator sds;
+	private DataSource sds;
 	private GeometryFactory geometryFactory = new GeometryFactory();
 
-	public LineNoder(final SpatialDataSourceDecorator sds) {
+	public LineNoder(final DataSource sds) {
 		this.sds = sds;
 	}
 
@@ -116,8 +116,9 @@ public class LineNoder {
 		// force the unionInput to be non-empty if possible, to ensure union is
 		// not optimized away
 		Geometry minLine = extractPoint(lines);
-		if (minLine != null)
-			unionInput = minLine;
+		if (minLine != null) {
+                        unionInput = minLine;
+                }
 		Geometry noded = linesGeom.union(unionInput);
 		return noded;
 	}
