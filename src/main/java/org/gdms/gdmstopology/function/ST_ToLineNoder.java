@@ -50,7 +50,7 @@ import org.gdms.data.values.ValueFactory;
 import org.gdms.driver.DriverException;
 import org.gdms.driver.DataSet;
 import org.gdms.driver.driverManager.DriverLoadException;
-import org.gdms.driver.generic.GenericObjectDriver;
+import org.gdms.driver.memory.MemoryDataSetDriver;
 import org.gdms.gdmstopology.process.LineNoder;
 import org.gdms.sql.function.FunctionSignature;
 import org.orbisgis.progress.ProgressMonitor;
@@ -76,7 +76,7 @@ public class ST_ToLineNoder extends AbstractTableFunction {
                         final Collection<Geometry> nodedLines = lineNoder.toLines(nodedGeom);
 
                         // build and populate the resulting driver
-                        final GenericObjectDriver driver = new GenericObjectDriver(
+                        final MemoryDataSetDriver driver = new MemoryDataSetDriver(
                                 getMetadata(null));
 
                         int k = 0;

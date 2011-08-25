@@ -4,13 +4,13 @@
  */
 package org.gdms.gdmstopology.function;
 
+import org.gdms.driver.memory.MemoryDataSetDriver;
 import org.gdms.data.DataSource;
 import org.gdms.data.types.Type;
 import org.gdms.data.types.TypeFactory;
 import org.gdms.data.values.Value;
 import org.gdms.data.values.ValueFactory;
 import org.gdms.driver.DataSet;
-import org.gdms.driver.generic.GenericObjectDriver;
 import org.gdms.gdmstopology.TopologySetUpTest;
 import org.junit.Test;
 import org.orbisgis.progress.NullProgressMonitor;
@@ -30,7 +30,7 @@ public class GraphBuilderTest extends TopologySetUpTest {
         @Test
         public void testST_PlanarGraph() throws Exception {
                 //Input datasource
-                final GenericObjectDriver driver_src = new GenericObjectDriver(
+                final MemoryDataSetDriver driver_src = new MemoryDataSetDriver(
                         new String[]{"the_geom", "id"},
                         new Type[]{TypeFactory.createType(Type.GEOMETRY),
                                 TypeFactory.createType(Type.INT)

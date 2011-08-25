@@ -37,12 +37,12 @@
  */
 package org.gdms.gdmstopology.function;
 
+import org.gdms.driver.memory.MemoryDataSetDriver;
 import org.gdms.data.types.Type;
 import org.gdms.data.types.TypeFactory;
 import org.gdms.data.values.Value;
 import org.gdms.data.values.ValueFactory;
 import org.gdms.driver.DataSet;
-import org.gdms.driver.generic.GenericObjectDriver;
 import org.gdms.gdmstopology.TopologySetUpTest;
 import org.junit.Test;
 import org.orbisgis.progress.NullProgressMonitor;
@@ -54,7 +54,7 @@ public class ConnectivityTest extends TopologySetUpTest {
         @Test
         public void testST_BlockIdentity() throws Exception {
                 // first datasource
-                final GenericObjectDriver driver1 = new GenericObjectDriver(
+                final MemoryDataSetDriver driver1 = new MemoryDataSetDriver(
                         new String[]{"the_geom", "id", "block_gid"},
                         new Type[]{TypeFactory.createType(Type.GEOMETRY),
                                 TypeFactory.createType(Type.INT),
