@@ -27,9 +27,9 @@ public class DWMultigraphDataSource extends DirectedWeightedMultigraph<Integer, 
 
         private final DataSet dataSet;
         private final DataSourceFactory dsf;
-        private int WEIGTH_FIELD = -1;
-        private int START_NODE_FIELD = -1;
-        private int END_NODE_FIELD = -1;
+        private int WEIGTH_FIELD_INDEX = -1;
+        private int START_NODE_FIELD_INDEX = -1;
+        private int END_NODE_FIELD_INDEX = -1;
         private int GEOMETRY_FIELD = -1;
         private final ProgressMonitor pm;
 
@@ -50,9 +50,9 @@ public class DWMultigraphDataSource extends DirectedWeightedMultigraph<Integer, 
                                 while (queryResult.hasNext()) {
                                         Integer rowId = queryResult.next();
                                         Value[] values = dataSet.getRow(rowId);
-                                        Integer pred = values[START_NODE_FIELD].getAsInt();
+                                        Integer pred = values[START_NODE_FIELD_INDEX].getAsInt();
                                         preds.add(new GraphEdge(pred, vertex,
-                                                values[WEIGTH_FIELD].getAsDouble()));
+                                                values[WEIGTH_FIELD_INDEX].getAsDouble()));
                                 }
                                 return preds;
 
@@ -71,9 +71,9 @@ public class DWMultigraphDataSource extends DirectedWeightedMultigraph<Integer, 
                                 while (queryResult.hasNext()) {
                                         Integer rowId = queryResult.next();
                                         Value[] values = dataSet.getRow(rowId);
-                                        Integer dest = values[END_NODE_FIELD].getAsInt();
+                                        Integer dest = values[END_NODE_FIELD_INDEX].getAsInt();
                                         preds.add(new GraphEdge(vertex, dest,
-                                                values[WEIGTH_FIELD].getAsDouble()));
+                                                values[WEIGTH_FIELD_INDEX].getAsDouble()));
                                 }
                                 return preds;
 
@@ -90,9 +90,9 @@ public class DWMultigraphDataSource extends DirectedWeightedMultigraph<Integer, 
                         if (queryResult.hasNext()) {
                                 Integer rowId = queryResult.next();
                                 Value[] values = dataSet.getRow(rowId);
-                                if (values[END_NODE_FIELD].getAsInt() == targetVertex) {
+                                if (values[END_NODE_FIELD_INDEX].getAsInt() == targetVertex) {
                                         return new GraphEdge(sourceVertex, targetVertex,
-                                                values[WEIGTH_FIELD].getAsDouble());
+                                                values[WEIGTH_FIELD_INDEX].getAsDouble());
                                 }
                         }
                 } catch (DriverException ex) {
@@ -122,6 +122,27 @@ public class DWMultigraphDataSource extends DirectedWeightedMultigraph<Integer, 
         }
 
         @Override
+        public boolean containsEdge(GraphEdge e) {
+                return containsEdge(e.getSource(), e.getTarget());
+        }
+
+        @Override
+        public boolean containsEdge(Integer v, Integer v1) {
+                try {
+                        Iterator<Integer> queryResult = getIndexIterator(GraphSchema.START_NODE, v);
+                        if (queryResult.hasNext()) {
+                                Integer rowId = queryResult.next();
+                                Value[] values = dataSet.getRow(rowId);
+                                if (values[END_NODE_FIELD_INDEX].getAsInt() == v1) {
+                                        return true;
+                                }
+                        }
+                } catch (DriverException ex) {
+                }
+                return false;
+        }
+
+        @Override
         public Set edgesOf(Integer vertex) {
                 HashSet<GraphEdge> edgesOf = new HashSet<GraphEdge>();
                 try {
@@ -129,17 +150,17 @@ public class DWMultigraphDataSource extends DirectedWeightedMultigraph<Integer, 
                         while (queryResult.hasNext()) {
                                 Integer rowId = queryResult.next();
                                 Value[] values = dataSet.getRow(rowId);
-                                Integer dest = values[END_NODE_FIELD].getAsInt();
-                                edgesOf.add(new GraphEdge(vertex, dest, values[WEIGTH_FIELD].getAsDouble()));
+                                Integer dest = values[END_NODE_FIELD_INDEX].getAsInt();
+                                edgesOf.add(new GraphEdge(vertex, dest, values[WEIGTH_FIELD_INDEX].getAsDouble()));
                         }
                         queryResult = getIndexIterator(GraphSchema.END_NODE, vertex);
 
                         while (queryResult.hasNext()) {
                                 Integer rowId = queryResult.next();
                                 Value[] values = dataSet.getRow(rowId);
-                                Integer source = values[START_NODE_FIELD].getAsInt();
+                                Integer source = values[START_NODE_FIELD_INDEX].getAsInt();
                                 edgesOf.add(new GraphEdge(source, vertex,
-                                        values[WEIGTH_FIELD].getAsDouble()));
+                                        values[WEIGTH_FIELD_INDEX].getAsDouble()));
                         }
 
                         return edgesOf;
@@ -206,8 +227,8 @@ public class DWMultigraphDataSource extends DirectedWeightedMultigraph<Integer, 
                         long rowCount = dataSet.getRowCount();
                         for (int i = 0; i < rowCount; i++) {
                                 Value[] values = dataSet.getRow(i);
-                                Integer source = values[START_NODE_FIELD].getAsInt();
-                                Integer dest = values[END_NODE_FIELD].getAsInt();
+                                Integer source = values[START_NODE_FIELD_INDEX].getAsInt();
+                                Integer dest = values[END_NODE_FIELD_INDEX].getAsInt();
                                 vertexSet.add(source);
                                 vertexSet.add(dest);
                         }
@@ -223,7 +244,8 @@ public class DWMultigraphDataSource extends DirectedWeightedMultigraph<Integer, 
                         while (queryResult.hasNext()) {
                                 Integer rowId = queryResult.next();
                                 Value[] values = dataSet.getRow(rowId);
-                                if (values[END_NODE_FIELD].getAsInt() == graphEdge.getTarget()) {
+                                if ((values[END_NODE_FIELD_INDEX].getAsInt() == graphEdge.getTarget())
+                                        && (Double.compare(values[WEIGTH_FIELD_INDEX].getAsDouble(), graphEdge.getWeight()) == 0)) {
                                         return values[GEOMETRY_FIELD].getAsGeometry();
                                 }
                         }
@@ -265,16 +287,16 @@ public class DWMultigraphDataSource extends DirectedWeightedMultigraph<Integer, 
         private boolean checkMetadata() throws DriverException {
                 Metadata edgesMetadata = dataSet.getMetadata();
                 GEOMETRY_FIELD = MetadataUtilities.getSpatialFieldIndex(edgesMetadata);
-                WEIGTH_FIELD = edgesMetadata.getFieldIndex(GraphSchema.WEIGTH);
-                START_NODE_FIELD = edgesMetadata.getFieldIndex(GraphSchema.START_NODE);
-                END_NODE_FIELD = edgesMetadata.getFieldIndex(GraphSchema.END_NODE);
-                if (WEIGTH_FIELD == -1) {
+                WEIGTH_FIELD_INDEX = edgesMetadata.getFieldIndex(GraphSchema.WEIGTH);
+                START_NODE_FIELD_INDEX = edgesMetadata.getFieldIndex(GraphSchema.START_NODE);
+                END_NODE_FIELD_INDEX = edgesMetadata.getFieldIndex(GraphSchema.END_NODE);
+                if (WEIGTH_FIELD_INDEX == -1) {
                         throw new IllegalArgumentException("The table must contains a field named weight");
                 }
-                if (START_NODE_FIELD == -1) {
+                if (START_NODE_FIELD_INDEX == -1) {
                         throw new IllegalArgumentException("The table must contains a field named start_node");
                 }
-                if (END_NODE_FIELD == -1) {
+                if (END_NODE_FIELD_INDEX == -1) {
                         throw new IllegalArgumentException("The table must contains a field named end_node");
                 }
                 return true;

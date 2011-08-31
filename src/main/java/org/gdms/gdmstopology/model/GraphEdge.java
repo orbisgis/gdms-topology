@@ -10,46 +10,40 @@ import org.jgrapht.graph.DefaultWeightedEdge;
  * @author Michael Michaud
  * @version 0.1 (2007-04-21)
  */
-
 public class GraphEdge extends DefaultWeightedEdge {
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -1862257432554700123L;
+        /**
+         *
+         */
+        private static final long serialVersionUID = -1862257432554700123L;
+        private Integer source;
+        private Integer target;
+        private double weight = 1;     
 
-	private Integer source;
-	private Integer target;
-	private double weight = 1;
+        public GraphEdge(Integer sourceVertex, Integer targetVertex, double weight) {
+                this.source = sourceVertex;
+                this.target = targetVertex;
+                this.weight = weight;
+        }       
+       
 
-	public GraphEdge(Integer sourceVertex, Integer targetVertex) {
-		this(sourceVertex, targetVertex, 1);
-	}
+        @Override
+        public double getWeight() {
+                return weight;
+        }
 
-	public GraphEdge(Integer sourceVertex, Integer targetVertex, double weight) {
-		this.source = sourceVertex;
-		this.target = targetVertex;
-		this.weight = weight;
-	}
+        @Override
+        public Integer getSource() {
+                return source;
+        }
 
-	@Override
-	public double getWeight() {
-		return weight;
-	}
+        @Override
+        public Integer getTarget() {
+                return target;
+        }
 
-	@Override
-	public Integer getSource() {
-		return source;
-	}
-
-	@Override
-	public Integer getTarget() {
-		return target;
-	}
-
-	@Override
-	public String toString() {
-		return "(" + source + " : " + target + ")";
-	}
-
+        @Override
+        public String toString() {
+                return "(" + source + " : " + target + " : " + weight + ")";
+        }
 }
