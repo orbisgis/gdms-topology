@@ -145,7 +145,7 @@ public class ST_BlockIdentity extends AbstractTableFunction {
                                 }
                                 met.addField("block_id", TypeFactory.createType(Type.LONG));
 
-                                 diskBufferDriver = new DiskBufferDriver(dsf, met);
+                                diskBufferDriver = new DiskBufferDriver(dsf, met);
 
 
                                 int blockId = 1;
@@ -198,7 +198,6 @@ public class ST_BlockIdentity extends AbstractTableFunction {
         public void workFinished() throws DriverException {
                 diskBufferDriver.stop();
         }
-
 
         private void aggregateNeighbours(SQLDataSourceFactory dsf, int id, Set<Integer> agg) throws DriverException {
                 int size = agg.size();

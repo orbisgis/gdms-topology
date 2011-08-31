@@ -96,8 +96,8 @@ public class ST_ShortestPath extends AbstractTableFunction {
         @Override
         public FunctionSignature[] getFunctionSignatures() {
                 return new FunctionSignature[]{
-                                new TableFunctionSignature(TableDefinition.ANY, new TableArgument(TableDefinition.GEOMETRY), ScalarArgument.INT, ScalarArgument.INT),
-                                new TableFunctionSignature(TableDefinition.ANY, new TableArgument(TableDefinition.GEOMETRY), ScalarArgument.INT,
+                                new TableFunctionSignature(TableDefinition.GEOMETRY, new TableArgument(TableDefinition.GEOMETRY), ScalarArgument.INT, ScalarArgument.INT),
+                                new TableFunctionSignature(TableDefinition.GEOMETRY, new TableArgument(TableDefinition.GEOMETRY), ScalarArgument.INT,
                                 ScalarArgument.INT, ScalarArgument.BOOLEAN)
                         };
         }

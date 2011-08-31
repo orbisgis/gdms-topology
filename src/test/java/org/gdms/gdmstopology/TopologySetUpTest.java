@@ -3,7 +3,6 @@ package org.gdms.gdmstopology;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.io.WKTReader;
 import java.io.File;
-import junit.framework.TestCase;
 import org.gdms.data.SQLDataSourceFactory;
 import org.junit.After;
 import org.junit.Before;

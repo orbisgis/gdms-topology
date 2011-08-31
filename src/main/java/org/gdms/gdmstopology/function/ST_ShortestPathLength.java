@@ -33,6 +33,8 @@ import org.jgrapht.traverse.ClosestFirstIterator;
  */
 public class ST_ShortestPathLength extends AbstractTableFunction {
 
+        private DiskBufferDriver diskBufferDriver;
+
         @Override
         public DataSet evaluate(SQLDataSourceFactory dsf, DataSet[] tables, Value[] values, ProgressMonitor pm) throws FunctionException {
                 int source = values[0].getAsInt();
@@ -55,6 +57,11 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
                 }
 
 
+        }
+
+        @Override
+        public void workFinished() throws DriverException {
+                diskBufferDriver.stop();
         }
 
         @Override
@@ -94,7 +101,7 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
                         ClosestFirstIterator<Integer, GraphEdge> cl = new ClosestFirstIterator<Integer, GraphEdge>(
                                 wMultigraphDataSource, source);
 
-                        DiskBufferDriver diskBufferDriver = new DiskBufferDriver(dsf, getMetadata(null));
+                        diskBufferDriver = new DiskBufferDriver(dsf, getMetadata(null));
 
                         while (cl.hasNext()) {
                                 Integer node = cl.next();
@@ -105,6 +112,7 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
                                 }
                         }
                         diskBufferDriver.writingFinished();
+                        diskBufferDriver.start();
                         return diskBufferDriver;
 
                 } catch (DriverException ex) {
@@ -119,7 +127,7 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
                         ClosestFirstIterator<Integer, GraphEdge> cl = new ClosestFirstIterator<Integer, GraphEdge>(
                                 dwMultigraphDataSource, source);
 
-                        DiskBufferDriver diskBufferDriver = new DiskBufferDriver(dsf, getMetadata(null));
+                        diskBufferDriver = new DiskBufferDriver(dsf, getMetadata(null));
 
                         while (cl.hasNext()) {
                                 Integer node = cl.next();
@@ -130,6 +138,7 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
                                 }
                         }
                         diskBufferDriver.writingFinished();
+                        diskBufferDriver.start();
                         return diskBufferDriver;
 
                 } catch (DriverException ex) {
