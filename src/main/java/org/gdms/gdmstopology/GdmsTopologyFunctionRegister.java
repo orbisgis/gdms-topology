@@ -1,7 +1,10 @@
 package org.gdms.gdmstopology;
 
 import org.gdms.gdmstopology.function.ST_BlockIdentity;
+import org.gdms.gdmstopology.function.ST_FindReachableEdges;
 import org.gdms.gdmstopology.function.ST_Graph;
+import org.gdms.gdmstopology.function.ST_MFindReachableEdges;
+import org.gdms.gdmstopology.function.ST_MShortestPathLength;
 import org.gdms.gdmstopology.function.ST_PlanarGraph;
 import org.gdms.gdmstopology.function.ST_ShortestPath;
 import org.gdms.gdmstopology.function.ST_ShortestPathLength;
@@ -18,7 +21,7 @@ public class GdmsTopologyFunctionRegister {
         }
 
         /**
-         * Register all gdms-topology functions.
+         * Register all functions from gdms-topology.
          */
         public static void register() {
                 FunctionManager.addFunction(ST_BlockIdentity.class);
@@ -27,6 +30,8 @@ public class GdmsTopologyFunctionRegister {
                 FunctionManager.addFunction(ST_ShortestPath.class);
                 FunctionManager.addFunction(ST_ShortestPathLength.class);
                 FunctionManager.addFunction(ST_ToLineNoder.class);
-
+                FunctionManager.addFunction(ST_MShortestPathLength.class);
+                FunctionManager.addFunction(ST_FindReachableEdges.class);
+                FunctionManager.addFunction(ST_MFindReachableEdges.class);
         }
 }

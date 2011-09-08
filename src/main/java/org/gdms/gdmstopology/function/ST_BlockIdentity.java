@@ -196,7 +196,9 @@ public class ST_BlockIdentity extends AbstractTableFunction {
 
         @Override
         public void workFinished() throws DriverException {
-                diskBufferDriver.stop();
+                if (diskBufferDriver != null) {
+                        diskBufferDriver.stop();
+                }
         }
 
         private void aggregateNeighbours(SQLDataSourceFactory dsf, int id, Set<Integer> agg) throws DriverException {

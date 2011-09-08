@@ -1,5 +1,6 @@
 package org.gdms.gdmstopology.function;
 
+import com.vividsolutions.jts.geom.Geometry;
 import org.gdms.data.DataSourceFactory;
 import org.gdms.data.SQLDataSourceFactory;
 import org.gdms.data.schema.DefaultMetadata;
@@ -30,7 +31,7 @@ import org.jgrapht.graph.EdgeReversedGraph;
  *
  * @author ebocher
  */
-public class ST_ShortestPathLength extends AbstractTableFunction {
+public class ST_FindReachableEdges extends AbstractTableFunction {
 
         private DiskBufferDriver diskBufferDriver;
 
@@ -53,39 +54,42 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
                         }
 
                 } catch (DriverException ex) {
-                        throw new FunctionException("Cannot compute the shortest path length", ex);
+                        throw new FunctionException("Cannot find reachable edges", ex);
                 }
-
 
         }
 
         @Override
         public void workFinished() throws DriverException {
-                if (diskBufferDriver != null) {
+                if(diskBufferDriver!=null) {
                         diskBufferDriver.stop();
                 }
         }
 
         @Override
         public String getName() {
-                return "ST_ShortestPathLength";
+                return "ST_FindReachableEdges";
         }
 
         @Override
         public String getDescription() {
-                return "Return the shortest path length beetwen one vertex to all other based on a directed graph. True if the path is computed using an undirected graph.";
+                return "Find reachable edges from one vertex to all other in a graph."
+                        + "Optional arguments : \n"
+                        + "true is the graph is undirected\n"
+                        + "true is the graph is reversed.";
         }
 
         @Override
         public String getSqlOrder() {
-                return "SELECT * from ST_ShortestPathLength(table, 12[,true]) );";
+                return "SELECT * from ST_FindReachableEdges(table, 12[,true, false]) );";
         }
 
         @Override
         public Metadata getMetadata(Metadata[] tables) throws DriverException {
                 Metadata md = new DefaultMetadata(
-                        new Type[]{TypeFactory.createType(Type.INT), TypeFactory.createType(Type.INT), TypeFactory.createType(Type.INT), TypeFactory.createType(Type.DOUBLE)},
-                        new String[]{GraphSchema.ID, GraphSchema.START_NODE, GraphSchema.END_NODE, GraphSchema.WEIGTH});
+                        new Type[]{TypeFactory.createType(Type.GEOMETRY), TypeFactory.createType(Type.INT), TypeFactory.createType(Type.INT), TypeFactory.createType(Type.INT),
+                                TypeFactory.createType(Type.DOUBLE), TypeFactory.createType(Type.DOUBLE)},
+                        new String[]{"the_geom", GraphSchema.ID, GraphSchema.START_NODE, GraphSchema.END_NODE, GraphSchema.WEIGTH, GraphSchema.WEIGTH_SUM});
                 return md;
         }
 
@@ -101,15 +105,15 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
                 WMultigraphDataSource wMultigraphDataSource = new WMultigraphDataSource(dsf, sds, pm);
                 ClosestFirstIterator<Integer, GraphEdge> cl = new ClosestFirstIterator<Integer, GraphEdge>(
                         wMultigraphDataSource, source);
-                //First point added
-                diskBufferDriver.addValues(new Value[]{ValueFactory.createValue(source), ValueFactory.createValue(source), ValueFactory.createValue(source), ValueFactory.createValue(0)});
 
                 int previous = source;
                 while (cl.hasNext()) {
                         Integer node = cl.next();
                         if (node != source) {
                                 double length = cl.getShortestPathLength(node);
-                                diskBufferDriver.addValues(new Value[]{ValueFactory.createValue(source), ValueFactory.createValue(previous), ValueFactory.createValue(node), ValueFactory.createValue(length)});
+                                GraphEdge edge = cl.getSpanningTreeEdge(node);
+                                Geometry geom = wMultigraphDataSource.getGeometry(edge);
+                                diskBufferDriver.addValues(new Value[]{ValueFactory.createValue(geom), ValueFactory.createValue(source), ValueFactory.createValue(previous), ValueFactory.createValue(node), ValueFactory.createValue(edge.getWeight()), ValueFactory.createValue(length)});
                                 previous = node;
                         }
                 }
@@ -131,15 +135,14 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
                         cl = new ClosestFirstIterator<Integer, GraphEdge>(
                                 dwMultigraphDataSource, source);
                 }
-                //First point added
-                diskBufferDriver.addValues(new Value[]{ValueFactory.createValue(source), ValueFactory.createValue(source), ValueFactory.createValue(source), ValueFactory.createValue(0)});
-
                 int previous = source;
                 while (cl.hasNext()) {
                         Integer node = cl.next();
                         if (node != source) {
                                 double length = cl.getShortestPathLength(node);
-                                diskBufferDriver.addValues(new Value[]{ValueFactory.createValue(source), ValueFactory.createValue(previous), ValueFactory.createValue(node), ValueFactory.createValue(length)});
+                                GraphEdge edge = cl.getSpanningTreeEdge(node);
+                                Geometry geom = dwMultigraphDataSource.getGeometry(edge);
+                                diskBufferDriver.addValues(new Value[]{ValueFactory.createValue(geom), ValueFactory.createValue(source), ValueFactory.createValue(previous), ValueFactory.createValue(node), ValueFactory.createValue(edge.getWeight()), ValueFactory.createValue(length)});
                                 previous = node;
                         }
                 }

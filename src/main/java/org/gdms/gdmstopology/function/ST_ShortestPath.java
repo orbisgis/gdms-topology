@@ -33,29 +33,30 @@ import org.orbisgis.progress.ProgressMonitor;
  */
 public class ST_ShortestPath extends AbstractTableFunction {
 
-        private DiskBufferDriver dataSet;
+        private DiskBufferDriver diskBufferDriver;
 
         @Override
         public DataSet evaluate(SQLDataSourceFactory dsf, DataSet[] tables, Value[] values, ProgressMonitor pm) throws FunctionException {
                 int source = values[0].getAsInt();
                 int target = values[1].getAsInt();
                 try {
+                        diskBufferDriver = new DiskBufferDriver(dsf, getMetadata(null));
                         if (values.length == 3) {
                                 if (values[2].getAsBoolean()) {
-                                        dataSet = computeWMPath(dsf, tables[0], source, target, pm);
-                                        dataSet.start();
-                                        return dataSet;
+                                        diskBufferDriver = computeWMPath(dsf, tables[0], source, target, pm);
+                                        diskBufferDriver.start();
+                                        return diskBufferDriver;
 
                                 } else {
-                                        dataSet = computeDWMPath(dsf, tables[0], source, target, pm);
-                                        dataSet.start();
-                                        return dataSet;
+                                        diskBufferDriver = computeDWMPath(dsf, tables[0], source, target, pm);
+                                        diskBufferDriver.start();
+                                        return diskBufferDriver;
                                 }
 
                         } else {
-                                dataSet = computeDWMPath(dsf, tables[0], source, target, pm);
-                                dataSet.start();
-                                return dataSet;
+                                diskBufferDriver = computeDWMPath(dsf, tables[0], source, target, pm);
+                                diskBufferDriver.start();
+                                return diskBufferDriver;
                         }
                 } catch (DriverException ex) {
                         throw new FunctionException("Cannot compute the shortest path", ex);
@@ -71,12 +72,15 @@ public class ST_ShortestPath extends AbstractTableFunction {
 
         @Override
         public String getDescription() {
-                return "Return the shortest path beetwen two vertexes using the Dijkstra algorithm.";
+                return "Return the shortest path beetwen two vertexes using the Dijkstra algorithm.\n"
+                        + "Optional arguments : \n"
+                        + "true is the graph is undirected\n"
+                        + "true is the graph is reversed.";
         }
 
         @Override
         public String getSqlOrder() {
-                return "SELECT * from  ST_ShortestPath(table,12, 10 [,true]);";
+                return "SELECT * from  ST_ShortestPath(table,12, 10 [,true, false]);";
         }
 
         @Override
@@ -90,7 +94,9 @@ public class ST_ShortestPath extends AbstractTableFunction {
 
         @Override
         public void workFinished() throws DriverException {
-                dataSet.stop();
+                 if(diskBufferDriver!=null) {
+                        diskBufferDriver.stop();
+                }
         }
 
         @Override
@@ -105,7 +111,6 @@ public class ST_ShortestPath extends AbstractTableFunction {
         private DiskBufferDriver computeDWMPath(DataSourceFactory dsf, DataSet dataSet, Integer source, Integer target, ProgressMonitor pm) throws DriverException {
                 DWMultigraphDataSource dWMultigraphDataSource = new DWMultigraphDataSource(dsf, dataSet, pm);
                 List<GraphEdge> result = GraphAnalysis.getShortestPath(dWMultigraphDataSource, source, target);
-                DiskBufferDriver diskBufferDriver = new DiskBufferDriver(dsf, getMetadata(null));
                 if (result != null) {
                         int k = 0;
                         for (GraphEdge graphEdge : result) {
@@ -124,7 +129,6 @@ public class ST_ShortestPath extends AbstractTableFunction {
         private DiskBufferDriver computeWMPath(DataSourceFactory dsf, DataSet dataSet, int source, int target, ProgressMonitor pm) throws DriverException {
                 WMultigraphDataSource wMultigraphDataSource = new WMultigraphDataSource(dsf, dataSet, pm);
                 List<GraphEdge> result = GraphAnalysis.getShortestPath(wMultigraphDataSource, source, target);
-                DiskBufferDriver diskBufferDriver = new DiskBufferDriver(dsf, getMetadata(null));
                 if (result != null) {
                         int k = 0;
                         for (GraphEdge graphEdge : result) {

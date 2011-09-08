@@ -12,7 +12,11 @@ public final class GraphSchema {
         public static final String WEIGTH = "weigth";
         public static final String LEFT_FACE = "left_polygon";
         public static final String RIGHT_FACE = "right_polygon";
+        public static String WEIGTH_SUM = "weigth_sum";
 
+        /**
+         * Some fields needed for the input datasource.
+         */
         private GraphSchema() {
         }
 }

@@ -55,17 +55,22 @@ import org.gdms.sql.function.table.TableDefinition;
 
 public class ST_Graph extends AbstractExecutorFunction {
 
+        @Override
         public String getName() {
                 return "ST_Graph";
         }
 
+        @Override
         public String getSqlOrder() {
                 return "EXECUTE ST_Graph(table [,tolerance, true, 'output_table_name']);";
         }
 
+        @Override
         public String getDescription() {
                 return "Build a graph based on geometries order. "
-                        + "A tolerance can be used to snap vertex.True if the edge is ordered according its slope.";
+                        + "A tolerance can be used to snap vertex\n."
+                        + "True if the edge is ordered according its slope.\n"+
+                        "output table name can be set.";
         }
 
         @Override

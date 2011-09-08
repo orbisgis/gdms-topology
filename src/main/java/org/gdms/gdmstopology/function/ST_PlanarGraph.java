@@ -70,7 +70,8 @@ public class ST_PlanarGraph extends AbstractExecutorFunction {
 
         @Override
         public String getDescription() {
-                return "Build a planar graph based on polygons";
+                return "Build a planar graph based on geometries.\n"
+                        +"Output table name can be set.";
         }
 
         @Override

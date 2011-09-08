@@ -5,13 +5,15 @@ import org.gdms.gdmstopology.model.GraphEdge;
 import org.jgrapht.alg.DijkstraShortestPath;
 import org.jgrapht.WeightedGraph;
 
-
 /**
  *
  * @author ebocher
  */
 public class GraphAnalysis {
 
+        /**
+         * Some usefull methods to analyse a graph network.
+         */
         private GraphAnalysis() {
         }
 
