@@ -69,6 +69,7 @@ import org.gdms.data.DataSource;
 import org.gdms.data.indexes.DefaultSpatialIndexQuery;
 import org.gdms.data.indexes.rtree.DiskRTree;
 import org.gdms.data.types.ConstraintFactory;
+import org.gdms.data.types.GeometryDimensionConstraint;
 import org.gdms.driver.DataSet;
 import org.gdms.driver.DiskBufferDriver;
 import org.gdms.gdmstopology.model.GraphSchema;
@@ -113,7 +114,7 @@ public class PlanarGraphBuilder {
 
                 DefaultMetadata edgeMedata = new DefaultMetadata(new Type[]{
                                 TypeFactory.createType(Type.GEOMETRY,
-                                new Constraint[]{ConstraintFactory.createConstraint(Constraint.GEOMETRY_TYPE, GeometryTypeConstraint.LINESTRING)}),
+                                new Constraint[]{new GeometryDimensionConstraint(1)}),
                                 TypeFactory.createType(Type.INT), TypeFactory.createType(Type.INT), TypeFactory.createType(Type.INT), TypeFactory.createType(Type.INT), TypeFactory.createType(Type.INT)}, new String[]{
                                 "the_geom", GraphSchema.ID, GraphSchema.START_NODE, GraphSchema.END_NODE, GraphSchema.RIGHT_FACE, GraphSchema.LEFT_FACE});
                 int edgesFieldsCount = edgeMedata.getFieldCount();
@@ -128,7 +129,7 @@ public class PlanarGraphBuilder {
                 }
 
                 DefaultMetadata nodeMedata = new DefaultMetadata(new Type[]{
-                                TypeFactory.createType(Type.GEOMETRY),
+                                TypeFactory.createType(Type.POINT),
                                 TypeFactory.createType(Type.INT)}, new String[]{"the_geom",
                                 GraphSchema.ID});
 
@@ -226,7 +227,7 @@ public class PlanarGraphBuilder {
                 // Create the face layer
 
                 DefaultMetadata faceMedata = new DefaultMetadata(new Type[]{
-                                TypeFactory.createType(Type.GEOMETRY),
+                                TypeFactory.createType(Type.POLYGON),
                                 TypeFactory.createType(Type.INT)}, new String[]{"the_geom",
                                 GraphSchema.ID});
 

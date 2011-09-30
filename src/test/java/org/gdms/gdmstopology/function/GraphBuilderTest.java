@@ -4,6 +4,7 @@
  */
 package org.gdms.gdmstopology.function;
 
+import com.vividsolutions.jts.io.ParseException;
 import org.gdms.driver.memory.MemoryDataSetDriver;
 import org.gdms.data.DataSource;
 import org.gdms.data.types.Type;
@@ -16,6 +17,7 @@ import org.junit.Test;
 import org.orbisgis.progress.NullProgressMonitor;
 
 import static org.junit.Assert.*;
+
 /**
  *
  * @author ebocher
@@ -141,8 +143,86 @@ public class GraphBuilderTest extends TopologySetUpTest {
                 dsResult_edges.close();
                 srcDS.close();
 
+        }
+
+        @Test
+        public void testZGraph() throws Exception {
+
+                //Input datasource
+                final MemoryDataSetDriver driver_src = new MemoryDataSetDriver(
+                        new String[]{"the_geom", "gid"},
+                        new Type[]{TypeFactory.createType(Type.GEOMETRY),
+                                TypeFactory.createType(Type.INT)
+                        });
+
+                driver_src.addValues(new Value[]{ValueFactory.createValue(wktReader.read("LINESTRING( 0 0 0, 5 5 10)")),
+                                ValueFactory.createValue(1)});
+                driver_src.addValues(new Value[]{ValueFactory.createValue(wktReader.read("LINESTRING( 0 10 5, 5 5 10)")),
+                                ValueFactory.createValue(2)});
+                driver_src.addValues(new Value[]{ValueFactory.createValue(wktReader.read("LINESTRING( 10 5 15, 5 5 10)")),
+                                ValueFactory.createValue(3)});
 
 
+                ST_Graph st_Graph = new ST_Graph();
+                DataSet[] tables = new DataSet[]{driver_src};
+                st_Graph.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(0), ValueFactory.createValue(true), ValueFactory.createValue("output")}, new NullProgressMonitor());
+
+                DataSource dsResult_nodes = dsf.getDataSource("output.edges");
+                dsResult_nodes.open();
+                int gidField = dsResult_nodes.getMetadata().getFieldIndex("gid");
+
+                for (int i = 0; i < dsResult_nodes.getRowCount(); i++) {
+                        Value[] values = dsResult_nodes.getRow(i);
+
+                        if (values[gidField].getAsInt() == 1) {
+                                assertTrue((values[3].getAsInt() == 1) && (values[4].getAsInt() == 2));
+                        } else if (values[gidField].getAsInt() == 2) {
+                                assertTrue((values[3].getAsInt() == 1) && (values[4].getAsInt() == 3));
+                        } else if (values[gidField].getAsInt() == 3) {
+                                assertTrue((values[3].getAsInt() == 4) && (values[4].getAsInt() == 1));
+                        }
+                }
+                dsResult_nodes.close();
+        }
+
+         @Test
+        public void testZGraph2() throws Exception {
+
+                //Input datasource
+                final MemoryDataSetDriver driver_src = new MemoryDataSetDriver(
+                        new String[]{"the_geom", "gid"},
+                        new Type[]{TypeFactory.createType(Type.GEOMETRY),
+                                TypeFactory.createType(Type.INT)
+                        });
+
+                driver_src.addValues(new Value[]{ValueFactory.createValue(wktReader.read("LINESTRING( 0 0 0, 5 5 10)")),
+                                ValueFactory.createValue(1)});
+                driver_src.addValues(new Value[]{ValueFactory.createValue(wktReader.read("LINESTRING( 0 10 5, 5 5 10)")),
+                                ValueFactory.createValue(2)});
+                driver_src.addValues(new Value[]{ValueFactory.createValue(wktReader.read("LINESTRING( 10 5 5, 5 5 10)")),
+                                ValueFactory.createValue(3)});
+
+
+                ST_Graph st_Graph = new ST_Graph();
+                DataSet[] tables = new DataSet[]{driver_src};
+                st_Graph.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(0), ValueFactory.createValue(true), ValueFactory.createValue("output")}, new NullProgressMonitor());
+
+                DataSource dsResult_nodes = dsf.getDataSource("output.edges");
+                dsResult_nodes.open();
+                int gidField = dsResult_nodes.getMetadata().getFieldIndex("gid");
+
+                for (int i = 0; i < dsResult_nodes.getRowCount(); i++) {
+                        Value[] values = dsResult_nodes.getRow(i);
+
+                        if (values[gidField].getAsInt() == 1) {
+                                assertTrue((values[3].getAsInt() == 1) && (values[4].getAsInt() == 2));
+                        } else if (values[gidField].getAsInt() == 2) {
+                                assertTrue((values[3].getAsInt() == 1) && (values[4].getAsInt() == 3));
+                        } else if (values[gidField].getAsInt() == 3) {
+                                assertTrue((values[3].getAsInt() == 1) && (values[4].getAsInt() == 4));
+                        }
+                }
+                dsResult_nodes.close();
         }
 
         /**
