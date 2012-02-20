@@ -25,7 +25,6 @@
  * or contact directly:
  * info_at_ orbisgis.org
  */
-
 package org.gdms.gdmstopology.model;
 
 import org.junit.Test;
@@ -34,6 +33,7 @@ import org.gdms.gdmstopology.TopologySetUpTest;
 import org.orbisgis.progress.NullProgressMonitor;
 
 import static org.junit.Assert.*;
+
 /**
  *
  * @author ebocher
@@ -46,24 +46,23 @@ public class GraphModelTest extends TopologySetUpTest {
          */
         @Test
         public void testCreateDWMGraph() throws Exception {
-                DataSource ds = dsf.getDataSource(GRAPH_EDGES);
+                DataSource ds = dsf.getDataSource(GRAPH2D_EDGES);
                 ds.open();
-
                 DWMultigraphDataSource dWMultigraphDataSource = new DWMultigraphDataSource(dsf, ds, new NullProgressMonitor());
-
+                dWMultigraphDataSource.setWeigthFieldIndex("length");
                 //Tests to validate the graph model and some properties
-                GraphEdge ge = (GraphEdge) dWMultigraphDataSource.getEdge(3, 4);
+                GraphEdge ge = (GraphEdge) dWMultigraphDataSource.getEdge(3, 5);
                 assertTrue(ge != null);
                 assertTrue((Integer) ge.getSource() == 3);
-                assertTrue((Integer) ge.getTarget() == 4);
+                assertTrue((Integer) ge.getTarget() == 5);
                 assertTrue((ge.getWeight() - ds.getGeometry(1).getLength()) == 0);
-                assertTrue(dWMultigraphDataSource.inDegreeOf(4) == 3);
-                assertTrue(dWMultigraphDataSource.outDegreeOf(4) == 1);
-                assertTrue(dWMultigraphDataSource.inDegreeOf(3) == 0);
-                assertTrue(dWMultigraphDataSource.outDegreeOf(3) == 1);
+                assertTrue(dWMultigraphDataSource.inDegreeOf(3) == 1);
+                assertTrue(dWMultigraphDataSource.outDegreeOf(6) == 2);
+                assertTrue(dWMultigraphDataSource.inDegreeOf(5) == 1);
+                assertTrue(dWMultigraphDataSource.outDegreeOf(5) == 0);
                 assertTrue(dWMultigraphDataSource.outDegreeOf(100) == 0);
-                assertTrue(dWMultigraphDataSource.incomingEdgesOf(4).size() == 3);
-                assertTrue(dWMultigraphDataSource.outgoingEdgesOf(4).size() == 1);
+                assertTrue(dWMultigraphDataSource.incomingEdgesOf(3).size() == 1);
+                assertTrue(dWMultigraphDataSource.outgoingEdgesOf(5).isEmpty());
                 ds.close();
         }
 
@@ -71,24 +70,26 @@ public class GraphModelTest extends TopologySetUpTest {
          * A test to wrap a WeightedMultigraph with JGrapht
          * @throws Exception
          */
-          @Test
+        @Test
         public void testCreateWMGraph() throws Exception {
-                DataSource ds = dsf.getDataSource(GRAPH_EDGES);
+                DataSource ds = dsf.getDataSource(GRAPH2D_EDGES);
                 ds.open();
                 WMultigraphDataSource wMultigraphDataSource = new WMultigraphDataSource(dsf, ds, new NullProgressMonitor());
+                wMultigraphDataSource.setWeigthFieldIndex("length");
+
                 //Tests to validate the graph model and some properties
-                GraphEdge ge = (GraphEdge) wMultigraphDataSource.getEdge(3, 4);
+                GraphEdge ge = (GraphEdge) wMultigraphDataSource.getEdge(3, 5);
                 assertTrue(ge != null);
                 assertTrue((Integer) ge.getSource() == 3);
-                assertTrue((Integer) ge.getTarget() == 4);
+                assertTrue((Integer) ge.getTarget() == 5);
                 assertTrue((ge.getWeight() - ds.getGeometry(1).getLength()) == 0);
-                assertTrue(wMultigraphDataSource.inDegreeOf(4) == 3);
-                assertTrue(wMultigraphDataSource.outDegreeOf(4) == 1);
-                assertTrue(wMultigraphDataSource.inDegreeOf(3) == 0);
-                assertTrue(wMultigraphDataSource.outDegreeOf(3) == 1);
+                assertTrue(wMultigraphDataSource.inDegreeOf(3) == 1);
+                assertTrue(wMultigraphDataSource.outDegreeOf(6) == 2);
+                assertTrue(wMultigraphDataSource.inDegreeOf(5) == 1);
+                assertTrue(wMultigraphDataSource.outDegreeOf(5) == 0);
                 assertTrue(wMultigraphDataSource.outDegreeOf(100) == 0);
-                assertTrue(wMultigraphDataSource.incomingEdgesOf(4).size() == 3);
-                assertTrue(wMultigraphDataSource.outgoingEdgesOf(4).size() == 1);
+                assertTrue(wMultigraphDataSource.incomingEdgesOf(3).size() == 1);
+                assertTrue(wMultigraphDataSource.outgoingEdgesOf(5).isEmpty());
                 ds.close();
         }
 }

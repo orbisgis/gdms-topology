@@ -133,7 +133,7 @@ public class GraphBuilderTest extends TopologySetUpTest {
         public void testST_Graph() throws Exception {
 
                 //Input datasource                
-                DataSource srcDS = dsf.getDataSource(GRAPH);
+                DataSource srcDS = dsf.getDataSource(GRAPH2D);
                 srcDS.open();
 
                 ST_Graph st_Graph = new ST_Graph();
@@ -145,15 +145,15 @@ public class GraphBuilderTest extends TopologySetUpTest {
 
                 dsResult_nodes.open();
                 //The graph returns 11 nodes
-                assertTrue(dsResult_nodes.getRowCount() == 11);
+                assertTrue(dsResult_nodes.getRowCount() == 6);
                 dsResult_nodes.close();
 
                 DataSource dsResult_edges = dsf.getDataSource("output.edges");
-                DataSource expectedDS = dsf.getDataSource(GRAPH_EDGES);
+                DataSource expectedDS = dsf.getDataSource(GRAPH2D_EDGES);
 
                 dsResult_edges.open();
                 //The graph returns 10 lines. The same as input.
-                assertTrue(dsResult_edges.getRowCount() == 10);
+                assertTrue(dsResult_edges.getRowCount() == 6);
 
                 expectedDS.open();
                 //Check if all values are equals between input datasource and excepted datasource

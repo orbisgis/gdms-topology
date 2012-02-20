@@ -119,7 +119,7 @@ public class ST_MShortestPathLength extends AbstractTableFunction {
         public Metadata getMetadata(Metadata[] tables) throws DriverException {
                 Metadata md = new DefaultMetadata(
                         new Type[]{TypeFactory.createType(Type.INT), TypeFactory.createType(Type.INT), TypeFactory.createType(Type.INT), TypeFactory.createType(Type.DOUBLE)},
-                        new String[]{GraphSchema.ID, GraphSchema.START_NODE, GraphSchema.END_NODE, GraphSchema.WEIGTH});
+                        new String[]{GraphSchema.ID, GraphSchema.START_NODE, GraphSchema.END_NODE, GraphSchema.WEIGHT});
                 return md;
         }
 

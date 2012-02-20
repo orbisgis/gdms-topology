@@ -45,31 +45,30 @@ public class TopologySetUpTest {
         protected static final GeometryFactory gf = new GeometryFactory();
         protected SQLDataSourceFactory dsf;
         protected WKTReader wktReader;
-        protected String GRAPH = "graph";
-        protected String GRAPH_EDGES = "graph_edges";
-        protected String GRAPH_NODES = "graph_nodes";
-        public static String internalData = "src/test/resources/";
+        protected String GRAPH2D = "graph2D";
+        protected String GRAPH2D_EDGES = "graph2D_edges";
+        protected String GRAPH2D_NODES = "graph2D_nodes";
+        public static String internalData = "src/test/resources/org/gdms/gdmstopology/";
+        public static File backupDir = new File(internalData + "backup");
 
         @Before
         public  void setUp() throws Exception {
                 //Create a folder to save all results
-                File backUpFile = new File("target/backup");
-                FileUtils.deleteDir(backUpFile);
-                backUpFile.mkdir();
+                FileUtils.deleteDir(backupDir);
+                backupDir.mkdir();
                 //Create the datasourcefactory that uses the folder
-                dsf = new SQLDataSourceFactory("target/backup", "target/backup");
+                dsf = new SQLDataSourceFactory(backupDir.getAbsolutePath(), backupDir.getAbsolutePath());
 
                 //Create some geometries
                 wktReader = new WKTReader();
-                dsf.getSourceManager().register(GRAPH, new File(internalData + "graph.shp"));
-                dsf.getSourceManager().register(GRAPH_EDGES, new File(internalData + "graph_edges.shp"));
-                dsf.getSourceManager().register(GRAPH_NODES, new File(internalData + "graph_nodes.shp"));
+                dsf.getSourceManager().register(GRAPH2D, new File(internalData + "graph2D.shp"));
+                dsf.getSourceManager().register(GRAPH2D_EDGES, new File(internalData + "graph2D_edges.shp"));
+                dsf.getSourceManager().register(GRAPH2D_NODES, new File(internalData + "graph2D_nodes.shp"));
         }
 
         @After
         public  void tearDown() throws Exception {
                 //Delete the folder that contains result
-                File backUpFile = new File("target/backup");
-                FileUtils.deleteDir(backUpFile);
+                FileUtils.deleteDir(backupDir);
         }
 }

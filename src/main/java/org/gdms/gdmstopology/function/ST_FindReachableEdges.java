@@ -117,7 +117,7 @@ public class ST_FindReachableEdges extends AbstractTableFunction {
                 Metadata md = new DefaultMetadata(
                         new Type[]{TypeFactory.createType(Type.GEOMETRY), TypeFactory.createType(Type.INT), TypeFactory.createType(Type.INT), TypeFactory.createType(Type.INT),
                                 TypeFactory.createType(Type.DOUBLE), TypeFactory.createType(Type.DOUBLE)},
-                        new String[]{"the_geom", GraphSchema.ID, GraphSchema.START_NODE, GraphSchema.END_NODE, GraphSchema.WEIGTH, GraphSchema.WEIGTH_SUM});
+                        new String[]{"the_geom", GraphSchema.ID, GraphSchema.START_NODE, GraphSchema.END_NODE, GraphSchema.WEIGHT, GraphSchema.WEIGHT_SUM});
                 return md;
         }
 

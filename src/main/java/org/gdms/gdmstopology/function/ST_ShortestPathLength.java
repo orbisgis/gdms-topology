@@ -25,7 +25,6 @@
  * or contact directly:
  * info_at_ orbisgis.org
  */
-
 package org.gdms.gdmstopology.function;
 
 import org.gdms.data.DataSourceFactory;
@@ -65,19 +64,20 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
         @Override
         public DataSet evaluate(SQLDataSourceFactory dsf, DataSet[] tables, Value[] values, ProgressMonitor pm) throws FunctionException {
                 int source = values[0].getAsInt();
+                String fieldCost = values[1].getAsString();
                 try {
                         DataSet sdsEdges = tables[0];
                         diskBufferDriver = new DiskBufferDriver(dsf, getMetadata(null));
 
-                        if (values.length == 3) {
-                                if (values[1].getAsBoolean()) {
-                                        return computeWMPath(dsf, sdsEdges, source, pm);
+                        if (values.length == 4) {
+                                if (values[2].getAsBoolean()) {
+                                        return computeWMPath(dsf, sdsEdges, source, fieldCost, pm);
                                 } else {
-                                        return computeDWMPath(dsf, sdsEdges, source, values[2].getAsBoolean(), pm);
+                                        return computeDWMPath(dsf, sdsEdges, source, fieldCost, values[3].getAsBoolean(), pm);
                                 }
 
                         } else {
-                                return computeDWMPath(dsf, sdsEdges, source, false, pm);
+                                return computeDWMPath(dsf, sdsEdges, source, fieldCost, false, pm);
                         }
 
                 } catch (DriverException ex) {
@@ -102,7 +102,7 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
         @Override
         public String getDescription() {
                 return "Return the shortest path length beetwen one vertex to all other based on a directed graph. True if the path is computed using an undirected graph."
-                        + "The last boolean argument is used to reverse or the edges.";
+                        + "The last boolean argument is used to reverse or not the edges.";
         }
 
         @Override
@@ -114,7 +114,7 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
         public Metadata getMetadata(Metadata[] tables) throws DriverException {
                 Metadata md = new DefaultMetadata(
                         new Type[]{TypeFactory.createType(Type.INT), TypeFactory.createType(Type.INT), TypeFactory.createType(Type.INT), TypeFactory.createType(Type.DOUBLE)},
-                        new String[]{GraphSchema.ID, GraphSchema.START_NODE, GraphSchema.END_NODE, GraphSchema.WEIGTH});
+                        new String[]{GraphSchema.ID, GraphSchema.START_NODE, GraphSchema.END_NODE, GraphSchema.WEIGHT});
                 return md;
         }
 
@@ -126,8 +126,9 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
                         };
         }
 
-        private DiskBufferDriver computeWMPath(DataSourceFactory dsf, DataSet sds, int source, ProgressMonitor pm) throws DriverException {
+        private DiskBufferDriver computeWMPath(DataSourceFactory dsf, DataSet sds, int source, String fieldCost, ProgressMonitor pm) throws DriverException {
                 WMultigraphDataSource wMultigraphDataSource = new WMultigraphDataSource(dsf, sds, pm);
+                wMultigraphDataSource.setWeigthFieldIndex(fieldCost);
                 ClosestFirstIterator<Integer, GraphEdge> cl = new ClosestFirstIterator<Integer, GraphEdge>(
                         wMultigraphDataSource, source);
                 //First point added
@@ -149,8 +150,9 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
 
         }
 
-        private DiskBufferDriver computeDWMPath(DataSourceFactory dsf, DataSet sds, int source, Boolean reverseGraph, ProgressMonitor pm) throws DriverException {
+        private DiskBufferDriver computeDWMPath(DataSourceFactory dsf, DataSet sds, int source, String fieldCost, boolean reverseGraph, ProgressMonitor pm) throws DriverException {
                 DWMultigraphDataSource dwMultigraphDataSource = new DWMultigraphDataSource(dsf, sds, pm);
+                dwMultigraphDataSource.setWeigthFieldIndex(fieldCost);
                 ClosestFirstIterator<Integer, GraphEdge> cl;
                 if (reverseGraph) {
                         EdgeReversedGraph edgeReversedGraph = new EdgeReversedGraph(dwMultigraphDataSource);

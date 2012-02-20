@@ -116,20 +116,19 @@ public class NetworkGraphBuilder {
                 String diskTreePath = dsf.getTempFile();
                 DiskRTree diskRTree = new DiskRTree();
                 diskRTree.newIndex(new File(diskTreePath));
-
+                
                 DefaultMetadata edgeMedata = new DefaultMetadata(dataSet.getMetadata());
                 int srcFieldsCount = edgeMedata.getFieldCount();
 
                 edgeMedata.addField(GraphSchema.ID, TypeFactory.createType(Type.INT));
                 edgeMedata.addField(GraphSchema.START_NODE, TypeFactory.createType(Type.INT));
                 edgeMedata.addField(GraphSchema.END_NODE, TypeFactory.createType(Type.INT));
-                edgeMedata.addField(GraphSchema.WEIGTH, TypeFactory.createType(Type.DOUBLE));
+                
                 int fieldsCount = edgeMedata.getFieldCount();
 
                 int idIndex = srcFieldsCount;
                 int initialIndex = srcFieldsCount + 1;
                 int finalIndex = srcFieldsCount + 2;
-                int weigthIndex = srcFieldsCount + 3;
 
                 DiskBufferDriver edgesDriver = new DiskBufferDriver(dsf.getResultFile("gdms"), edgeMedata);
 
@@ -151,7 +150,6 @@ public class NetworkGraphBuilder {
                         newValues[idIndex] = ValueFactory.createValue(rowIndex + 1);
                         Geometry geom = fieldsValues[geomFieldIndex].getAsGeometry();
                         double length = geom.getLength();
-                        newValues[weigthIndex] = ValueFactory.createValue(length);
                         if (tolerance > 0 && length >= tolerance) {
                                 expand = true;
                         }

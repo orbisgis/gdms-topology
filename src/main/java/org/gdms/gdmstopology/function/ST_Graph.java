@@ -61,7 +61,7 @@ public class ST_Graph extends AbstractExecutorFunction {
                 return "Build a graph based on geometries order. "
                         + "A tolerance can be used to snap vertex\n."
                         + "True if the edge is ordered according its slope.\n"+
-                        "output table name can be set.";
+                        "The name of the output table can be set.";
         }
 
         @Override

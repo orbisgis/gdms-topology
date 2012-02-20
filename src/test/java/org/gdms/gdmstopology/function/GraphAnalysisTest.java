@@ -25,7 +25,6 @@
  * or contact directly:
  * info_at_ orbisgis.org
  */
-
 package org.gdms.gdmstopology.function;
 
 import com.vividsolutions.jts.geom.Geometry;
@@ -52,27 +51,27 @@ public class GraphAnalysisTest extends TopologySetUpTest {
         @Test
         public void testST_ShortestPath() throws Exception {
                 ST_ShortestPath sT_ShortestPath = new ST_ShortestPath();
-                DataSource ds = dsf.getDataSource(GRAPH_EDGES);
+                DataSource ds = dsf.getDataSource(GRAPH2D_EDGES);
                 ds.open();
                 DataSet[] tables = new DataSet[]{ds};
                 int source = 3;
-                int target = 4;
-                DataSet result = sT_ShortestPath.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source), ValueFactory.createValue(target)}, null);
+                int target = 5;
+                DataSet result = sT_ShortestPath.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source), ValueFactory.createValue(target), ValueFactory.createValue("length")}, null);
                 assertTrue(result.getRowCount() == 1);
-                assertTrue(result.getFieldValue(0, 0).getAsGeometry().equals(wktReader.read("LINESTRING ( 191.77905737704918 272.73798360655735 10, 213.28322950819674 185.6593606557377 20 )")));
+                assertTrue(result.getFieldValue(0, 0).getAsGeometry().equals(wktReader.read("LINESTRING ( 222 242, 335 313 )")));
                 ds.close();
         }
 
         @Test
         public void testST_ShortestPath2() throws Exception {
                 ST_ShortestPath sT_ShortestPath = new ST_ShortestPath();
-                DataSource ds = dsf.getDataSource(GRAPH_EDGES);
+                DataSource ds = dsf.getDataSource(GRAPH2D_EDGES);
                 ds.open();
                 DataSet[] tables = new DataSet[]{ds};
-                int source = 4;
+                int source = 5;
                 int target = 3;
                 sT_ShortestPath = new ST_ShortestPath();
-                DataSet result = sT_ShortestPath.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source), ValueFactory.createValue(target)}, null);
+                DataSet result = sT_ShortestPath.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source), ValueFactory.createValue(target), ValueFactory.createValue("length")}, null);
                 assertTrue(result.getRowCount() == 0);
                 ds.close();
 
@@ -81,26 +80,26 @@ public class GraphAnalysisTest extends TopologySetUpTest {
         @Test
         public void testST_ShortestPath3() throws Exception {
                 ST_ShortestPath sT_ShortestPath = new ST_ShortestPath();
-                DataSource ds = dsf.getDataSource(GRAPH_EDGES);
+                DataSource ds = dsf.getDataSource(GRAPH2D_EDGES);
                 ds.open();
                 DataSet[] tables = new DataSet[]{ds};
-                int source = 4;
+                int source = 5;
                 int target = 3;
-                DataSet result = sT_ShortestPath.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source), ValueFactory.createValue(target), ValueFactory.createValue(true)}, null);
+                DataSet result = sT_ShortestPath.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source), ValueFactory.createValue(target), ValueFactory.createValue("length"), ValueFactory.createValue(true)}, null);
                 assertTrue(result.getRowCount() == 1);
-                assertTrue(result.getFieldValue(0, 0).getAsGeometry().equals(wktReader.read("LINESTRING ( 191.77905737704918 272.73798360655735 10, 213.28322950819674 185.6593606557377 20 )")));
+                assertTrue(result.getFieldValue(0, 0).getAsGeometry().equals(wktReader.read("LINESTRING ( 222 242, 335 313 )")));
                 ds.close();
         }
 
         @Test
         public void testST_ShortestPath4() throws Exception {
                 ST_ShortestPath sT_ShortestPath = new ST_ShortestPath();
-                DataSource ds = dsf.getDataSource(GRAPH_EDGES);
+                DataSource ds = dsf.getDataSource(GRAPH2D_EDGES);
                 ds.open();
                 DataSet[] tables = new DataSet[]{ds};
                 int source = 3;
-                int target = 8;
-                DataSet result = sT_ShortestPath.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source), ValueFactory.createValue(target), ValueFactory.createValue(true)}, null);
+                int target = 4;
+                DataSet result = sT_ShortestPath.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source), ValueFactory.createValue(target), ValueFactory.createValue("length"), ValueFactory.createValue(true)}, null);
                 assertTrue(result.getRowCount() == 3);
                 ds.close();
         }
@@ -122,7 +121,7 @@ public class GraphAnalysisTest extends TopologySetUpTest {
                 DataSet[] tables = new DataSet[]{mdsd};
                 int source = 1;
                 int target = 4;
-                DataSet result = sT_ShortestPath.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source), ValueFactory.createValue(target)}, null);
+                DataSet result = sT_ShortestPath.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source), ValueFactory.createValue(target), ValueFactory.createValue("weigth")}, null);
                 assertTrue(result.getRowCount() == 3);
                 assertTrue(result.getFieldValue(0, 0).getAsGeometry().equals(wktReader.read("LINESTRING(0 0, 2 2)")));
                 assertTrue(result.getFieldValue(1, 0).getAsGeometry().equals(wktReader.read("LINESTRING(2 2, 4 4 , 6 2)")));
@@ -147,7 +146,7 @@ public class GraphAnalysisTest extends TopologySetUpTest {
                 DataSet[] tables = new DataSet[]{mdsd};
                 int source = 1;
                 int target = 4;
-                DataSet result = sT_ShortestPath.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source), ValueFactory.createValue(target)}, null);
+                DataSet result = sT_ShortestPath.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source), ValueFactory.createValue(target),ValueFactory.createValue("weigth")}, null);
                 assertTrue(result.getRowCount() == 3);
                 assertTrue(result.getFieldValue(0, 0).getAsGeometry().equals(wktReader.read("LINESTRING(0 0, 2 2)")));
                 assertTrue(result.getFieldValue(1, 0).getAsGeometry().equals(wktReader.read("LINESTRING(2 2, 4 1 , 6 2)")));
@@ -261,5 +260,17 @@ public class GraphAnalysisTest extends TopologySetUpTest {
                         }
                 }
                 assertTrue(count == 4);
+        }
+        
+        @Test
+        public void testST_ShortestPathLength() throws Exception {
+                ST_ShortestPathLength sT_ShortestPathLength = new ST_ShortestPathLength();
+                DataSource ds = dsf.getDataSource(GRAPH2D_EDGES);
+                ds.open();
+                DataSet[] tables = new DataSet[]{ds};
+                int source = 3;
+                DataSet result = sT_ShortestPathLength.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source), ValueFactory.createValue("length"), ValueFactory.createValue(true)}, null);
+                assertTrue(result.getRowCount() == 5);
+                ds.close();
         }
 }
