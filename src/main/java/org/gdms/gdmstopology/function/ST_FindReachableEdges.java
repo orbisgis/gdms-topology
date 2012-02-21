@@ -43,6 +43,7 @@ import org.gdms.gdmstopology.model.DWMultigraphDataSource;
 import org.gdms.gdmstopology.model.GraphEdge;
 import org.gdms.gdmstopology.model.GraphSchema;
 import org.gdms.gdmstopology.model.WMultigraphDataSource;
+import org.gdms.gdmstopology.process.GraphAnalysis;
 import org.gdms.sql.function.FunctionException;
 import org.gdms.sql.function.FunctionSignature;
 import org.gdms.sql.function.ScalarArgument;
@@ -65,20 +66,27 @@ public class ST_FindReachableEdges extends AbstractTableFunction {
 
         @Override
         public DataSet evaluate(SQLDataSourceFactory dsf, DataSet[] tables, Value[] values, ProgressMonitor pm) throws FunctionException {
-                int source = values[0].getAsInt();
                 try {
+                        int source = values[0].getAsInt();
+                        String fieldCost = values[1].getAsString();
                         DataSet sdsEdges = tables[0];
                         diskBufferDriver = new DiskBufferDriver(dsf, getMetadata(null));
 
                         if (values.length == 3) {
-                                if (values[1].getAsBoolean()) {
-                                        return computeWMPath(dsf, sdsEdges, source, pm);
+                                int method = values[2].getAsInt();
+                                if (method == GraphAnalysis.DIRECT) {
+                                        return computeDWMPath(dsf, sdsEdges, source, fieldCost, false, pm);
+
+                                } else if (method == GraphAnalysis.DIRECT_REVERSED) {
+                                        return computeDWMPath(dsf, sdsEdges, source, fieldCost, true, pm);
+                                } else if (method == GraphAnalysis.UNDIRECT) {
+                                        return computeWMPath(dsf, sdsEdges, source, fieldCost, pm);
                                 } else {
-                                        return computeDWMPath(dsf, sdsEdges, source, values[2].getAsBoolean(), pm);
+                                        throw new FunctionException("1, 2 or 3 input value constante is needed to execute the function");
                                 }
 
                         } else {
-                                return computeDWMPath(dsf, sdsEdges, source, false, pm);
+                                return computeDWMPath(dsf, sdsEdges, source, fieldCost, false, pm);
                         }
 
                 } catch (DriverException ex) {
@@ -102,14 +110,15 @@ public class ST_FindReachableEdges extends AbstractTableFunction {
         @Override
         public String getDescription() {
                 return "Find reachable edges from one vertex to all other in a graph."
-                        + "Optional arguments : \n"
-                        + "true is the graph is undirected\n"
-                        + "true is the graph is reversed.";
+                        + "Optional argument : \n"
+                        + "1 if the graph is directed\n"
+                        + "2 if the graph is directed and edges are reversed."
+                        + "3 if the graph is undirected\n";
         }
 
         @Override
         public String getSqlOrder() {
-                return "SELECT * from ST_FindReachableEdges(table, 12[,true, false]) );";
+                return "SELECT * from ST_FindReachableEdges(table, 12, costField [,1]) );";
         }
 
         @Override
@@ -124,13 +133,14 @@ public class ST_FindReachableEdges extends AbstractTableFunction {
         @Override
         public FunctionSignature[] getFunctionSignatures() {
                 return new FunctionSignature[]{
-                                new TableFunctionSignature(TableDefinition.GEOMETRY, new TableArgument(TableDefinition.GEOMETRY), ScalarArgument.INT),
-                                new TableFunctionSignature(TableDefinition.GEOMETRY, new TableArgument(TableDefinition.GEOMETRY), ScalarArgument.INT, ScalarArgument.BOOLEAN, ScalarArgument.BOOLEAN)
+                                new TableFunctionSignature(TableDefinition.GEOMETRY, new TableArgument(TableDefinition.GEOMETRY), ScalarArgument.INT, ScalarArgument.STRING),
+                                new TableFunctionSignature(TableDefinition.GEOMETRY, new TableArgument(TableDefinition.GEOMETRY), ScalarArgument.INT, ScalarArgument.STRING, ScalarArgument.INT)
                         };
         }
 
-        private DiskBufferDriver computeWMPath(DataSourceFactory dsf, DataSet sds, int source, ProgressMonitor pm) throws DriverException {
+        private DiskBufferDriver computeWMPath(DataSourceFactory dsf, DataSet sds, int source, String fieldCost, ProgressMonitor pm) throws DriverException {
                 WMultigraphDataSource wMultigraphDataSource = new WMultigraphDataSource(dsf, sds, pm);
+                wMultigraphDataSource.setWeigthFieldIndex(fieldCost);
                 ClosestFirstIterator<Integer, GraphEdge> cl = new ClosestFirstIterator<Integer, GraphEdge>(
                         wMultigraphDataSource, source);
 
@@ -152,8 +162,9 @@ public class ST_FindReachableEdges extends AbstractTableFunction {
 
         }
 
-        private DiskBufferDriver computeDWMPath(DataSourceFactory dsf, DataSet sds, int source, Boolean reverseGraph, ProgressMonitor pm) throws DriverException {
+        private DiskBufferDriver computeDWMPath(DataSourceFactory dsf, DataSet sds, int source, String fieldCost, boolean reverseGraph, ProgressMonitor pm) throws DriverException {
                 DWMultigraphDataSource dwMultigraphDataSource = new DWMultigraphDataSource(dsf, sds, pm);
+                dwMultigraphDataSource.setWeigthFieldIndex(fieldCost);
                 ClosestFirstIterator<Integer, GraphEdge> cl;
                 if (reverseGraph) {
                         EdgeReversedGraph edgeReversedGraph = new EdgeReversedGraph(dwMultigraphDataSource);

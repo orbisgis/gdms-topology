@@ -25,7 +25,6 @@
  * or contact directly:
  * info_at_ orbisgis.org
  */
-
 package org.gdms.gdmstopology.process;
 
 import java.util.List;
@@ -38,6 +37,11 @@ import org.jgrapht.WeightedGraph;
  * @author ebocher
  */
 public class GraphAnalysis {
+
+        //Constants used in the functions
+        public static int DIRECT = 1;
+        public static int DIRECT_REVERSED = 2;
+        public static int UNDIRECT = 3;
 
         /**
          * Some usefull methods to analyse a graph network.

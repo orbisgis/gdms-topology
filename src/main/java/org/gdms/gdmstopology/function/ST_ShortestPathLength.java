@@ -42,6 +42,7 @@ import org.gdms.gdmstopology.model.DWMultigraphDataSource;
 import org.gdms.gdmstopology.model.GraphEdge;
 import org.gdms.gdmstopology.model.GraphSchema;
 import org.gdms.gdmstopology.model.WMultigraphDataSource;
+import org.gdms.gdmstopology.process.GraphAnalysis;
 import org.gdms.sql.function.FunctionException;
 import org.gdms.sql.function.FunctionSignature;
 import org.gdms.sql.function.ScalarArgument;
@@ -60,19 +61,25 @@ import org.jgrapht.graph.EdgeReversedGraph;
 public class ST_ShortestPathLength extends AbstractTableFunction {
 
         private DiskBufferDriver diskBufferDriver;
+        
 
         @Override
         public DataSet evaluate(SQLDataSourceFactory dsf, DataSet[] tables, Value[] values, ProgressMonitor pm) throws FunctionException {
-                int source = values[0].getAsInt();
-                String fieldCost = values[1].getAsString();
                 try {
+                        int source = values[0].getAsInt();
+                        String fieldCost = values[1].getAsString();
                         DataSet sdsEdges = tables[0];
                         diskBufferDriver = new DiskBufferDriver(dsf, getMetadata(null));
-                        if (values.length == 4) {
-                                if (values[2].getAsBoolean()) {
+                        if (values.length == 3) {
+                                int method = values[2].getAsInt();
+                                if (method == GraphAnalysis.DIRECT) {
+                                        return computeDWMPath(dsf, sdsEdges, source, fieldCost, false, pm);
+                                } else if (method == GraphAnalysis.DIRECT_REVERSED) {
+                                        return computeDWMPath(dsf, sdsEdges, source, fieldCost, true, pm);
+                                } else if (method == GraphAnalysis.UNDIRECT) {
                                         return computeWMPath(dsf, sdsEdges, source, fieldCost, pm);
                                 } else {
-                                        return computeDWMPath(dsf, sdsEdges, source, fieldCost, values[3].getAsBoolean(), pm);
+                                        throw new FunctionException("1, 2 or 3 input value constante is needed to execute the function");
                                 }
 
                         } else {
@@ -100,13 +107,15 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
 
         @Override
         public String getDescription() {
-                return "Return the shortest path length beetwen one vertex to all other based on a directed graph. True if the path is computed using an undirected graph."
-                        + "The last boolean argument is used to reverse or not the edges.";
+                return "Return the shortest path length beetwen one vertex to all other based on a directed graph.\n "
+                        + "1 if the path is computing using a directed graph.\n"
+                        + "2 if the path is computing using a directed graph and edges are reversed\n"
+                        + "3 if the path is computing using a undirected.";
         }
 
         @Override
         public String getSqlOrder() {
-                return "SELECT * from ST_ShortestPathLength(table, 12, costField,[,true, false]) );";
+                return "SELECT * from ST_ShortestPathLength(table, 12, costField[,2]) );";
         }
 
         @Override
@@ -121,11 +130,10 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
         public FunctionSignature[] getFunctionSignatures() {
                 return new FunctionSignature[]{
                                 new TableFunctionSignature(TableDefinition.GEOMETRY, new TableArgument(TableDefinition.GEOMETRY), ScalarArgument.INT, ScalarArgument.STRING),
-                                new TableFunctionSignature(TableDefinition.GEOMETRY, new TableArgument(TableDefinition.GEOMETRY), ScalarArgument.INT, ScalarArgument.STRING, ScalarArgument.BOOLEAN, ScalarArgument.BOOLEAN)
+                                new TableFunctionSignature(TableDefinition.GEOMETRY, new TableArgument(TableDefinition.GEOMETRY), ScalarArgument.INT, ScalarArgument.STRING, ScalarArgument.INT)
                         };
         }
 
-        
         private DiskBufferDriver computeWMPath(DataSourceFactory dsf, DataSet sds, int source, String fieldCost, ProgressMonitor pm) throws DriverException {
                 WMultigraphDataSource wMultigraphDataSource = new WMultigraphDataSource(dsf, sds, pm);
                 wMultigraphDataSource.setWeigthFieldIndex(fieldCost);

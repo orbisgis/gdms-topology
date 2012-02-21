@@ -173,7 +173,7 @@ public class GraphAnalysisTest extends TopologySetUpTest {
                 DataSet[] tables = new DataSet[]{mdsd};
                 int source = 1;
                 ST_FindReachableEdges stspl = new ST_FindReachableEdges();
-                DataSet result = stspl.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source)}, new NullProgressMonitor());
+                DataSet result = stspl.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source), ValueFactory.createValue("weigth")}, new NullProgressMonitor());
                 assertTrue(result.getRowCount() == 1);
                 assertTrue(result.getGeometry(0, 0).equalsExact(wktReader.read("LINESTRING(0 0, 5 0)")));
 
@@ -198,13 +198,13 @@ public class GraphAnalysisTest extends TopologySetUpTest {
                 DataSet[] tables = new DataSet[]{mdsd};
                 int source = 2;
                 ST_FindReachableEdges stspl = new ST_FindReachableEdges();
-                DataSet result = stspl.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source)}, new NullProgressMonitor());
+                DataSet result = stspl.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source), ValueFactory.createValue("weigth")}, new NullProgressMonitor());
                 assertTrue(result.getRowCount() == 0);
 
         }
 
         @Test
-        public void testFindReachableEdgesr3() throws Exception {
+        public void testFindReachableEdges3() throws Exception {
                 MemoryDataSetDriver mdsd = new MemoryDataSetDriver(new String[]{"geom", "start_node", "end_node", "weigth"},
                         new Type[]{
                                 TypeFactory.createType(Type.GEOMETRY),
@@ -222,7 +222,7 @@ public class GraphAnalysisTest extends TopologySetUpTest {
                 DataSet[] tables = new DataSet[]{mdsd};
                 int source = 5;
                 ST_FindReachableEdges stspl = new ST_FindReachableEdges();
-                DataSet result = stspl.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source)}, new NullProgressMonitor());
+                DataSet result = stspl.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source), ValueFactory.createValue("weigth")}, new NullProgressMonitor());
                 assertTrue(result.getRowCount() == 3);
                 assertTrue(result.getGeometry(0, 0).equalsExact(wktReader.read("LINESTRING(10 0 , 20 0)")));
                 assertTrue(result.getGeometry(1, 0).equalsExact(wktReader.read("LINESTRING(7 0 , 10 0)")));
@@ -248,7 +248,7 @@ public class GraphAnalysisTest extends TopologySetUpTest {
                 DataSet[] tables = new DataSet[]{mdsd};
                 int source = 2;
                 ST_FindReachableEdges stspl = new ST_FindReachableEdges();
-                DataSet result = stspl.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source), ValueFactory.createValue(true), ValueFactory.createValue(false)}, new NullProgressMonitor());
+                DataSet result = stspl.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source), ValueFactory.createValue("weigth"), ValueFactory.createValue(3)}, new NullProgressMonitor());
                 assertTrue(result.getRowCount() == 4);
 
                 int count = 0;
@@ -294,7 +294,8 @@ public class GraphAnalysisTest extends TopologySetUpTest {
                 ds.open();
                 DataSet[] tables = new DataSet[]{ds};
                 int source = 3;
-                DataSet result = sT_ShortestPathLength.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source), ValueFactory.createValue("length"), ValueFactory.createValue(false), ValueFactory.createValue(true)}, null);
+                DataSet result = sT_ShortestPathLength.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source),
+                                ValueFactory.createValue("length"), ValueFactory.createValue(2)}, null);
                 assertTrue(result.getRowCount() == 2);
                 HashMap<Integer, Double> results = new HashMap<Integer, Double>();
                 results.put(3, 0d);
@@ -314,7 +315,8 @@ public class GraphAnalysisTest extends TopologySetUpTest {
                 ds.open();
                 DataSet[] tables = new DataSet[]{ds};
                 int source = 3;
-                DataSet result = sT_ShortestPathLength.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source), ValueFactory.createValue("length"), ValueFactory.createValue(true), ValueFactory.createValue(false)}, null);
+                DataSet result = sT_ShortestPathLength.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source), ValueFactory.createValue("length"),
+                                ValueFactory.createValue(3)}, null);
                 assertTrue(result.getRowCount() == 6);
                 HashMap<Integer, Double> results = new HashMap<Integer, Double>();
                 results.put(3, 0d);

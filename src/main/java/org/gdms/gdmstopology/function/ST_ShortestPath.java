@@ -59,58 +59,56 @@ import org.orbisgis.progress.ProgressMonitor;
  * @author ebocher
  */
 public class ST_ShortestPath extends AbstractTableFunction {
-        
+
         private DiskBufferDriver diskBufferDriver;
-        
+
         @Override
         public DataSet evaluate(SQLDataSourceFactory dsf, DataSet[] tables, Value[] values, ProgressMonitor pm) throws FunctionException {
-                int source = values[0].getAsInt();
-                int target = values[1].getAsInt();
-                String costField = values[2].getAsString();
                 try {
+                        int source = values[0].getAsInt();
+                        int target = values[1].getAsInt();
+                        String costField = values[2].getAsString();
                         diskBufferDriver = new DiskBufferDriver(dsf, getMetadata(null));
                         if (values.length == 4) {
-                                if (values[3].getAsBoolean()) {
-                                        diskBufferDriver = computeWMPath(dsf, tables[0], source, target, costField, pm);
-                                        diskBufferDriver.start();
-                                        return diskBufferDriver;
-                                        
-                                } else {
+                                if (!values[3].getAsBoolean()) {
                                         diskBufferDriver = computeDWMPath(dsf, tables[0], source, target, costField, pm);
                                         diskBufferDriver.start();
                                         return diskBufferDriver;
+                                } else {
+                                        diskBufferDriver = computeWMPath(dsf, tables[0], source, target, costField, pm);
+                                        diskBufferDriver.start();
+                                        return diskBufferDriver;
                                 }
-                                
+
                         } else {
                                 diskBufferDriver = computeDWMPath(dsf, tables[0], source, target, costField, pm);
                                 diskBufferDriver.start();
                                 return diskBufferDriver;
                         }
+
                 } catch (DriverException ex) {
                         throw new FunctionException("Cannot compute the shortest path", ex);
                 }
-                
-                
         }
-        
+
         @Override
         public String getName() {
                 return "ST_ShortestPath";
         }
-        
+
         @Override
         public String getDescription() {
                 return "Return the shortest path beetwen two vertexes using the Dijkstra algorithm.\n"
-                        + "Optional arguments : \n"
-                        + "true is the graph is undirected\n"
-                        + "true is the graph is reversed.";
+                        + "Optional argument : \n"
+                        + "false if the graph is directed ."
+                        + "true if the graph is undirected\n";
         }
-        
+
         @Override
         public String getSqlOrder() {
-                return "SELECT * from  ST_ShortestPath(table,12, 10, costField [,true, false]);";
+                return "SELECT * from  ST_ShortestPath(table,12, 10, costField [,true]);";
         }
-        
+
         @Override
         public Metadata getMetadata(Metadata[] tables) throws DriverException {
                 Metadata md = new DefaultMetadata(
@@ -119,23 +117,23 @@ public class ST_ShortestPath extends AbstractTableFunction {
                         new String[]{"the_geom", GraphSchema.ID, GraphSchema.START_NODE, GraphSchema.END_NODE, GraphSchema.WEIGHT});
                 return md;
         }
-        
+
         @Override
         public void workFinished() throws DriverException {
                 if (diskBufferDriver != null) {
                         diskBufferDriver.stop();
                 }
         }
-        
+
         @Override
         public FunctionSignature[] getFunctionSignatures() {
                 return new FunctionSignature[]{
-                                new TableFunctionSignature(TableDefinition.GEOMETRY, new TableArgument(TableDefinition.GEOMETRY), ScalarArgument.INT, ScalarArgument.INT),
+                                new TableFunctionSignature(TableDefinition.GEOMETRY, new TableArgument(TableDefinition.GEOMETRY), ScalarArgument.INT, ScalarArgument.INT, ScalarArgument.STRING),
                                 new TableFunctionSignature(TableDefinition.GEOMETRY, new TableArgument(TableDefinition.GEOMETRY), ScalarArgument.INT,
-                                ScalarArgument.INT, ScalarArgument.BOOLEAN)
+                                ScalarArgument.INT, ScalarArgument.STRING, ScalarArgument.BOOLEAN)
                         };
         }
-        
+
         private DiskBufferDriver computeDWMPath(DataSourceFactory dsf, DataSet dataSet, Integer source, Integer target, String costField, ProgressMonitor pm) throws DriverException {
                 DWMultigraphDataSource dWMultigraphDataSource = new DWMultigraphDataSource(dsf, dataSet, pm);
                 dWMultigraphDataSource.setWeigthFieldIndex(costField);
@@ -154,7 +152,7 @@ public class ST_ShortestPath extends AbstractTableFunction {
                 diskBufferDriver.writingFinished();
                 return diskBufferDriver;
         }
-        
+
         private DiskBufferDriver computeWMPath(DataSourceFactory dsf, DataSet dataSet, int source, int target, String costField, ProgressMonitor pm) throws DriverException {
                 WMultigraphDataSource wMultigraphDataSource = new WMultigraphDataSource(dsf, dataSet, pm);
                 wMultigraphDataSource.setWeigthFieldIndex(costField);
@@ -168,7 +166,7 @@ public class ST_ShortestPath extends AbstractTableFunction {
                                                 ValueFactory.createValue(graphEdge.getSource()),
                                                 ValueFactory.createValue(graphEdge.getTarget()),
                                                 ValueFactory.createValue(graphEdge.getWeight())});
-                                
+
                         }
                 }
                 diskBufferDriver.writingFinished();
