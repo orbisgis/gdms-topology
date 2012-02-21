@@ -68,7 +68,6 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
                 try {
                         DataSet sdsEdges = tables[0];
                         diskBufferDriver = new DiskBufferDriver(dsf, getMetadata(null));
-
                         if (values.length == 4) {
                                 if (values[2].getAsBoolean()) {
                                         return computeWMPath(dsf, sdsEdges, source, fieldCost, pm);
@@ -107,7 +106,7 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
 
         @Override
         public String getSqlOrder() {
-                return "SELECT * from ST_ShortestPathLength(table, 12[,true, false]) );";
+                return "SELECT * from ST_ShortestPathLength(table, 12, costField,[,true, false]) );";
         }
 
         @Override
@@ -121,11 +120,12 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
         @Override
         public FunctionSignature[] getFunctionSignatures() {
                 return new FunctionSignature[]{
-                                new TableFunctionSignature(TableDefinition.GEOMETRY, new TableArgument(TableDefinition.GEOMETRY), ScalarArgument.INT),
-                                new TableFunctionSignature(TableDefinition.GEOMETRY, new TableArgument(TableDefinition.GEOMETRY), ScalarArgument.INT, ScalarArgument.BOOLEAN, ScalarArgument.BOOLEAN)
+                                new TableFunctionSignature(TableDefinition.GEOMETRY, new TableArgument(TableDefinition.GEOMETRY), ScalarArgument.INT, ScalarArgument.STRING),
+                                new TableFunctionSignature(TableDefinition.GEOMETRY, new TableArgument(TableDefinition.GEOMETRY), ScalarArgument.INT, ScalarArgument.STRING, ScalarArgument.BOOLEAN, ScalarArgument.BOOLEAN)
                         };
         }
 
+        
         private DiskBufferDriver computeWMPath(DataSourceFactory dsf, DataSet sds, int source, String fieldCost, ProgressMonitor pm) throws DriverException {
                 WMultigraphDataSource wMultigraphDataSource = new WMultigraphDataSource(dsf, sds, pm);
                 wMultigraphDataSource.setWeigthFieldIndex(fieldCost);
