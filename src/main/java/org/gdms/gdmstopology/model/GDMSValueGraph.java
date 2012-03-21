@@ -28,24 +28,38 @@
 
 package org.gdms.gdmstopology.model;
 
+import com.vividsolutions.jts.geom.Geometry;
+import org.gdms.data.values.Value;
+import org.gdms.driver.DriverException;
+import org.jgrapht.Graph;
+
 /**
  *
  * @author ebocher
  */
-public final class GraphSchema {
-
-        public static final String START_NODE = "start_node";
-        public static final String END_NODE = "end_node";
-        public static final String ID = "id";
-        public static final String WEIGHT = "weight";
-        public static final String LEFT_FACE = "left_polygon";
-        public static final String RIGHT_FACE = "right_polygon";
-        public static String WEIGHT_SUM = "weight_sum";
-        public static final String PATH_ID = "path_id";
-
+public interface GDMSValueGraph<V extends Integer, E extends GraphEdge> extends Graph<V, E>{
+ 
         /**
-         * Some fields needed for the input datasource.
+         * Return the geometry at the specified row
+         * @param rowid
+         * @return
+         * @throws DriverException 
          */
-        private GraphSchema() {
-        }
+        Geometry getGeometry(int rowid) throws DriverException ;
+        
+        /**
+         * Return the geometry at the specified row
+         * @param graphEdge
+         * @return
+         * @throws DriverException 
+         */
+        Geometry getGeometry(GraphEdge graphEdge) throws DriverException;
+        
+        /**
+         * Gets the value of all fields at the specified row
+         * @param rowid
+         * @return
+         * @throws DriverException 
+         */
+        Value[] getValues(int rowid ) throws DriverException ;
 }

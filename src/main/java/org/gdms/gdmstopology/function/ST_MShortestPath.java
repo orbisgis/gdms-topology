@@ -30,10 +30,9 @@ package org.gdms.gdmstopology.function;
 import org.gdms.data.SQLDataSourceFactory;
 import org.gdms.data.schema.Metadata;
 import org.gdms.data.values.Value;
+import org.gdms.driver.DataSet;
 import org.gdms.driver.DiskBufferDriver;
 import org.gdms.driver.DriverException;
-import org.gdms.driver.DataSet;
-import org.gdms.gdmstopology.model.GraphException;
 import org.gdms.gdmstopology.model.GraphMetadataFactory;
 import org.gdms.gdmstopology.process.GraphAnalysis;
 import org.gdms.sql.function.FunctionException;
@@ -49,48 +48,25 @@ import org.orbisgis.progress.ProgressMonitor;
  *
  * @author ebocher
  */
-public class ST_ShortestPath extends AbstractTableFunction {
+public class ST_MShortestPath extends AbstractTableFunction {
 
         @Override
         public DataSet evaluate(SQLDataSourceFactory dsf, DataSet[] tables, Value[] values, ProgressMonitor pm) throws FunctionException {
-
                 try {
-                        int source = values[0].getAsInt();
-                        int target = values[1].getAsInt();
-                        String costField = values[2].getAsString();
-                        if (values.length == 4) {
-                                DiskBufferDriver diskBufferDriver = GraphAnalysis.getShortestPath(dsf, tables[0], source, target, costField, values[3].getAsInt(), pm);
+                        if (values.length == 2) {
+                                DiskBufferDriver diskBufferDriver = GraphAnalysis.getMShortestPath(dsf, tables[0], tables[1], 
+                                        values[0].getAsString(), values[1].getAsInt(), pm);
                                 diskBufferDriver.start();
                                 return diskBufferDriver;
-
                         } else {
-                                DiskBufferDriver diskBufferDriver = GraphAnalysis.getShortestPath(dsf, tables[0], source, target, costField, GraphAnalysis.DIRECT, pm);
+                                DiskBufferDriver diskBufferDriver = GraphAnalysis.getMShortestPath(dsf, tables[0], tables[1], 
+                                        values[0].getAsString(), GraphAnalysis.DIRECT, pm);
                                 diskBufferDriver.start();
                                 return diskBufferDriver;
                         }
-
                 } catch (Exception ex) {
                         throw new FunctionException("Cannot compute the shortest path", ex);
                 }
-        }
-
-        @Override
-        public String getName() {
-                return "ST_ShortestPath";
-        }
-
-        @Override
-        public String getDescription() {
-                return "Return the shortest path beetwen two vertexes using the Dijkstra algorithm.\n"
-                        + "Optional argument : \n"
-                        + "1 if the graph is directed ."
-                        + "2 if the graph is directed and edges reversed\n"
-                        + "3 if the graph is undirected\n";
-        }
-
-        @Override
-        public String getSqlOrder() {
-                return "SELECT * from  ST_ShortestPath(table,12, 10, costField [,1]);";
         }
 
         @Override
@@ -99,11 +75,31 @@ public class ST_ShortestPath extends AbstractTableFunction {
         }
 
         @Override
+        public String getDescription() {
+                return "Return the shortest path beetwen several vertexes using the Dijkstra algorithm.\n"
+                        + "Optional argument : \n"
+                        + "1 if the graph is directed ."
+                        + "2 if the graph is directed and edges reversed\n"
+                        + "3 if the graph is undirected\n";
+        }
+
+        @Override
         public FunctionSignature[] getFunctionSignatures() {
                 return new FunctionSignature[]{
-                                new TableFunctionSignature(TableDefinition.GEOMETRY, new TableArgument(TableDefinition.GEOMETRY), ScalarArgument.INT, ScalarArgument.INT, ScalarArgument.STRING),
-                                new TableFunctionSignature(TableDefinition.GEOMETRY, new TableArgument(TableDefinition.GEOMETRY), ScalarArgument.INT,
-                                ScalarArgument.INT, ScalarArgument.STRING, ScalarArgument.INT)
+                                new TableFunctionSignature(TableDefinition.GEOMETRY, new TableArgument(TableDefinition.GEOMETRY), new TableArgument(TableDefinition.ANY),
+                                ScalarArgument.STRING),
+                                new TableFunctionSignature(TableDefinition.GEOMETRY, new TableArgument(TableDefinition.GEOMETRY),
+                                new TableArgument(TableDefinition.ANY), ScalarArgument.STRING, ScalarArgument.INT)
                         };
+        }
+
+        @Override
+        public String getName() {
+                return "ST_MShortestPath";
+        }
+
+        @Override
+        public String getSqlOrder() {
+                return "SELECT * from  ST_MShortestPath(table,tableNodes, costField [,1]);";
         }
 }

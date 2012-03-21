@@ -27,6 +27,7 @@
  */
 package org.gdms.gdmstopology.function;
 
+import org.gdms.driver.DriverException;
 import org.gdms.driver.memory.MemoryDataSetDriver;
 import org.gdms.data.DataSource;
 import org.gdms.data.types.Type;
@@ -207,7 +208,7 @@ public class GraphBuilderTest extends TopologySetUpTest {
                 dsResult_nodes.close();
         }
 
-         @Test
+        @Test
         public void testZGraph2() throws Exception {
 
                 //Input datasource
@@ -245,6 +246,31 @@ public class GraphBuilderTest extends TopologySetUpTest {
                         }
                 }
                 dsResult_nodes.close();
+        }
+
+        /**
+         * We test if the 3D is well managed during the graph construction
+         * @throws Exception 
+         */
+        @Test
+        public void testDim3() throws Exception {
+                //Input datasource
+                final MemoryDataSetDriver driver_src = new MemoryDataSetDriver(
+                        new String[]{"the_geom", "gid"},
+                        new Type[]{TypeFactory.createType(Type.GEOMETRY),
+                                TypeFactory.createType(Type.INT)
+                        });
+
+                driver_src.addValues(new Value[]{ValueFactory.createValue(wktReader.read("LINESTRING( 200 300 0, 400 300 0)")),
+                                ValueFactory.createValue(1)});
+                driver_src.addValues(new Value[]{ValueFactory.createValue(wktReader.read("LINESTRING( 600 300 10, 400 300 0)")),
+                                ValueFactory.createValue(2)});
+                driver_src.addValues(new Value[]{ValueFactory.createValue(wktReader.read("LINESTRING( 600 300 10, 800 300 0)")),
+                                ValueFactory.createValue(3)});
+                driver_src.addValues(new Value[]{ValueFactory.createValue(wktReader.read("LINESTRING( 600 300 0, 400 300 0)")),
+                                ValueFactory.createValue(2)});
+
+
         }
 
         /**

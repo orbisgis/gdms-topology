@@ -59,8 +59,9 @@ public class NetworkGraphBuilder {
         GeometryFactory gf = new GeometryFactory();
         private double tolerance = 0;
         private boolean expand = false;
-        boolean dim3 = false;
+        boolean zDirection = false;
         private String output_name;
+        private boolean dim3 = false;
 
         /**
          * This class is used to order edges and create requiered nodes to build a network graph
@@ -72,12 +73,39 @@ public class NetworkGraphBuilder {
                 this.pm = pm;
         }
 
-        public boolean isDim3() {
-                return dim3;
+        /**
+         * 
+         * @return if true is the graph is oriented coordinate 
+         * the z value of the start and end coordinates
+         */
+        public boolean isZDirection() {
+                return zDirection;
         }
 
+        /**
+         * Set if the graph must ne oriented according the z value of 
+         * the start and end coordinates
+         * 
+         * @param dim3 
+         */
+        public void setZDirection(boolean zDirection) {
+                this.zDirection = zDirection;
+        }
+
+        /**
+         * Set if the z value of the coordinate must be used to order the nodes.
+         * @param dim3 
+         */
         public void setDim3(boolean dim3) {
                 this.dim3 = dim3;
+        }
+
+        /**
+         * 
+         * @return if the z value of the coordinate must be used. 
+         */
+        public boolean isDim3() {
+                return dim3;
         }
 
         /**
@@ -91,7 +119,6 @@ public class NetworkGraphBuilder {
         public void setOutput_name(String output_name) {
                 this.output_name = output_name;
         }
-        
 
         /**
          * Create the two data structure nodes and edges using a RTree disk.
@@ -101,121 +128,121 @@ public class NetworkGraphBuilder {
          * @throws IOException
          * @throws NonEditableDataSourceException
          */
-        public void buildGraph(DataSet dataSet) throws DriverException, IOException, NonEditableDataSourceException {                
+        public void buildGraph(DataSet dataSet) throws DriverException, IOException, NonEditableDataSourceException {
                 pm.startTask("Create the graph", 100);
+
                 int geomFieldIndex = MetadataUtilities.getSpatialFieldIndex(dataSet.getMetadata());
 
-                if (geomFieldIndex!=-1){
-                DefaultMetadata nodeMedata = new DefaultMetadata(new Type[]{
-                                TypeFactory.createType(Type.GEOMETRY),
-                                TypeFactory.createType(Type.INT)}, new String[]{"the_geom",
-                                GraphSchema.ID});
+                if (geomFieldIndex != -1) {                        
+                        DefaultMetadata nodeMedata = new DefaultMetadata(new Type[]{
+                                        TypeFactory.createType(Type.GEOMETRY),
+                                        TypeFactory.createType(Type.INT)}, new String[]{"the_geom",
+                                        GraphSchema.ID});
 
-                DiskBufferDriver nodesDriver = new DiskBufferDriver(dsf.getResultFile("gdms"), nodeMedata);
+                        DiskBufferDriver nodesDriver = new DiskBufferDriver(dsf.getResultFile("gdms"), nodeMedata);
 
-                String diskTreePath = dsf.getTempFile();
-                DiskRTree diskRTree = new DiskRTree();
-                diskRTree.newIndex(new File(diskTreePath));
-                
-                DefaultMetadata edgeMedata = new DefaultMetadata(dataSet.getMetadata());
-                int srcFieldsCount = edgeMedata.getFieldCount();
+                        String diskTreePath = dsf.getTempFile();
+                        DiskRTree diskRTree = new DiskRTree();
+                        diskRTree.newIndex(new File(diskTreePath));
 
-                edgeMedata.addField(GraphSchema.ID, TypeFactory.createType(Type.INT));
-                edgeMedata.addField(GraphSchema.START_NODE, TypeFactory.createType(Type.INT));
-                edgeMedata.addField(GraphSchema.END_NODE, TypeFactory.createType(Type.INT));
-                
-                int fieldsCount = edgeMedata.getFieldCount();
+                        DefaultMetadata edgeMedata = new DefaultMetadata(dataSet.getMetadata());
+                        int srcFieldsCount = edgeMedata.getFieldCount();
 
-                int idIndex = srcFieldsCount;
-                int initialIndex = srcFieldsCount + 1;
-                int finalIndex = srcFieldsCount + 2;
+                        edgeMedata.addField(GraphSchema.ID, TypeFactory.createType(Type.INT));
+                        edgeMedata.addField(GraphSchema.START_NODE, TypeFactory.createType(Type.INT));
+                        edgeMedata.addField(GraphSchema.END_NODE, TypeFactory.createType(Type.INT));
 
-                DiskBufferDriver edgesDriver = new DiskBufferDriver(dsf.getResultFile("gdms"), edgeMedata);
+                        int fieldsCount = edgeMedata.getFieldCount();
 
-                long rowCount = dataSet.getRowCount();
-                int gidNode = 1;
+                        int idIndex = srcFieldsCount;
+                        int initialIndex = srcFieldsCount + 1;
+                        int finalIndex = srcFieldsCount + 2;
 
-                for (int rowIndex = 0; rowIndex < rowCount; rowIndex++) {
-                        if (rowIndex / 100 == rowIndex / 100.0) {
-                                if (pm.isCancelled()) {
-                                        break;
+                        DiskBufferDriver edgesDriver = new DiskBufferDriver(dsf.getResultFile("gdms"), edgeMedata);
+
+                        long rowCount = dataSet.getRowCount();
+                        int gidNode = 1;
+
+                        for (int rowIndex = 0; rowIndex < rowCount; rowIndex++) {
+                                if (rowIndex / 100 == rowIndex / 100.0) {
+                                        if (pm.isCancelled()) {
+                                                break;
+                                        } else {
+                                                pm.progressTo((int) (100 * rowIndex / rowCount));
+                                        }
+                                }
+                                final Value[] fieldsValues = dataSet.getRow(rowIndex);
+                                final Value[] newValues = new Value[fieldsCount];
+                                System.arraycopy(fieldsValues, 0, newValues, 0,
+                                        srcFieldsCount);
+                                newValues[idIndex] = ValueFactory.createValue(rowIndex + 1);
+                                Geometry geom = fieldsValues[geomFieldIndex].getAsGeometry();
+                                double length = geom.getLength();
+                                if (tolerance > 0 && length >= tolerance) {
+                                        expand = true;
+                                }
+                                Coordinate[] cc = geom.getCoordinates();
+                                Coordinate start = cc[0];
+                                Coordinate end = cc[cc.length - 1];
+
+                                if (isZDirection()) {
+                                        if (start.z < end.z) {
+                                                Coordinate tmpStart = start;
+                                                start = end;
+                                                end = tmpStart;
+                                        }
+                                }
+                                Envelope startEnvelope = new Envelope(start);
+                                if (expand) {
+                                        startEnvelope.expandBy(tolerance);
+                                }
+                                int[] gidsStart = diskRTree.query(startEnvelope);
+                                if (gidsStart.length == 0) {
+                                        newValues[initialIndex] =
+                                                ValueFactory.createValue(gidNode);
+                                        nodesDriver.addValues(new Value[]{ValueFactory.createValue(gf.createPoint(start)),
+                                                        ValueFactory.createValue(gidNode)});
+                                        diskRTree.insert(startEnvelope, gidNode);
+                                        gidNode++;
                                 } else {
-                                        pm.progressTo((int) (100 * rowIndex / rowCount));
+                                        newValues[initialIndex] =
+                                                ValueFactory.createValue(gidsStart[0]);
                                 }
-                        }
-                        final Value[] fieldsValues = dataSet.getRow(rowIndex);
-                        final Value[] newValues = new Value[fieldsCount];
-                        System.arraycopy(fieldsValues, 0, newValues, 0,
-                                srcFieldsCount);
-                        newValues[idIndex] = ValueFactory.createValue(rowIndex + 1);
-                        Geometry geom = fieldsValues[geomFieldIndex].getAsGeometry();
-                        double length = geom.getLength();
-                        if (tolerance > 0 && length >= tolerance) {
-                                expand = true;
-                        }
-                        Coordinate[] cc = geom.getCoordinates();
-                        Coordinate start = cc[0];
-                        Coordinate end = cc[cc.length - 1];
-
-                        if (isDim3()) {
-                                if (start.z < end.z) {
-                                        Coordinate tmpStart = start;
-                                        start = end;
-                                        end = tmpStart;
+                                Envelope endEnvelope = new Envelope(end);
+                                if (expand) {
+                                        endEnvelope.expandBy(tolerance);
                                 }
+                                int[] gidsEnd = diskRTree.query(endEnvelope);
+                                if (gidsEnd.length == 0) {
+                                        newValues[finalIndex] =
+                                                ValueFactory.createValue(gidNode);
+                                        nodesDriver.addValues(new Value[]{ValueFactory.createValue(gf.createPoint(end)),
+                                                        ValueFactory.createValue(gidNode)});
+                                        diskRTree.insert(endEnvelope, gidNode);
+                                        gidNode++;
+                                } else {
+                                        newValues[finalIndex] =
+                                                ValueFactory.createValue(gidsEnd[0]);
+                                }
+
+                                edgesDriver.addValues(newValues);
+
                         }
-                        Envelope startEnvelope = new Envelope(start);
-                        if (expand) {
-                                startEnvelope.expandBy(tolerance);
-                        }
-                        int[] gidsStart = diskRTree.getRow(startEnvelope);
-                        if (gidsStart.length == 0) {
-                                newValues[initialIndex] =
-                                        ValueFactory.createValue(gidNode);
-                                nodesDriver.addValues(new Value[]{ValueFactory.createValue(gf.createPoint(start)),
-                                                ValueFactory.createValue(gidNode)});
-                                diskRTree.insert(startEnvelope, gidNode);
-                                gidNode++;
-                        } else {
-                                newValues[initialIndex] =
-                                        ValueFactory.createValue(gidsStart[0]);
-                        }
-                        Envelope endEnvelope = new Envelope(end);
-                        if (expand) {
-                                endEnvelope.expandBy(tolerance);
-                        }
-                        int[] gidsEnd = diskRTree.getRow(endEnvelope);
-                        if (gidsEnd.length == 0) {
-                                newValues[finalIndex] =
-                                        ValueFactory.createValue(gidNode);
-                                nodesDriver.addValues(new Value[]{ValueFactory.createValue(gf.createPoint(end)),
-                                                ValueFactory.createValue(gidNode)});
-                                diskRTree.insert(endEnvelope, gidNode);
-                                gidNode++;
-                        } else {
-                                newValues[finalIndex] =
-                                        ValueFactory.createValue(gidsEnd[0]);
-                        }
-
-                        edgesDriver.addValues(newValues);
-
-                }
-                nodesDriver.writingFinished();
-                edgesDriver.writingFinished();
+                        nodesDriver.writingFinished();
+                        edgesDriver.writingFinished();
 
 
-                //The datasources will be registered as a schema
-                String ds_nodes_name = dsf.getSourceManager().getUniqueName(output_name+ ".nodes");
-                dsf.getSourceManager().register(ds_nodes_name, nodesDriver.getFile());
+                        //The datasources will be registered as a schema
+                        String ds_nodes_name = dsf.getSourceManager().getUniqueName(output_name + ".nodes");
+                        dsf.getSourceManager().register(ds_nodes_name, nodesDriver.getFile());
 
-                String ds_edges_name = dsf.getSourceManager().getUniqueName(output_name + ".edges");
-                dsf.getSourceManager().register(ds_edges_name, edgesDriver.getFile());
+                        String ds_edges_name = dsf.getSourceManager().getUniqueName(output_name + ".edges");
+                        dsf.getSourceManager().register(ds_edges_name, edgesDriver.getFile());
 
-                //Remove the Rtree on disk
-                new File(diskTreePath).delete();
-                }
-                else {
-                      throw new DriverException("The table must contains a geometry field");
+                        //Remove the Rtree on disk
+                        new File(diskTreePath).delete();
+                } else {
+                        throw new DriverException("The table must contains a geometry field");
                 }
         }
 }

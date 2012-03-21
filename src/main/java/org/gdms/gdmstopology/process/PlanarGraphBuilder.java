@@ -146,7 +146,7 @@ public class PlanarGraphBuilder {
                         Coordinate[] cc = geom.getCoordinates();
                         Coordinate start = cc[0];
                         Coordinate end = cc[cc.length - 1];
-                        int[] gidsStart = diskRTree.getRow(new Envelope(start));
+                        int[] gidsStart = diskRTree.query(new Envelope(start));
                         if (gidsStart.length == 0) {
                                 values[2] = ValueFactory.createValue(gidNode);
                                 nodeDriver.addValues(new Value[]{ValueFactory.createValue(gf.createPoint(start)),
@@ -156,7 +156,7 @@ public class PlanarGraphBuilder {
                         } else {
                                 values[2] = ValueFactory.createValue(gidsStart[0]);
                         }
-                        int[] gidsEnd = diskRTree.getRow(new Envelope(end));
+                        int[] gidsEnd = diskRTree.query(new Envelope(end));
                         if (gidsEnd.length == 0) {
                                 values[3] = ValueFactory.createValue(gidNode);
                                 nodeDriver.addValues(new Value[]{ValueFactory.createValue(gf.createPoint(end)),

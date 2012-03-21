@@ -30,6 +30,7 @@ package org.gdms.gdmstopology.model;
 import com.vividsolutions.jts.geom.Geometry;
 import java.util.Set;
 import org.gdms.data.DataSourceFactory;
+import org.gdms.data.values.Value;
 import org.gdms.driver.DataSet;
 import org.gdms.driver.DriverException;
 import org.jgrapht.graph.WeightedMultigraph;
@@ -39,7 +40,7 @@ import org.orbisgis.progress.ProgressMonitor;
  *
  * @author ebocher
  */
-public class WMultigraphDataSource extends WeightedMultigraph<Integer, GraphEdge> {
+public class WMultigraphDataSource extends WeightedMultigraph<Integer, GraphEdge> implements GDMSValueGraph<Integer, GraphEdge> {
 
         private final GDMSGraph GDMSGraph;
 
@@ -130,7 +131,22 @@ public class WMultigraphDataSource extends WeightedMultigraph<Integer, GraphEdge
                 return GDMSGraph.vertexSet();
         }
 
+        @Override
         public Geometry getGeometry(GraphEdge graphEdge) throws DriverException {
                 return GDMSGraph.getGeometry(graphEdge);
+        }
+
+        public org.gdms.gdmstopology.model.GDMSGraph getGDMSGraph() {
+                return GDMSGraph;
+        }
+
+        @Override
+        public Geometry getGeometry(int rowid) throws DriverException {
+                return GDMSGraph.getGeometry(rowid);
+        }
+
+        @Override
+        public Value[] getValues(int rowid) throws DriverException {
+                return GDMSGraph.getValues(rowid);
         }
 }

@@ -74,12 +74,12 @@ public class ST_Graph extends AbstractExecutorFunction {
                         if (values.length == 1) {
                                 graphNetwork.setTolerance(values[0].getAsDouble());
                         } else if (values.length == 2) {
-                                graphNetwork.setDim3(values[1].getAsBoolean());
+                                graphNetwork.setZDirection(values[1].getAsBoolean());
                                 graphNetwork.setTolerance(values[0].getAsDouble());
 
                         } else if (values.length == 3) {
                                 graphNetwork.setTolerance(values[0].getAsDouble());
-                                graphNetwork.setDim3(values[1].getAsBoolean());
+                                graphNetwork.setZDirection(values[1].getAsBoolean());
                                 graphNetwork.setOutput_name(values[2].getAsString());
                         }
                         graphNetwork.buildGraph(dataSet);

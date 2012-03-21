@@ -25,7 +25,6 @@
  * or contact directly:
  * info_at_ orbisgis.org
  */
-
 package org.gdms.gdmstopology;
 
 import com.vividsolutions.jts.geom.GeometryFactory;
@@ -49,12 +48,14 @@ public class TopologySetUpTest {
         protected String GRAPH2D_EDGES = "graph2D_edges";
         protected String GRAPH2D_NODES = "graph2D_nodes";
         public static String internalData = "src/test/resources/org/gdms/gdmstopology/";
-        public static File backupDir = new File(internalData + "backup");
+        public static File backupDir = new File(System.getProperty("user.home") + File.separator + ".gdmstopology");
 
         @Before
-        public  void setUp() throws Exception {
+        public void setUp() throws Exception {
+                if(backupDir.exists()){
                 //Create a folder to save all results
                 FileUtils.deleteDir(backupDir);
+                }
                 backupDir.mkdir();
                 //Create the datasourcefactory that uses the folder
                 dsf = new SQLDataSourceFactory(backupDir.getAbsolutePath(), backupDir.getAbsolutePath());
@@ -67,7 +68,7 @@ public class TopologySetUpTest {
         }
 
         @After
-        public  void tearDown() throws Exception {
+        public void tearDown() throws Exception {
                 //Delete the folder that contains result
                 FileUtils.deleteDir(backupDir);
         }

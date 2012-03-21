@@ -79,7 +79,7 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
                                 } else if (method == GraphAnalysis.UNDIRECT) {
                                         return computeWMPath(dsf, sdsEdges, source, fieldCost, pm);
                                 } else {
-                                        throw new FunctionException("1, 2 or 3 input value constante is needed to execute the function");
+                                        throw new FunctionException("1, 2 or 3 input value is needed to execute the function");
                                 }
 
                         } else {
@@ -136,7 +136,7 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
 
         private DiskBufferDriver computeWMPath(DataSourceFactory dsf, DataSet sds, int source, String fieldCost, ProgressMonitor pm) throws DriverException {
                 WMultigraphDataSource wMultigraphDataSource = new WMultigraphDataSource(dsf, sds, pm);
-                wMultigraphDataSource.setWeigthFieldIndex(fieldCost);
+                wMultigraphDataSource.setWeigthFieldIndex(fieldCost);               
                 ClosestFirstIterator<Integer, GraphEdge> cl = new ClosestFirstIterator<Integer, GraphEdge>(
                         wMultigraphDataSource, source);
                 //First point added

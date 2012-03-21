@@ -25,27 +25,38 @@
  * or contact directly:
  * info_at_ orbisgis.org
  */
-
 package org.gdms.gdmstopology.model;
+
+import com.vividsolutions.jts.geom.Geometry;
+import org.gdms.data.values.Value;
+import org.gdms.driver.DriverException;
+import org.jgrapht.graph.EdgeReversedGraph;
 
 /**
  *
  * @author ebocher
  */
-public final class GraphSchema {
+public class EdgeReversedGraphDataSource extends EdgeReversedGraph<Integer, GraphEdge> implements GDMSValueGraph<Integer, GraphEdge> {
 
-        public static final String START_NODE = "start_node";
-        public static final String END_NODE = "end_node";
-        public static final String ID = "id";
-        public static final String WEIGHT = "weight";
-        public static final String LEFT_FACE = "left_polygon";
-        public static final String RIGHT_FACE = "right_polygon";
-        public static String WEIGHT_SUM = "weight_sum";
-        public static final String PATH_ID = "path_id";
+        private DWMultigraphDataSource dWMultigraphDataSource;
 
-        /**
-         * Some fields needed for the input datasource.
-         */
-        private GraphSchema() {
+        public EdgeReversedGraphDataSource(DWMultigraphDataSource dWMultigraphDataSource) {
+                super(dWMultigraphDataSource);
+                this.dWMultigraphDataSource = dWMultigraphDataSource;
+        }
+
+        @Override
+        public Geometry getGeometry(int rowid) throws DriverException {
+                return dWMultigraphDataSource.getGeometry(rowid);
+        }
+
+        @Override
+        public Geometry getGeometry(GraphEdge graphEdge) throws DriverException {
+                return dWMultigraphDataSource.getGeometry(graphEdge);
+        }
+
+        @Override
+        public Value[] getValues(int rowid) throws DriverException {
+                return dWMultigraphDataSource.getValues(rowid);
         }
 }

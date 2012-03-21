@@ -29,6 +29,7 @@ package org.gdms.gdmstopology.function;
 
 import com.vividsolutions.jts.geom.Geometry;
 import java.util.HashMap;
+import org.gdms.data.NoSuchTableException;
 import org.gdms.data.types.TypeFactory;
 import org.gdms.data.types.Type;
 import org.junit.Test;
@@ -86,7 +87,9 @@ public class GraphAnalysisTest extends TopologySetUpTest {
                 DataSet[] tables = new DataSet[]{ds};
                 int source = 5;
                 int target = 3;
-                DataSet result = sT_ShortestPath.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source), ValueFactory.createValue(target), ValueFactory.createValue("length"), ValueFactory.createValue(true)}, null);
+                DataSet result = sT_ShortestPath.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source),
+                                ValueFactory.createValue(target), ValueFactory.createValue("length"),
+                                ValueFactory.createValue(2)}, null);
                 assertTrue(result.getRowCount() == 1);
                 assertTrue(result.getFieldValue(0, 0).getAsGeometry().equals(wktReader.read("LINESTRING ( 222 242, 335 313 )")));
                 ds.close();
@@ -100,7 +103,9 @@ public class GraphAnalysisTest extends TopologySetUpTest {
                 DataSet[] tables = new DataSet[]{ds};
                 int source = 3;
                 int target = 4;
-                DataSet result = sT_ShortestPath.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source), ValueFactory.createValue(target), ValueFactory.createValue("length"), ValueFactory.createValue(true)}, null);
+                DataSet result = sT_ShortestPath.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source),
+                                ValueFactory.createValue(target), ValueFactory.createValue("length"),
+                                ValueFactory.createValue(3)}, null);
                 assertTrue(result.getRowCount() == 3);
                 ds.close();
         }
@@ -114,19 +119,24 @@ public class GraphAnalysisTest extends TopologySetUpTest {
                                 TypeFactory.createType(Type.GEOMETRY),
                                 TypeFactory.createType(Type.INT), TypeFactory.createType(Type.INT), TypeFactory.createType(Type.DOUBLE)});
 
-                mdsd.addValues(new Value[]{ValueFactory.createValue(wktReader.read("LINESTRING(0 0, 2 2)")), ValueFactory.createValue(1), ValueFactory.createValue(2), ValueFactory.createValue(0)});
-                mdsd.addValues(new Value[]{ValueFactory.createValue(wktReader.read("LINESTRING(2 2, 4 4 , 6 2)")), ValueFactory.createValue(2), ValueFactory.createValue(3), ValueFactory.createValue(0)});
-                mdsd.addValues(new Value[]{ValueFactory.createValue(wktReader.read("LINESTRING(2 2, 4 1 , 6 2)")), ValueFactory.createValue(2), ValueFactory.createValue(3), ValueFactory.createValue(10)});
-                mdsd.addValues(new Value[]{ValueFactory.createValue(wktReader.read("LINESTRING(6 2  , 10 2)")), ValueFactory.createValue(3), ValueFactory.createValue(4), ValueFactory.createValue(0)});
+                mdsd.addValues(new Value[]{ValueFactory.createValue(wktReader.read("LINESTRING(0 0, 2 2)")),
+                                ValueFactory.createValue(1), ValueFactory.createValue(2), ValueFactory.createValue(0)});
+                mdsd.addValues(new Value[]{ValueFactory.createValue(wktReader.read("LINESTRING(2 2, 4 4 , 6 2)")),
+                                ValueFactory.createValue(2), ValueFactory.createValue(3), ValueFactory.createValue(0)});
+                mdsd.addValues(new Value[]{ValueFactory.createValue(wktReader.read("LINESTRING(2 2, 4 1 , 6 2)")),
+                                ValueFactory.createValue(2), ValueFactory.createValue(3), ValueFactory.createValue(10)});
+                mdsd.addValues(new Value[]{ValueFactory.createValue(wktReader.read("LINESTRING(6 2  , 10 2)")),
+                                ValueFactory.createValue(3), ValueFactory.createValue(4), ValueFactory.createValue(0)});
 
                 DataSet[] tables = new DataSet[]{mdsd};
                 int source = 1;
                 int target = 4;
-                DataSet result = sT_ShortestPath.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source), ValueFactory.createValue(target), ValueFactory.createValue("weigth")}, null);
+                DataSet result = sT_ShortestPath.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source),
+                                ValueFactory.createValue(target), ValueFactory.createValue("weigth")}, null);
                 assertTrue(result.getRowCount() == 3);
-                assertTrue(result.getFieldValue(0, 0).getAsGeometry().equals(wktReader.read("LINESTRING(0 0, 2 2)")));
+                assertTrue(result.getFieldValue(0, 0).getAsGeometry().equals(wktReader.read("LINESTRING(6 2  , 10 2)")));
                 assertTrue(result.getFieldValue(1, 0).getAsGeometry().equals(wktReader.read("LINESTRING(2 2, 4 4 , 6 2)")));
-                assertTrue(result.getFieldValue(2, 0).getAsGeometry().equals(wktReader.read("LINESTRING(6 2  , 10 2)")));
+                assertTrue(result.getFieldValue(2, 0).getAsGeometry().equals(wktReader.read("LINESTRING(0 0, 2 2)")));
 
         }
 
@@ -139,19 +149,24 @@ public class GraphAnalysisTest extends TopologySetUpTest {
                                 TypeFactory.createType(Type.GEOMETRY),
                                 TypeFactory.createType(Type.INT), TypeFactory.createType(Type.INT), TypeFactory.createType(Type.DOUBLE)});
 
-                mdsd.addValues(new Value[]{ValueFactory.createValue(wktReader.read("LINESTRING(0 0, 2 2)")), ValueFactory.createValue(1), ValueFactory.createValue(2), ValueFactory.createValue(0)});
-                mdsd.addValues(new Value[]{ValueFactory.createValue(wktReader.read("LINESTRING(2 2, 4 4 , 6 2)")), ValueFactory.createValue(2), ValueFactory.createValue(3), ValueFactory.createValue(10)});
-                mdsd.addValues(new Value[]{ValueFactory.createValue(wktReader.read("LINESTRING(2 2, 4 1 , 6 2)")), ValueFactory.createValue(2), ValueFactory.createValue(3), ValueFactory.createValue(0)});
-                mdsd.addValues(new Value[]{ValueFactory.createValue(wktReader.read("LINESTRING(6 2  , 10 2)")), ValueFactory.createValue(3), ValueFactory.createValue(4), ValueFactory.createValue(0)});
+                mdsd.addValues(new Value[]{ValueFactory.createValue(wktReader.read("LINESTRING(0 0, 2 2)")),
+                                ValueFactory.createValue(1), ValueFactory.createValue(2), ValueFactory.createValue(0)});
+                mdsd.addValues(new Value[]{ValueFactory.createValue(wktReader.read("LINESTRING(2 2, 4 4 , 6 2)")),
+                                ValueFactory.createValue(2), ValueFactory.createValue(3), ValueFactory.createValue(10)});
+                mdsd.addValues(new Value[]{ValueFactory.createValue(wktReader.read("LINESTRING(2 2, 4 1 , 6 2)")),
+                                ValueFactory.createValue(2), ValueFactory.createValue(3), ValueFactory.createValue(0)});
+                mdsd.addValues(new Value[]{ValueFactory.createValue(wktReader.read("LINESTRING(6 2  , 10 2)")),
+                                ValueFactory.createValue(3), ValueFactory.createValue(4), ValueFactory.createValue(0)});
 
                 DataSet[] tables = new DataSet[]{mdsd};
                 int source = 1;
                 int target = 4;
-                DataSet result = sT_ShortestPath.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source), ValueFactory.createValue(target), ValueFactory.createValue("weigth")}, null);
+                DataSet result = sT_ShortestPath.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source),
+                                ValueFactory.createValue(target), ValueFactory.createValue("weigth")}, null);
                 assertTrue(result.getRowCount() == 3);
-                assertTrue(result.getFieldValue(0, 0).getAsGeometry().equals(wktReader.read("LINESTRING(0 0, 2 2)")));
+                assertTrue(result.getFieldValue(0, 0).getAsGeometry().equals(wktReader.read("LINESTRING(6 2  , 10 2)")));
                 assertTrue(result.getFieldValue(1, 0).getAsGeometry().equals(wktReader.read("LINESTRING(2 2, 4 1 , 6 2)")));
-                assertTrue(result.getFieldValue(2, 0).getAsGeometry().equals(wktReader.read("LINESTRING(6 2  , 10 2)")));
+                assertTrue(result.getFieldValue(2, 0).getAsGeometry().equals(wktReader.read("LINESTRING(0 0, 2 2)")));
         }
 
         @Test
@@ -173,7 +188,8 @@ public class GraphAnalysisTest extends TopologySetUpTest {
                 DataSet[] tables = new DataSet[]{mdsd};
                 int source = 1;
                 ST_FindReachableEdges stspl = new ST_FindReachableEdges();
-                DataSet result = stspl.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source), ValueFactory.createValue("weigth")}, new NullProgressMonitor());
+                DataSet result = stspl.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source),
+                                ValueFactory.createValue("weigth")}, new NullProgressMonitor());
                 assertTrue(result.getRowCount() == 1);
                 assertTrue(result.getGeometry(0, 0).equalsExact(wktReader.read("LINESTRING(0 0, 5 0)")));
 
@@ -184,7 +200,8 @@ public class GraphAnalysisTest extends TopologySetUpTest {
                 MemoryDataSetDriver mdsd = new MemoryDataSetDriver(new String[]{"geom", "start_node", "end_node", "weigth"},
                         new Type[]{
                                 TypeFactory.createType(Type.GEOMETRY),
-                                TypeFactory.createType(Type.INT), TypeFactory.createType(Type.INT), TypeFactory.createType(Type.DOUBLE)});
+                                TypeFactory.createType(Type.INT), TypeFactory.createType(Type.INT),
+                                TypeFactory.createType(Type.DOUBLE)});
 
                 mdsd.addValues(new Value[]{ValueFactory.createValue(wktReader.read("LINESTRING(0 0, 5 0)")),
                                 ValueFactory.createValue(1), ValueFactory.createValue(2), ValueFactory.createValue(1)});
@@ -198,7 +215,8 @@ public class GraphAnalysisTest extends TopologySetUpTest {
                 DataSet[] tables = new DataSet[]{mdsd};
                 int source = 2;
                 ST_FindReachableEdges stspl = new ST_FindReachableEdges();
-                DataSet result = stspl.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source), ValueFactory.createValue("weigth")}, new NullProgressMonitor());
+                DataSet result = stspl.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source),
+                                ValueFactory.createValue("weigth")}, new NullProgressMonitor());
                 assertTrue(result.getRowCount() == 0);
 
         }
@@ -222,7 +240,8 @@ public class GraphAnalysisTest extends TopologySetUpTest {
                 DataSet[] tables = new DataSet[]{mdsd};
                 int source = 5;
                 ST_FindReachableEdges stspl = new ST_FindReachableEdges();
-                DataSet result = stspl.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source), ValueFactory.createValue("weigth")}, new NullProgressMonitor());
+                DataSet result = stspl.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source),
+                                ValueFactory.createValue("weigth")}, new NullProgressMonitor());
                 assertTrue(result.getRowCount() == 3);
                 assertTrue(result.getGeometry(0, 0).equalsExact(wktReader.read("LINESTRING(10 0 , 20 0)")));
                 assertTrue(result.getGeometry(1, 0).equalsExact(wktReader.read("LINESTRING(7 0 , 10 0)")));
@@ -234,7 +253,8 @@ public class GraphAnalysisTest extends TopologySetUpTest {
                 MemoryDataSetDriver mdsd = new MemoryDataSetDriver(new String[]{"geom", "start_node", "end_node", "weigth"},
                         new Type[]{
                                 TypeFactory.createType(Type.GEOMETRY),
-                                TypeFactory.createType(Type.INT), TypeFactory.createType(Type.INT), TypeFactory.createType(Type.DOUBLE)});
+                                TypeFactory.createType(Type.INT), TypeFactory.createType(Type.INT),
+                                TypeFactory.createType(Type.DOUBLE)});
 
                 mdsd.addValues(new Value[]{ValueFactory.createValue(wktReader.read("LINESTRING(0 0, 5 0)")),
                                 ValueFactory.createValue(1), ValueFactory.createValue(2), ValueFactory.createValue(1)});
@@ -248,7 +268,8 @@ public class GraphAnalysisTest extends TopologySetUpTest {
                 DataSet[] tables = new DataSet[]{mdsd};
                 int source = 2;
                 ST_FindReachableEdges stspl = new ST_FindReachableEdges();
-                DataSet result = stspl.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source), ValueFactory.createValue("weigth"), ValueFactory.createValue(3)}, new NullProgressMonitor());
+                DataSet result = stspl.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source),
+                                ValueFactory.createValue("weigth"), ValueFactory.createValue(3)}, new NullProgressMonitor());
                 assertTrue(result.getRowCount() == 4);
 
                 int count = 0;
@@ -270,7 +291,8 @@ public class GraphAnalysisTest extends TopologySetUpTest {
                 ds.open();
                 DataSet[] tables = new DataSet[]{ds};
                 int source = 3;
-                DataSet result = sT_ShortestPathLength.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source), ValueFactory.createValue("length")}, null);
+                DataSet result = sT_ShortestPathLength.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source),
+                                ValueFactory.createValue("length")}, null);
                 assertTrue(result.getRowCount() == 5);
                 HashMap<Integer, Double> results = new HashMap<Integer, Double>();
                 results.put(3, 0d);
@@ -315,7 +337,8 @@ public class GraphAnalysisTest extends TopologySetUpTest {
                 ds.open();
                 DataSet[] tables = new DataSet[]{ds};
                 int source = 3;
-                DataSet result = sT_ShortestPathLength.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source), ValueFactory.createValue("length"),
+                DataSet result = sT_ShortestPathLength.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source),
+                                ValueFactory.createValue("length"),
                                 ValueFactory.createValue(3)}, null);
                 assertTrue(result.getRowCount() == 6);
                 HashMap<Integer, Double> results = new HashMap<Integer, Double>();
@@ -330,6 +353,36 @@ public class GraphAnalysisTest extends TopologySetUpTest {
                         double cost = result.getDouble(i, 3);
                         assertTrue((results.get(key) - cost) == 0);
                 }
+                ds.close();
+        }
+
+        @Test
+        public void testST_MShortestPath() throws Exception {
+                ST_MShortestPath sT_MShortestPath = new ST_MShortestPath();
+                DataSource ds = dsf.getDataSource(GRAPH2D_EDGES);
+                ds.open();
+
+                MemoryDataSetDriver nodes = new MemoryDataSetDriver(new String[]{"id", "source", "target"},
+                        new Type[]{
+                                TypeFactory.createType(Type.INT),
+                                TypeFactory.createType(Type.INT), TypeFactory.createType(Type.INT)});
+
+                nodes.addValues(new Value[]{
+                                ValueFactory.createValue(1),
+                                ValueFactory.createValue(2),
+                                ValueFactory.createValue(1)});
+                nodes.addValues(new Value[]{
+                                ValueFactory.createValue(2),
+                                ValueFactory.createValue(2),
+                                ValueFactory.createValue(5)});
+                nodes.addValues(new Value[]{
+                                ValueFactory.createValue(3),
+                                ValueFactory.createValue(6),
+                                ValueFactory.createValue(4)});
+
+                DataSet[] tables = new DataSet[]{ds, nodes};
+                DataSet result = sT_MShortestPath.evaluate(dsf, tables, new Value[]{ValueFactory.createValue("length")}, null);
+                assertTrue(result.getRowCount() == 5);                
                 ds.close();
         }
 }
