@@ -28,6 +28,7 @@
 package org.gdms.gdmstopology.process;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -174,9 +175,9 @@ public class GraphAnalysis {
          * @param endNode
          * @return 
          */
-        public static DiskBufferDriver findDistancesBetweenOneNode(SQLDataSourceFactory dsf, GDMSValueGraph<Integer, GraphEdge> graph,
+        public static DiskBufferDriver computeDistancesBetweenOneNode(SQLDataSourceFactory dsf, GDMSValueGraph<Integer, GraphEdge> graph,
                 Integer sourceVertex, ProgressMonitor pm) throws GraphException, DriverException {
-                return calculateDistancesBetweenOneNode(dsf, graph, sourceVertex, Double.POSITIVE_INFINITY, pm);
+                return computeDistancesBetweenOneNode(dsf, graph, sourceVertex, Double.POSITIVE_INFINITY, pm);
         }
 
         /**
@@ -190,7 +191,7 @@ public class GraphAnalysis {
          * @param radius
          * @return 
          */
-        public static DiskBufferDriver calculateDistancesBetweenOneNode(SQLDataSourceFactory dsf, GDMSValueGraph<Integer, GraphEdge> graph,
+        public static DiskBufferDriver computeDistancesBetweenOneNode(SQLDataSourceFactory dsf, GDMSValueGraph<Integer, GraphEdge> graph,
                 Integer sourceVertex, double radius, ProgressMonitor pm) throws GraphException, DriverException {
 
                 if (!graph.containsVertex(sourceVertex)) {
@@ -266,7 +267,7 @@ public class GraphAnalysis {
          */
         public static DiskBufferDriver findPathBetweenSeveralNodes(SQLDataSourceFactory dsf, GDMSValueGraph<Integer, GraphEdge> graph,
                 DataSet nodes, double radius, ProgressMonitor pm) throws GraphException, DriverException {
-                initIndex(dsf, nodes, new NullProgressMonitor());
+                initIndex(dsf, nodes, pm);
                 DiskBufferDriver diskBufferDriver = new DiskBufferDriver(dsf, GraphMetadataFactory.createEdgeMetadataGraph());
 
                 Iterator<Value[]> it = nodes.iterator();
@@ -274,9 +275,8 @@ public class GraphAnalysis {
                 HashSet<Integer> visitedSources = new HashSet<Integer>();
                 while (it.hasNext()) {
                         Value[] values = it.next();
-                        int id_path_nodes = values[ID_FIELD_INDEX].getAsInt();
                         int source = values[SOURCE_FIELD_INDEX].getAsInt();
-                        ArrayList<Integer> targets = null;
+                        HashMap<Integer, Integer> targets = null;
                         if (!visitedSources.contains(source)) {
                                 cl = new ClosestFirstIterator<Integer, GraphEdge>(graph, source);
                                 targets = getTargets(dsf, nodes, source);
@@ -285,10 +285,11 @@ public class GraphAnalysis {
                                 boolean isAllTargetsDone = false;
                                 while (cl.hasNext() && (!isAllTargetsDone)) {
                                         int vertex = cl.next();
-                                        if (targets.contains(vertex)) {
+                                        if (targets.containsKey(vertex)) {
                                                 targetVisisted++;
                                                 isAllTargetsDone = targetsNumber - targetVisisted == 0;
                                                 int v = vertex;
+                                                int idNodes = targets.get(vertex);
                                                 int k = 0;
                                                 while (true) {
                                                         GraphEdge edge = cl.getSpanningTreeEdge(v);
@@ -296,7 +297,7 @@ public class GraphAnalysis {
                                                                 break;
                                                         }
                                                         diskBufferDriver.addValues(new Value[]{ValueFactory.createValue(graph.getGeometry(edge)),
-                                                                        ValueFactory.createValue(id_path_nodes),
+                                                                        ValueFactory.createValue(idNodes),
                                                                         ValueFactory.createValue(k),
                                                                         ValueFactory.createValue(edge.getSource()),
                                                                         ValueFactory.createValue(edge.getTarget()),
@@ -325,9 +326,9 @@ public class GraphAnalysis {
          * @throws GraphException
          * @throws DriverException 
          */
-        public static DiskBufferDriver findDistanceBetweenSeveralNodes(SQLDataSourceFactory dsf, GDMSValueGraph<Integer, GraphEdge> graph,
+        public static DiskBufferDriver computeDistanceBetweenSeveralNodes(SQLDataSourceFactory dsf, GDMSValueGraph<Integer, GraphEdge> graph,
                 DataSet nodes, ProgressMonitor pm) throws GraphException, DriverException {
-                return findDistanceBetweenSeveralNodes(dsf, graph, nodes, Double.POSITIVE_INFINITY, pm);
+                return computeDistanceBetweenSeveralNodes(dsf, graph, nodes, Double.POSITIVE_INFINITY, pm);
 
         }
 
@@ -342,7 +343,7 @@ public class GraphAnalysis {
          * @throws GraphException
          * @throws DriverException 
          */
-        public static DiskBufferDriver findDistanceBetweenSeveralNodes(SQLDataSourceFactory dsf, GDMSValueGraph<Integer, GraphEdge> graph,
+        public static DiskBufferDriver computeDistanceBetweenSeveralNodes(SQLDataSourceFactory dsf, GDMSValueGraph<Integer, GraphEdge> graph,
                 DataSet nodes, double radius, ProgressMonitor pm) throws GraphException, DriverException {
                 initIndex(dsf, nodes, new NullProgressMonitor());
                 DiskBufferDriver diskBufferDriver = new DiskBufferDriver(dsf, GraphMetadataFactory.createDistancesMetadataGraph());
@@ -352,9 +353,8 @@ public class GraphAnalysis {
                 HashSet<Integer> visitedSources = new HashSet<Integer>();
                 while (it.hasNext()) {
                         Value[] values = it.next();
-                        int id_path_nodes = values[ID_FIELD_INDEX].getAsInt();
                         int source = values[SOURCE_FIELD_INDEX].getAsInt();
-                        ArrayList<Integer> targets = null;
+                        HashMap<Integer, Integer> targets = null;
                         if (!visitedSources.contains(source)) {
                                 cl = new ClosestFirstIterator<Integer, GraphEdge>(graph, source);
                                 targets = getTargets(dsf, nodes, source);
@@ -363,10 +363,11 @@ public class GraphAnalysis {
                                 boolean isAllTargetsDone = false;
                                 while (cl.hasNext() && (!isAllTargetsDone)) {
                                         int vertex = cl.next();
-                                        if (targets.contains(vertex)) {
+                                        if (targets.containsKey(vertex)) {
                                                 targetVisisted++;
                                                 isAllTargetsDone = targetsNumber - targetVisisted == 0;
                                                 int v = vertex;
+                                                int idNodes = targets.get(vertex);
                                                 int k = 0;
                                                 double sum = 0;
                                                 while (true) {
@@ -379,7 +380,7 @@ public class GraphAnalysis {
                                                         v = Graphs.getOppositeVertex(graph, edge, v);
                                                 }
                                                 diskBufferDriver.addValues(new Value[]{
-                                                                ValueFactory.createValue(id_path_nodes),
+                                                                ValueFactory.createValue(idNodes),
                                                                 ValueFactory.createValue(source),
                                                                 ValueFactory.createValue(vertex),
                                                                 ValueFactory.createValue(sum)});
@@ -488,16 +489,16 @@ public class GraphAnalysis {
                 if (graphType == DIRECT) {
                         DWMultigraphDataSource dwMultigraphDataSource = new DWMultigraphDataSource(dsf, dataSet, pm);
                         dwMultigraphDataSource.setWeigthFieldIndex(costField);
-                        return findDistancesBetweenOneNode(dsf, dwMultigraphDataSource, source, pm);
+                        return computeDistancesBetweenOneNode(dsf, dwMultigraphDataSource, source, pm);
                 } else if (graphType == DIRECT_REVERSED) {
                         DWMultigraphDataSource dwMultigraphDataSource = new DWMultigraphDataSource(dsf, dataSet, pm);
                         dwMultigraphDataSource.setWeigthFieldIndex(costField);
                         EdgeReversedGraphDataSource edgeReversedGraph = new EdgeReversedGraphDataSource(dwMultigraphDataSource);
-                        return findDistancesBetweenOneNode(dsf, edgeReversedGraph, source, pm);
+                        return computeDistancesBetweenOneNode(dsf, edgeReversedGraph, source, pm);
                 } else if (graphType == UNDIRECT) {
                         WMultigraphDataSource wMultigraphDataSource = new WMultigraphDataSource(dsf, dataSet, pm);
                         wMultigraphDataSource.setWeigthFieldIndex(costField);
-                        return findDistancesBetweenOneNode(dsf, wMultigraphDataSource, source, pm);
+                        return computeDistancesBetweenOneNode(dsf, wMultigraphDataSource, source, pm);
                 } else {
                         throw new GraphException("Only 3 type of graphs are allowed."
                                 + "1 if the path is computing using a directed graph.\n"
@@ -524,16 +525,16 @@ public class GraphAnalysis {
                         if (graphType == DIRECT) {
                                 DWMultigraphDataSource dwMultigraphDataSource = new DWMultigraphDataSource(dsf, dataSet, pm);
                                 dwMultigraphDataSource.setWeigthFieldIndex(costField);
-                                return findDistanceBetweenSeveralNodes(dsf, dwMultigraphDataSource, nodes, pm);
+                                return computeDistanceBetweenSeveralNodes(dsf, dwMultigraphDataSource, nodes, pm);
                         } else if (graphType == DIRECT_REVERSED) {
                                 DWMultigraphDataSource dwMultigraphDataSource = new DWMultigraphDataSource(dsf, dataSet, pm);
                                 dwMultigraphDataSource.setWeigthFieldIndex(costField);
                                 EdgeReversedGraphDataSource edgeReversedGraph = new EdgeReversedGraphDataSource(dwMultigraphDataSource);
-                                return findDistanceBetweenSeveralNodes(dsf, edgeReversedGraph, nodes, pm);
+                                return computeDistanceBetweenSeveralNodes(dsf, edgeReversedGraph, nodes, pm);
                         } else if (graphType == UNDIRECT) {
                                 WMultigraphDataSource wMultigraphDataSource = new WMultigraphDataSource(dsf, dataSet, pm);
                                 wMultigraphDataSource.setWeigthFieldIndex(costField);
-                                return findDistanceBetweenSeveralNodes(dsf, wMultigraphDataSource, nodes, pm);
+                                return computeDistanceBetweenSeveralNodes(dsf, wMultigraphDataSource, nodes, pm);
                         } else {
                                 throw new GraphException("Only 3 type of graphs are allowed."
                                         + "1 if the path is computing using a directed graph.\n"
@@ -593,17 +594,17 @@ public class GraphAnalysis {
          * Query the dataset using an alphanumeric index
          * @param fieldToQuery
          * @param valueToQuery
-         * @return a list of target values
+         * @return a map where key = target value and value = id value
          * @throws DriverException 
          */
-        public static ArrayList<Integer> getTargets(SQLDataSourceFactory dsf, DataSet nodes, Integer valueToQuery) throws DriverException {
+        public static HashMap<Integer, Integer> getTargets(SQLDataSourceFactory dsf, DataSet nodes, Integer valueToQuery) throws DriverException {
                 DefaultAlphaQuery defaultAlphaQuery = new DefaultAlphaQuery(
                         GraphSchema.SOURCE_NODE, ValueFactory.createValue(valueToQuery));
                 Iterator<Integer> iterator = nodes.queryIndex(dsf, defaultAlphaQuery);
-                ArrayList<Integer> targets = new ArrayList<Integer>();
+                HashMap<Integer, Integer> targets = new HashMap<Integer, Integer>();
                 while (iterator.hasNext()) {
                         Integer integer = iterator.next();
-                        targets.add(nodes.getInt(integer, TARGET_FIELD_INDEX));
+                        targets.put(nodes.getInt(integer, TARGET_FIELD_INDEX), nodes.getInt(integer, ID_FIELD_INDEX));
                 }
                 return targets;
         }

@@ -28,6 +28,7 @@
 package org.gdms.gdmstopology.function;
 
 import java.util.LinkedList;
+import org.gdms.data.DataSourceIterator;
 import org.jgrapht.Graphs;
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.DefaultDirectedGraph;
@@ -35,6 +36,7 @@ import org.jgrapht.DirectedGraph;
 import com.vividsolutions.jts.geom.Geometry;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import org.gdms.data.types.TypeFactory;
 import org.gdms.data.types.Type;
 import org.junit.Test;
@@ -44,7 +46,6 @@ import org.gdms.data.values.ValueFactory;
 import org.gdms.driver.DataSet;
 import org.gdms.driver.memory.MemoryDataSetDriver;
 import org.gdms.gdmstopology.TopologySetUpTest;
-import org.jgrapht.alg.KShortestPaths;
 import org.jgrapht.traverse.ClosestFirstIterator;
 import org.orbisgis.progress.NullProgressMonitor;
 
@@ -65,8 +66,8 @@ public class GraphAnalysisTest extends TopologySetUpTest {
                 DataSet[] tables = new DataSet[]{ds};
                 int source = 3;
                 int target = 5;
-                DataSet result = sT_ShortestPath.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source), ValueFactory.createValue(target), 
-                        ValueFactory.createValue("length")}, new NullProgressMonitor());
+                DataSet result = sT_ShortestPath.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source), ValueFactory.createValue(target),
+                                ValueFactory.createValue("length")}, new NullProgressMonitor());
                 assertTrue(result.getRowCount() == 1);
                 assertTrue(result.getFieldValue(0, 0).getAsGeometry().equals(wktReader.read("LINESTRING ( 222 242, 335 313 )")));
                 ds.close();
@@ -455,6 +456,46 @@ public class GraphAnalysisTest extends TopologySetUpTest {
         }
 
         @Test
+        public void testST_MShortestPathLength() throws Exception {
+                ST_MShortestPathLength sT_MShortestPathLength = new ST_MShortestPathLength();
+                DataSource ds = dsf.getDataSource(GRAPH2D_EDGES);
+                ds.open();
+                MemoryDataSetDriver nodes = new MemoryDataSetDriver(new String[]{"id", "source", "target"},
+                        new Type[]{
+                                TypeFactory.createType(Type.INT),
+                                TypeFactory.createType(Type.INT), TypeFactory.createType(Type.INT)});
+
+                nodes.addValues(new Value[]{
+                                ValueFactory.createValue(1),
+                                ValueFactory.createValue(2),
+                                ValueFactory.createValue(4)});
+
+                DataSet[] tables = new DataSet[]{ds, nodes};
+                DataSet result = sT_MShortestPathLength.evaluate(dsf, tables, new Value[]{ValueFactory.createValue("length")},
+                        new NullProgressMonitor());
+                assertTrue(result.getRowCount() == 1);
+
+                DataSourceIterator iter = ds.iterator();
+
+                HashSet<Integer> pathList = new HashSet<Integer>();
+                pathList.add(1);
+                pathList.add(3);
+                pathList.add(4);
+                pathList.add(6);
+
+                double sum = 0;
+                while (iter.hasNext()) {
+                        Value[] values = iter.next();
+                        if (pathList.contains(values[1].getAsInt())) {
+                                sum += values[0].getAsGeometry().getLength();
+                        }
+                }
+                assertEquals(result.getDouble(0, 3), sum, 0.000001);
+
+                ds.close();
+        }
+
+        @Test
         public void JGraphtMPath() {
                 DirectedGraph<Integer, DefaultEdge> g =
                         new DefaultDirectedGraph<Integer, DefaultEdge>(DefaultEdge.class);
@@ -508,5 +549,6 @@ public class GraphAnalysisTest extends TopologySetUpTest {
                                 }
                         }
                 }
+                assertTrue(true);
         }
 }
