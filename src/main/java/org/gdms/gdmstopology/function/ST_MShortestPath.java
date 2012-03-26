@@ -54,12 +54,12 @@ public class ST_MShortestPath extends AbstractTableFunction {
         public DataSet evaluate(SQLDataSourceFactory dsf, DataSet[] tables, Value[] values, ProgressMonitor pm) throws FunctionException {
                 try {
                         if (values.length == 2) {
-                                DiskBufferDriver diskBufferDriver = GraphAnalysis.getMShortestPath(dsf, tables[0], tables[1], 
+                                DiskBufferDriver diskBufferDriver = GraphAnalysis.getMShortestPath(dsf, tables[0], tables[1],
                                         values[0].getAsString(), values[1].getAsInt(), pm);
                                 diskBufferDriver.start();
                                 return diskBufferDriver;
                         } else {
-                                DiskBufferDriver diskBufferDriver = GraphAnalysis.getMShortestPath(dsf, tables[0], tables[1], 
+                                DiskBufferDriver diskBufferDriver = GraphAnalysis.getMShortestPath(dsf, tables[0], tables[1],
                                         values[0].getAsString(), GraphAnalysis.DIRECT, pm);
                                 diskBufferDriver.start();
                                 return diskBufferDriver;

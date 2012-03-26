@@ -27,9 +27,14 @@
  */
 package org.gdms.gdmstopology.function;
 
+import java.util.LinkedList;
+import org.jgrapht.Graphs;
+import org.jgrapht.graph.DefaultEdge;
+import org.jgrapht.graph.DefaultDirectedGraph;
+import org.jgrapht.DirectedGraph;
 import com.vividsolutions.jts.geom.Geometry;
+import java.util.ArrayList;
 import java.util.HashMap;
-import org.gdms.data.NoSuchTableException;
 import org.gdms.data.types.TypeFactory;
 import org.gdms.data.types.Type;
 import org.junit.Test;
@@ -39,6 +44,8 @@ import org.gdms.data.values.ValueFactory;
 import org.gdms.driver.DataSet;
 import org.gdms.driver.memory.MemoryDataSetDriver;
 import org.gdms.gdmstopology.TopologySetUpTest;
+import org.jgrapht.alg.KShortestPaths;
+import org.jgrapht.traverse.ClosestFirstIterator;
 import org.orbisgis.progress.NullProgressMonitor;
 
 
@@ -58,7 +65,8 @@ public class GraphAnalysisTest extends TopologySetUpTest {
                 DataSet[] tables = new DataSet[]{ds};
                 int source = 3;
                 int target = 5;
-                DataSet result = sT_ShortestPath.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source), ValueFactory.createValue(target), ValueFactory.createValue("length")}, null);
+                DataSet result = sT_ShortestPath.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source), ValueFactory.createValue(target), 
+                        ValueFactory.createValue("length")}, new NullProgressMonitor());
                 assertTrue(result.getRowCount() == 1);
                 assertTrue(result.getFieldValue(0, 0).getAsGeometry().equals(wktReader.read("LINESTRING ( 222 242, 335 313 )")));
                 ds.close();
@@ -73,7 +81,8 @@ public class GraphAnalysisTest extends TopologySetUpTest {
                 int source = 5;
                 int target = 3;
                 sT_ShortestPath = new ST_ShortestPath();
-                DataSet result = sT_ShortestPath.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source), ValueFactory.createValue(target), ValueFactory.createValue("length")}, null);
+                DataSet result = sT_ShortestPath.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source),
+                                ValueFactory.createValue(target), ValueFactory.createValue("length")}, new NullProgressMonitor());
                 assertTrue(result.getRowCount() == 0);
                 ds.close();
 
@@ -89,7 +98,7 @@ public class GraphAnalysisTest extends TopologySetUpTest {
                 int target = 3;
                 DataSet result = sT_ShortestPath.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source),
                                 ValueFactory.createValue(target), ValueFactory.createValue("length"),
-                                ValueFactory.createValue(2)}, null);
+                                ValueFactory.createValue(2)}, new NullProgressMonitor());
                 assertTrue(result.getRowCount() == 1);
                 assertTrue(result.getFieldValue(0, 0).getAsGeometry().equals(wktReader.read("LINESTRING ( 222 242, 335 313 )")));
                 ds.close();
@@ -105,7 +114,7 @@ public class GraphAnalysisTest extends TopologySetUpTest {
                 int target = 4;
                 DataSet result = sT_ShortestPath.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source),
                                 ValueFactory.createValue(target), ValueFactory.createValue("length"),
-                                ValueFactory.createValue(3)}, null);
+                                ValueFactory.createValue(3)}, new NullProgressMonitor());
                 assertTrue(result.getRowCount() == 3);
                 ds.close();
         }
@@ -132,7 +141,7 @@ public class GraphAnalysisTest extends TopologySetUpTest {
                 int source = 1;
                 int target = 4;
                 DataSet result = sT_ShortestPath.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source),
-                                ValueFactory.createValue(target), ValueFactory.createValue("weigth")}, null);
+                                ValueFactory.createValue(target), ValueFactory.createValue("weigth")}, new NullProgressMonitor());
                 assertTrue(result.getRowCount() == 3);
                 assertTrue(result.getFieldValue(0, 0).getAsGeometry().equals(wktReader.read("LINESTRING(6 2  , 10 2)")));
                 assertTrue(result.getFieldValue(1, 0).getAsGeometry().equals(wktReader.read("LINESTRING(2 2, 4 4 , 6 2)")));
@@ -162,7 +171,7 @@ public class GraphAnalysisTest extends TopologySetUpTest {
                 int source = 1;
                 int target = 4;
                 DataSet result = sT_ShortestPath.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source),
-                                ValueFactory.createValue(target), ValueFactory.createValue("weigth")}, null);
+                                ValueFactory.createValue(target), ValueFactory.createValue("weigth")}, new NullProgressMonitor());
                 assertTrue(result.getRowCount() == 3);
                 assertTrue(result.getFieldValue(0, 0).getAsGeometry().equals(wktReader.read("LINESTRING(6 2  , 10 2)")));
                 assertTrue(result.getFieldValue(1, 0).getAsGeometry().equals(wktReader.read("LINESTRING(2 2, 4 1 , 6 2)")));
@@ -292,10 +301,9 @@ public class GraphAnalysisTest extends TopologySetUpTest {
                 DataSet[] tables = new DataSet[]{ds};
                 int source = 3;
                 DataSet result = sT_ShortestPathLength.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source),
-                                ValueFactory.createValue("length")}, null);
-                assertTrue(result.getRowCount() == 5);
+                                ValueFactory.createValue("length")}, new NullProgressMonitor());
+                assertTrue(result.getRowCount() == 4);
                 HashMap<Integer, Double> results = new HashMap<Integer, Double>();
-                results.put(3, 0d);
                 results.put(5, 133.4541119636259);
                 results.put(6, 51.35172830587107);
                 results.put(1, (211.6687715105811 + 51.35172830587107));
@@ -317,10 +325,9 @@ public class GraphAnalysisTest extends TopologySetUpTest {
                 DataSet[] tables = new DataSet[]{ds};
                 int source = 3;
                 DataSet result = sT_ShortestPathLength.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source),
-                                ValueFactory.createValue("length"), ValueFactory.createValue(2)}, null);
-                assertTrue(result.getRowCount() == 2);
+                                ValueFactory.createValue("length"), ValueFactory.createValue(2)}, new NullProgressMonitor());
+                assertTrue(result.getRowCount() == 1);
                 HashMap<Integer, Double> results = new HashMap<Integer, Double>();
-                results.put(3, 0d);
                 results.put(2, 129.63024338479042);
                 for (int i = 0; i < result.getRowCount(); i++) {
                         int key = result.getInt(i, 2);
@@ -339,10 +346,9 @@ public class GraphAnalysisTest extends TopologySetUpTest {
                 int source = 3;
                 DataSet result = sT_ShortestPathLength.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source),
                                 ValueFactory.createValue("length"),
-                                ValueFactory.createValue(3)}, null);
-                assertTrue(result.getRowCount() == 6);
+                                ValueFactory.createValue(3)}, new NullProgressMonitor());
+                assertTrue(result.getRowCount() == 5);
                 HashMap<Integer, Double> results = new HashMap<Integer, Double>();
-                results.put(3, 0d);
                 results.put(2, 129.63024338479042);
                 results.put(5, 133.4541119636259);
                 results.put(6, 51.35172830587107);
@@ -369,6 +375,29 @@ public class GraphAnalysisTest extends TopologySetUpTest {
 
                 nodes.addValues(new Value[]{
                                 ValueFactory.createValue(1),
+                                ValueFactory.createValue(6),
+                                ValueFactory.createValue(1)});
+
+                DataSet[] tables = new DataSet[]{ds, nodes};
+                DataSet result = sT_MShortestPath.evaluate(dsf, tables, new Value[]{ValueFactory.createValue("length")}, new NullProgressMonitor());
+                assertTrue(result.getRowCount() == 1);
+                assertTrue(result.getGeometry(0, 0).equals(wktReader.read("LINESTRING ( 228 191, 313 110, 223 82 )")));
+                ds.close();
+        }
+
+        @Test
+        public void testST_MShortestPath1() throws Exception {
+                ST_MShortestPath sT_MShortestPath = new ST_MShortestPath();
+                DataSource ds = dsf.getDataSource(GRAPH2D_EDGES);
+                ds.open();
+
+                MemoryDataSetDriver nodes = new MemoryDataSetDriver(new String[]{"id", "source", "target"},
+                        new Type[]{
+                                TypeFactory.createType(Type.INT),
+                                TypeFactory.createType(Type.INT), TypeFactory.createType(Type.INT)});
+
+                nodes.addValues(new Value[]{
+                                ValueFactory.createValue(1),
                                 ValueFactory.createValue(2),
                                 ValueFactory.createValue(1)});
                 nodes.addValues(new Value[]{
@@ -379,10 +408,105 @@ public class GraphAnalysisTest extends TopologySetUpTest {
                                 ValueFactory.createValue(3),
                                 ValueFactory.createValue(6),
                                 ValueFactory.createValue(4)});
+                nodes.addValues(new Value[]{
+                                ValueFactory.createValue(3),
+                                ValueFactory.createValue(6),
+                                ValueFactory.createValue(1)});
 
                 DataSet[] tables = new DataSet[]{ds, nodes};
-                DataSet result = sT_MShortestPath.evaluate(dsf, tables, new Value[]{ValueFactory.createValue("length")}, null);
-                assertTrue(result.getRowCount() == 5);                
+                DataSet result = sT_MShortestPath.evaluate(dsf, tables, new Value[]{ValueFactory.createValue("length")},
+                        new NullProgressMonitor());
+                assertTrue(result.getRowCount() == 8);
                 ds.close();
+        }
+
+        @Test
+        public void testST_MShortestPath2() throws Exception {
+                ST_MShortestPath sT_MShortestPath = new ST_MShortestPath();
+                DataSource ds = dsf.getDataSource(GRAPH2D_EDGES);
+                ds.open();
+                MemoryDataSetDriver nodes = new MemoryDataSetDriver(new String[]{"id", "source", "target"},
+                        new Type[]{
+                                TypeFactory.createType(Type.INT),
+                                TypeFactory.createType(Type.INT), TypeFactory.createType(Type.INT)});
+
+                nodes.addValues(new Value[]{
+                                ValueFactory.createValue(1),
+                                ValueFactory.createValue(2),
+                                ValueFactory.createValue(1)});
+                nodes.addValues(new Value[]{
+                                ValueFactory.createValue(2),
+                                ValueFactory.createValue(1),
+                                ValueFactory.createValue(5)});
+                nodes.addValues(new Value[]{
+                                ValueFactory.createValue(3),
+                                ValueFactory.createValue(6),
+                                ValueFactory.createValue(4)});
+                nodes.addValues(new Value[]{
+                                ValueFactory.createValue(3),
+                                ValueFactory.createValue(5),
+                                ValueFactory.createValue(1)});
+
+                DataSet[] tables = new DataSet[]{ds, nodes};
+                DataSet result = sT_MShortestPath.evaluate(dsf, tables, new Value[]{ValueFactory.createValue("length")},
+                        new NullProgressMonitor());
+                assertTrue(result.getRowCount() == 5);
+                ds.close();
+        }
+
+        @Test
+        public void JGraphtMPath() {
+                DirectedGraph<Integer, DefaultEdge> g =
+                        new DefaultDirectedGraph<Integer, DefaultEdge>(DefaultEdge.class);
+                g.addVertex(1);
+                g.addVertex(2);
+                g.addVertex(3);
+                g.addVertex(4);
+                g.addVertex(5);
+                g.addVertex(6);
+                g.addEdge(2, 3);
+                g.addEdge(3, 5);
+                g.addEdge(3, 6);
+                g.addEdge(6, 1);
+                g.addEdge(6, 1);
+                g.addEdge(1, 4);
+
+                //Graph<Integer, DefaultEdge> g = RandomGraphCreator.createRandomDirectGraph(10000, 2000);
+
+                ArrayList<Integer> sources = new ArrayList<Integer>();
+                sources.add(2);
+                sources.add(3);
+
+
+                int sourceNode = 3;
+                LinkedList<Integer> targets = new LinkedList<Integer>();
+                targets.add(1);
+                targets.add(3);
+                targets.add(5);
+                targets.add(5);
+                targets.add(4);
+
+                ClosestFirstIterator<Integer, DefaultEdge> cl = new ClosestFirstIterator<Integer, DefaultEdge>(g, sourceNode);
+
+                while (cl.hasNext()) {
+                        int vertex = cl.next();
+                        if (vertex != sourceNode) {
+                                if (targets.contains(vertex)) {
+                                        int v = vertex;
+                                        int k = 0;
+                                        StringBuffer sb = new StringBuffer();
+                                        while (true) {
+                                                DefaultEdge edge = cl.getSpanningTreeEdge(v);
+                                                if (edge == null) {
+                                                        break;
+                                                }
+                                                k++;
+                                                sb.append(edge.toString());
+                                                v = Graphs.getOppositeVertex(g, edge, v);
+                                        }
+                                        System.out.println("Source " + sourceNode + " --> Target " + vertex + sb.toString());
+                                }
+                        }
+                }
         }
 }

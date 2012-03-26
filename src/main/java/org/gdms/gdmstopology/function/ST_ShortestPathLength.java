@@ -27,21 +27,13 @@
  */
 package org.gdms.gdmstopology.function;
 
-import org.gdms.data.DataSourceFactory;
 import org.gdms.data.SQLDataSourceFactory;
-import org.gdms.data.schema.DefaultMetadata;
 import org.gdms.data.schema.Metadata;
-import org.gdms.data.types.Type;
-import org.gdms.data.types.TypeFactory;
 import org.gdms.data.values.Value;
-import org.gdms.data.values.ValueFactory;
 import org.gdms.driver.DiskBufferDriver;
 import org.gdms.driver.DriverException;
 import org.gdms.driver.DataSet;
-import org.gdms.gdmstopology.model.DWMultigraphDataSource;
-import org.gdms.gdmstopology.model.GraphEdge;
-import org.gdms.gdmstopology.model.GraphSchema;
-import org.gdms.gdmstopology.model.WMultigraphDataSource;
+import org.gdms.gdmstopology.model.GraphMetadataFactory;
 import org.gdms.gdmstopology.process.GraphAnalysis;
 import org.gdms.sql.function.FunctionException;
 import org.gdms.sql.function.FunctionSignature;
@@ -51,8 +43,6 @@ import org.gdms.sql.function.table.TableArgument;
 import org.gdms.sql.function.table.TableDefinition;
 import org.gdms.sql.function.table.TableFunctionSignature;
 import org.orbisgis.progress.ProgressMonitor;
-import org.jgrapht.traverse.ClosestFirstIterator;
-import org.jgrapht.graph.EdgeReversedGraph;
 
 /**
  *
@@ -60,44 +50,27 @@ import org.jgrapht.graph.EdgeReversedGraph;
  */
 public class ST_ShortestPathLength extends AbstractTableFunction {
 
-        private DiskBufferDriver diskBufferDriver;
-        
-
         @Override
         public DataSet evaluate(SQLDataSourceFactory dsf, DataSet[] tables, Value[] values, ProgressMonitor pm) throws FunctionException {
                 try {
                         int source = values[0].getAsInt();
-                        String fieldCost = values[1].getAsString();
-                        DataSet sdsEdges = tables[0];
-                        diskBufferDriver = new DiskBufferDriver(dsf, getMetadata(null));
+                        String costField = values[1].getAsString();
                         if (values.length == 3) {
-                                int method = values[2].getAsInt();
-                                if (method == GraphAnalysis.DIRECT) {
-                                        return computeDWMPath(dsf, sdsEdges, source, fieldCost, false, pm);
-                                } else if (method == GraphAnalysis.DIRECT_REVERSED) {
-                                        return computeDWMPath(dsf, sdsEdges, source, fieldCost, true, pm);
-                                } else if (method == GraphAnalysis.UNDIRECT) {
-                                        return computeWMPath(dsf, sdsEdges, source, fieldCost, pm);
-                                } else {
-                                        throw new FunctionException("1, 2 or 3 input value is needed to execute the function");
-                                }
+                                DiskBufferDriver diskBufferDriver = GraphAnalysis.getShortestPathLength(dsf, tables[0], source, costField, values[2].getAsInt(), pm);
+                                diskBufferDriver.start();
+                                return diskBufferDriver;
 
                         } else {
-                                return computeDWMPath(dsf, sdsEdges, source, fieldCost, false, pm);
+                                DiskBufferDriver diskBufferDriver = GraphAnalysis.getShortestPathLength(dsf, tables[0], source, costField, GraphAnalysis.DIRECT, pm);
+                                diskBufferDriver.start();
+                                return diskBufferDriver;
                         }
 
-                } catch (DriverException ex) {
+                } catch (Exception ex) {
                         throw new FunctionException("Cannot compute the shortest path length", ex);
                 }
 
 
-        }
-
-        @Override
-        public void workFinished() throws DriverException {
-                if (diskBufferDriver != null) {
-                        diskBufferDriver.stop();
-                }
         }
 
         @Override
@@ -120,10 +93,7 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
 
         @Override
         public Metadata getMetadata(Metadata[] tables) throws DriverException {
-                Metadata md = new DefaultMetadata(
-                        new Type[]{TypeFactory.createType(Type.INT), TypeFactory.createType(Type.INT), TypeFactory.createType(Type.INT), TypeFactory.createType(Type.DOUBLE)},
-                        new String[]{GraphSchema.ID, GraphSchema.START_NODE, GraphSchema.END_NODE, GraphSchema.WEIGHT});
-                return md;
+                return GraphMetadataFactory.createDistancesMetadataGraph();
         }
 
         @Override
@@ -132,58 +102,5 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
                                 new TableFunctionSignature(TableDefinition.GEOMETRY, new TableArgument(TableDefinition.GEOMETRY), ScalarArgument.INT, ScalarArgument.STRING),
                                 new TableFunctionSignature(TableDefinition.GEOMETRY, new TableArgument(TableDefinition.GEOMETRY), ScalarArgument.INT, ScalarArgument.STRING, ScalarArgument.INT)
                         };
-        }
-
-        private DiskBufferDriver computeWMPath(DataSourceFactory dsf, DataSet sds, int source, String fieldCost, ProgressMonitor pm) throws DriverException {
-                WMultigraphDataSource wMultigraphDataSource = new WMultigraphDataSource(dsf, sds, pm);
-                wMultigraphDataSource.setWeigthFieldIndex(fieldCost);               
-                ClosestFirstIterator<Integer, GraphEdge> cl = new ClosestFirstIterator<Integer, GraphEdge>(
-                        wMultigraphDataSource, source);
-                //First point added
-                diskBufferDriver.addValues(new Value[]{ValueFactory.createValue(source), ValueFactory.createValue(source), ValueFactory.createValue(source), ValueFactory.createValue(0)});
-
-                int previous = source;
-                while (cl.hasNext()) {
-                        Integer node = cl.next();
-                        if (node != source) {
-                                double length = cl.getShortestPathLength(node);
-                                diskBufferDriver.addValues(new Value[]{ValueFactory.createValue(source), ValueFactory.createValue(previous), ValueFactory.createValue(node), ValueFactory.createValue(length)});
-                                previous = node;
-                        }
-                }
-                diskBufferDriver.writingFinished();
-                diskBufferDriver.start();
-                return diskBufferDriver;
-
-
-        }
-
-        private DiskBufferDriver computeDWMPath(DataSourceFactory dsf, DataSet sds, int source, String fieldCost, boolean reverseGraph, ProgressMonitor pm) throws DriverException {
-                DWMultigraphDataSource dwMultigraphDataSource = new DWMultigraphDataSource(dsf, sds, pm);
-                dwMultigraphDataSource.setWeigthFieldIndex(fieldCost);
-                ClosestFirstIterator<Integer, GraphEdge> cl;
-                if (reverseGraph) {
-                        EdgeReversedGraph edgeReversedGraph = new EdgeReversedGraph(dwMultigraphDataSource);
-                        cl = new ClosestFirstIterator<Integer, GraphEdge>(
-                                edgeReversedGraph, source);
-                } else {
-                        cl = new ClosestFirstIterator<Integer, GraphEdge>(
-                                dwMultigraphDataSource, source);
-                }
-                //First point added
-                diskBufferDriver.addValues(new Value[]{ValueFactory.createValue(source), ValueFactory.createValue(source), ValueFactory.createValue(source), ValueFactory.createValue(0)});
-
-                int previous = source;
-                while (cl.hasNext()) {
-                        Integer node = cl.next();
-                        if (node != source) {
-                                double length = cl.getShortestPathLength(node);
-                                diskBufferDriver.addValues(new Value[]{ValueFactory.createValue(source), ValueFactory.createValue(previous), ValueFactory.createValue(node), ValueFactory.createValue(length)});
-                                previous = node;
-                        }
-                }
-                diskBufferDriver.writingFinished();
-                diskBufferDriver.start();
-                return diskBufferDriver;
         }
 }

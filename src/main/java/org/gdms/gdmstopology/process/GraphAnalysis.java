@@ -27,9 +27,14 @@
  */
 package org.gdms.gdmstopology.process;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import org.gdms.data.NoSuchTableException;
 import org.gdms.data.SQLDataSourceFactory;
+import org.gdms.data.indexes.DefaultAlphaQuery;
+import org.gdms.data.indexes.IndexException;
 import org.gdms.data.schema.Metadata;
 import org.gdms.data.values.Value;
 import org.gdms.data.values.ValueFactory;
@@ -47,6 +52,7 @@ import org.gdms.gdmstopology.model.WMultigraphDataSource;
 import org.jgrapht.Graphs;
 import org.jgrapht.alg.DijkstraShortestPath;
 import org.jgrapht.traverse.ClosestFirstIterator;
+import org.orbisgis.progress.NullProgressMonitor;
 import org.orbisgis.progress.ProgressMonitor;
 
 /**
@@ -62,7 +68,6 @@ public class GraphAnalysis {
         private static int ID_FIELD_INDEX = -1;
         private static int SOURCE_FIELD_INDEX = -1;
         private static int TARGET_FIELD_INDEX = -1;
-        private static int pass =0;
 
         /**
          * Some usefull methods to analyse a graph network.
@@ -70,27 +75,67 @@ public class GraphAnalysis {
         private GraphAnalysis() {
         }
 
+        /**
+         * Find the shortest path between two nodes using
+         * the Dijkstra algorithm.
+         * It returns a list of @GraphEdge
+         * @param dsf
+         * @param graph
+         * @param startNode
+         * @param endNode
+         * @return 
+         */
         public static List<GraphEdge> findPathBetween(SQLDataSourceFactory dsf, GDMSValueGraph<Integer, GraphEdge> graph,
                 Integer startNode, Integer endNode) {
                 return DijkstraShortestPath.findPathBetween(graph, startNode, endNode);
         }
 
+        /**
+         * Find the shortest path between two nodes using
+         * the Dijkstra algorithm.
+         * The list of @GraphEdge is stored in a datasource.
+         * @param dsf
+         * @param graph
+         * @param startNode
+         * @param endNode
+         * @return 
+         */
         public static DiskBufferDriver findPathBetween2Nodes(SQLDataSourceFactory dsf, GDMSValueGraph<Integer, GraphEdge> graph,
-                Integer sourceVertex, Integer targetVertex) throws GraphException, DriverException {
-                return findPathBetween2Nodes(dsf, graph, sourceVertex, targetVertex, Double.POSITIVE_INFINITY);
+                Integer sourceVertex, Integer targetVertex, ProgressMonitor pm) throws GraphException, DriverException {
+                return findPathBetween2Nodes(dsf, graph, sourceVertex, targetVertex, Double.POSITIVE_INFINITY, pm);
         }
 
+        /**
+         * Find the shortest path between two nodes using
+         * the Dijkstra algorithm.
+         * A radius can be used to constraint the analysis of the graph.
+         * The list of @GraphEdge is stored in a datasource.
+         * For each path the method returns all geometries of the input graph datasource.
+         * @param dsf
+         * @param graph
+         * @param startNode
+         * @param endNode
+         * @param radius
+         * @return 
+         */
         public static DiskBufferDriver findPathBetween2Nodes(SQLDataSourceFactory dsf, GDMSValueGraph<Integer, GraphEdge> graph,
-                Integer sourceVertex, Integer targetVertex, double radius) throws GraphException, DriverException {
+                Integer sourceVertex, Integer targetVertex, double radius, ProgressMonitor pm) throws GraphException, DriverException {
 
                 if (!graph.containsVertex(targetVertex)) {
                         throw new GraphException(
                                 "The graph must contain the target vertex");
                 }
-
                 ClosestFirstIterator<Integer, GraphEdge> cl = new ClosestFirstIterator<Integer, GraphEdge>(graph, sourceVertex, radius);
                 DiskBufferDriver diskBufferDriver = new DiskBufferDriver(dsf, GraphMetadataFactory.createEdgeMetadataGraph());
+                int count = 0;
+                pm.startTask("Find shortest path", 100);
                 while (cl.hasNext()) {
+                        if (count >= 100 && count % 100 == 0) {
+                                if (pm.isCancelled()) {
+                                        break;
+                                }
+                        }
+                        count++;
                         int vertex = cl.next();
                         if (vertex == targetVertex) {
                                 int v = targetVertex;
@@ -113,66 +158,155 @@ public class GraphAnalysis {
                         }
                 }
                 diskBufferDriver.writingFinished();
+                pm.endTask();
                 diskBufferDriver.stop();
 
                 return diskBufferDriver;
 
         }
 
-        public static DiskBufferDriver findPathBetweenSeveralNodes(SQLDataSourceFactory dsf, GDMSValueGraph<Integer, GraphEdge> graph,
-                DataSet nodes) throws GraphException, DriverException {
-                return findPathBetweenSeveralNodes(dsf, graph, nodes, Double.POSITIVE_INFINITY);
+        /**
+         * Compute all shortest distancs between one node.
+         * The distances are stored in a datasource.
+         * @param dsf
+         * @param graph
+         * @param startNode
+         * @param endNode
+         * @return 
+         */
+        public static DiskBufferDriver findDistancesBetweenOneNode(SQLDataSourceFactory dsf, GDMSValueGraph<Integer, GraphEdge> graph,
+                Integer sourceVertex, ProgressMonitor pm) throws GraphException, DriverException {
+                return calculateDistancesBetweenOneNode(dsf, graph, sourceVertex, Double.POSITIVE_INFINITY, pm);
         }
 
+        /**
+         * Compute all shortest distancs between one node.
+         * A radius can be used to constraint the analysis of the graph.
+         * The distances are stored in a datasource.
+         * @param dsf
+         * @param graph
+         * @param startNode
+         * @param endNode
+         * @param radius
+         * @return 
+         */
+        public static DiskBufferDriver calculateDistancesBetweenOneNode(SQLDataSourceFactory dsf, GDMSValueGraph<Integer, GraphEdge> graph,
+                Integer sourceVertex, double radius, ProgressMonitor pm) throws GraphException, DriverException {
+
+                if (!graph.containsVertex(sourceVertex)) {
+                        throw new GraphException(
+                                "The graph must contain the target vertex");
+                }
+
+                DiskBufferDriver diskBufferDriver = new DiskBufferDriver(dsf, GraphMetadataFactory.createDistancesMetadataGraph());
+
+                ClosestFirstIterator<Integer, GraphEdge> cl = new ClosestFirstIterator<Integer, GraphEdge>(graph, sourceVertex, radius);
+
+                int count = 0;
+                pm.startTask("Calculate distances path", 100);
+                int k = 0;
+                while (cl.hasNext()) {
+                        if (count >= 100 && count % 100 == 0) {
+                                if (pm.isCancelled()) {
+                                        break;
+                                }
+                        }
+                        count++;
+                        Integer node = cl.next();
+                        if (node != sourceVertex) {
+                                double length = cl.getShortestPathLength(node);
+                                diskBufferDriver.addValues(new Value[]{ValueFactory.createValue(k),
+                                                ValueFactory.createValue(sourceVertex), ValueFactory.createValue(node),
+                                                ValueFactory.createValue(length)});
+                                k++;
+                        }
+                }
+                diskBufferDriver.writingFinished();
+                pm.endTask();
+                diskBufferDriver.stop();
+
+                return diskBufferDriver;
+
+        }
+
+        /**
+         * Find the shortest path between sereval nodes using
+         * the Dijkstra algorithm.
+         * A radius can be used to constraint the analysis of the graph.
+         * A datasource that contains all destinations must be used following the schema :
+         * id :: int, source::int, target::int.
+         * The algorithm iters all paths (source, target) and returns the results in a datasource.
+         * Duplicate paths (ie rows with the same source and target values) are computed once again.
+         * @param dsf
+         * @param graph
+         * @param nodes
+         * @param radius
+         * @return
+         * @throws GraphException
+         * @throws DriverException 
+         */
         public static DiskBufferDriver findPathBetweenSeveralNodes(SQLDataSourceFactory dsf, GDMSValueGraph<Integer, GraphEdge> graph,
-                DataSet nodes, double radius) throws GraphException, DriverException {
-               
+                DataSet nodes, ProgressMonitor pm) throws GraphException, DriverException {
+                return findPathBetweenSeveralNodes(dsf, graph, nodes, Double.POSITIVE_INFINITY, pm);
+        }
+
+        /**
+         * Find the shortest path between sereval nodes using
+         * the Dijkstra algorithm.
+         * A datasource that contains all destinations must be used following the schema :
+         * id :: int, source::int, target::int.
+         * The algorithm iters all paths (source, target) and returns the results in a datasource.
+         * Duplicate paths (ie rows with the same source and target values) are computed once again.
+         * @param dsf
+         * @param graph
+         * @param nodes
+         * @return
+         * @throws GraphException
+         * @throws DriverException 
+         */
+        public static DiskBufferDriver findPathBetweenSeveralNodes(SQLDataSourceFactory dsf, GDMSValueGraph<Integer, GraphEdge> graph,
+                DataSet nodes, double radius, ProgressMonitor pm) throws GraphException, DriverException {
+                initIndex(dsf, nodes, new NullProgressMonitor());
                 DiskBufferDriver diskBufferDriver = new DiskBufferDriver(dsf, GraphMetadataFactory.createEdgeMetadataGraph());
 
                 Iterator<Value[]> it = nodes.iterator();
-                int currentSource = -1;
                 ClosestFirstIterator<Integer, GraphEdge> cl = null;
-
+                HashSet<Integer> visitedSources = new HashSet<Integer>();
                 while (it.hasNext()) {
                         Value[] values = it.next();
                         int id_path_nodes = values[ID_FIELD_INDEX].getAsInt();
                         int source = values[SOURCE_FIELD_INDEX].getAsInt();
-                        if (currentSource == -1) {
-                                currentSource = source;
+                        ArrayList<Integer> targets = null;
+                        if (!visitedSources.contains(source)) {
                                 cl = new ClosestFirstIterator<Integer, GraphEdge>(graph, source);
-                        }
-                        //Check if the target node is in the graph
-                        int targetVertex = values[TARGET_FIELD_INDEX].getAsInt();
-
-                        if (!graph.containsVertex(targetVertex)) {
-                                throw new GraphException(
-                                        "The graph must contain the target vertex");
-                        }
-                        if (source != currentSource) {
-                                cl = new ClosestFirstIterator<Integer, GraphEdge>(graph, source);
-                        }
-
-                        while (cl.hasNext()) {
-                                int vertex = cl.next();
-                                if (vertex == targetVertex) {
-                                        int v = targetVertex;
-                                        int k = 0;
-                                        while (true) {
-                                                GraphEdge edge = cl.getSpanningTreeEdge(v);
-                                                if (edge == null) {
-                                                        break;
+                                targets = getTargets(dsf, nodes, source);
+                                int targetsNumber = targets.size();
+                                int targetVisisted = 0;
+                                boolean isAllTargetsDone = false;
+                                while (cl.hasNext() && (!isAllTargetsDone)) {
+                                        int vertex = cl.next();
+                                        if (targets.contains(vertex)) {
+                                                targetVisisted++;
+                                                isAllTargetsDone = targetsNumber - targetVisisted == 0;
+                                                int v = vertex;
+                                                int k = 0;
+                                                while (true) {
+                                                        GraphEdge edge = cl.getSpanningTreeEdge(v);
+                                                        if (edge == null) {
+                                                                break;
+                                                        }
+                                                        diskBufferDriver.addValues(new Value[]{ValueFactory.createValue(graph.getGeometry(edge)),
+                                                                        ValueFactory.createValue(id_path_nodes),
+                                                                        ValueFactory.createValue(k),
+                                                                        ValueFactory.createValue(edge.getSource()),
+                                                                        ValueFactory.createValue(edge.getTarget()),
+                                                                        ValueFactory.createValue(edge.getWeight())});
+                                                        k++;
+                                                        v = Graphs.getOppositeVertex(graph, edge, v);
                                                 }
-                                                diskBufferDriver.addValues(new Value[]{ValueFactory.createValue(graph.getGeometry(edge)),
-                                                                ValueFactory.createValue(id_path_nodes),
-                                                                ValueFactory.createValue(k),
-                                                                ValueFactory.createValue(edge.getSource()),
-                                                                ValueFactory.createValue(edge.getTarget()),
-                                                                ValueFactory.createValue(edge.getWeight())});
-                                                k++;
-                                                v = Graphs.getOppositeVertex(graph, edge, v);
                                         }
-                                        break;
                                 }
+                                visitedSources.add(source);
                         }
 
                 }
@@ -182,7 +316,88 @@ public class GraphAnalysis {
         }
 
         /**
-         * Return as set of geometries the shortest path between two nodes. 
+         * 
+         * @param dsf
+         * @param graph
+         * @param nodes
+         * @param pm
+         * @return
+         * @throws GraphException
+         * @throws DriverException 
+         */
+        public static DiskBufferDriver findDistanceBetweenSeveralNodes(SQLDataSourceFactory dsf, GDMSValueGraph<Integer, GraphEdge> graph,
+                DataSet nodes, ProgressMonitor pm) throws GraphException, DriverException {
+                return findDistanceBetweenSeveralNodes(dsf, graph, nodes, Double.POSITIVE_INFINITY, pm);
+
+        }
+
+        /**
+         * 
+         * @param dsf
+         * @param graph
+         * @param nodes
+         * @param radius
+         * @param pm
+         * @return
+         * @throws GraphException
+         * @throws DriverException 
+         */
+        public static DiskBufferDriver findDistanceBetweenSeveralNodes(SQLDataSourceFactory dsf, GDMSValueGraph<Integer, GraphEdge> graph,
+                DataSet nodes, double radius, ProgressMonitor pm) throws GraphException, DriverException {
+                initIndex(dsf, nodes, new NullProgressMonitor());
+                DiskBufferDriver diskBufferDriver = new DiskBufferDriver(dsf, GraphMetadataFactory.createDistancesMetadataGraph());
+
+                Iterator<Value[]> it = nodes.iterator();
+                ClosestFirstIterator<Integer, GraphEdge> cl = null;
+                HashSet<Integer> visitedSources = new HashSet<Integer>();
+                while (it.hasNext()) {
+                        Value[] values = it.next();
+                        int id_path_nodes = values[ID_FIELD_INDEX].getAsInt();
+                        int source = values[SOURCE_FIELD_INDEX].getAsInt();
+                        ArrayList<Integer> targets = null;
+                        if (!visitedSources.contains(source)) {
+                                cl = new ClosestFirstIterator<Integer, GraphEdge>(graph, source);
+                                targets = getTargets(dsf, nodes, source);
+                                int targetsNumber = targets.size();
+                                int targetVisisted = 0;
+                                boolean isAllTargetsDone = false;
+                                while (cl.hasNext() && (!isAllTargetsDone)) {
+                                        int vertex = cl.next();
+                                        if (targets.contains(vertex)) {
+                                                targetVisisted++;
+                                                isAllTargetsDone = targetsNumber - targetVisisted == 0;
+                                                int v = vertex;
+                                                int k = 0;
+                                                double sum = 0;
+                                                while (true) {
+                                                        GraphEdge edge = cl.getSpanningTreeEdge(v);
+                                                        if (edge == null) {
+                                                                break;
+                                                        }
+                                                        sum += edge.getWeight();
+                                                        k++;
+                                                        v = Graphs.getOppositeVertex(graph, edge, v);
+                                                }
+                                                diskBufferDriver.addValues(new Value[]{
+                                                                ValueFactory.createValue(id_path_nodes),
+                                                                ValueFactory.createValue(source),
+                                                                ValueFactory.createValue(vertex),
+                                                                ValueFactory.createValue(sum)});
+
+                                        }
+
+                                }
+                                visitedSources.add(source);
+                        }
+
+                }
+                diskBufferDriver.writingFinished();
+                diskBufferDriver.stop();
+                return diskBufferDriver;
+        }
+
+        /**
+         * Return as set of geometries that represent the shortest path between two nodes. 
          * @param dsf
          * @param dataSet
          * @param source
@@ -198,16 +413,16 @@ public class GraphAnalysis {
                 if (graphType == DIRECT) {
                         DWMultigraphDataSource dwMultigraphDataSource = new DWMultigraphDataSource(dsf, dataSet, pm);
                         dwMultigraphDataSource.setWeigthFieldIndex(costField);
-                        return findPathBetween2Nodes(dsf, dwMultigraphDataSource, source, target);
+                        return findPathBetween2Nodes(dsf, dwMultigraphDataSource, source, target, pm);
                 } else if (graphType == DIRECT_REVERSED) {
                         DWMultigraphDataSource dwMultigraphDataSource = new DWMultigraphDataSource(dsf, dataSet, pm);
                         dwMultigraphDataSource.setWeigthFieldIndex(costField);
                         EdgeReversedGraphDataSource edgeReversedGraph = new EdgeReversedGraphDataSource(dwMultigraphDataSource);
-                        return findPathBetween2Nodes(dsf, edgeReversedGraph, source, target);
+                        return findPathBetween2Nodes(dsf, edgeReversedGraph, source, target, pm);
                 } else if (graphType == UNDIRECT) {
                         WMultigraphDataSource wMultigraphDataSource = new WMultigraphDataSource(dsf, dataSet, pm);
                         wMultigraphDataSource.setWeigthFieldIndex(costField);
-                        return findPathBetween2Nodes(dsf, wMultigraphDataSource, source, target);
+                        return findPathBetween2Nodes(dsf, wMultigraphDataSource, source, target, pm);
                 } else {
                         throw new GraphException("Only 3 type of graphs are allowed."
                                 + "1 if the path is computing using a directed graph.\n"
@@ -235,16 +450,90 @@ public class GraphAnalysis {
                         if (graphType == DIRECT) {
                                 DWMultigraphDataSource dwMultigraphDataSource = new DWMultigraphDataSource(dsf, dataSet, pm);
                                 dwMultigraphDataSource.setWeigthFieldIndex(costField);
-                                return findPathBetweenSeveralNodes(dsf, dwMultigraphDataSource, nodes);
+                                return findPathBetweenSeveralNodes(dsf, dwMultigraphDataSource, nodes, pm);
                         } else if (graphType == DIRECT_REVERSED) {
                                 DWMultigraphDataSource dwMultigraphDataSource = new DWMultigraphDataSource(dsf, dataSet, pm);
                                 dwMultigraphDataSource.setWeigthFieldIndex(costField);
                                 EdgeReversedGraphDataSource edgeReversedGraph = new EdgeReversedGraphDataSource(dwMultigraphDataSource);
-                                return findPathBetweenSeveralNodes(dsf, edgeReversedGraph, nodes);
+                                return findPathBetweenSeveralNodes(dsf, edgeReversedGraph, nodes, pm);
                         } else if (graphType == UNDIRECT) {
                                 WMultigraphDataSource wMultigraphDataSource = new WMultigraphDataSource(dsf, dataSet, pm);
                                 wMultigraphDataSource.setWeigthFieldIndex(costField);
-                                return findPathBetweenSeveralNodes(dsf, wMultigraphDataSource, nodes);
+                                return findPathBetweenSeveralNodes(dsf, wMultigraphDataSource, nodes, pm);
+                        } else {
+                                throw new GraphException("Only 3 type of graphs are allowed."
+                                        + "1 if the path is computing using a directed graph.\n"
+                                        + "2 if the path is computing using a directed graph and edges are reversed\n"
+                                        + "3 if the path is computing using a undirected.");
+                        }
+                } else {
+                        throw new GraphException("The table nodes must contains the field id, source and target");
+                }
+        }
+
+        /**
+         * Compute the shortest path distance between two nodes.
+         * @param dsf
+         * @param dataSet
+         * @param source
+         * @param target
+         * @param costField
+         * @param graphType
+         * @param pm
+         * @return
+         * @throws GraphException
+         * @throws DriverException 
+         */
+        public static DiskBufferDriver getShortestPathLength(SQLDataSourceFactory dsf, DataSet dataSet, int source, String costField, int graphType, ProgressMonitor pm) throws GraphException, DriverException {
+                if (graphType == DIRECT) {
+                        DWMultigraphDataSource dwMultigraphDataSource = new DWMultigraphDataSource(dsf, dataSet, pm);
+                        dwMultigraphDataSource.setWeigthFieldIndex(costField);
+                        return findDistancesBetweenOneNode(dsf, dwMultigraphDataSource, source, pm);
+                } else if (graphType == DIRECT_REVERSED) {
+                        DWMultigraphDataSource dwMultigraphDataSource = new DWMultigraphDataSource(dsf, dataSet, pm);
+                        dwMultigraphDataSource.setWeigthFieldIndex(costField);
+                        EdgeReversedGraphDataSource edgeReversedGraph = new EdgeReversedGraphDataSource(dwMultigraphDataSource);
+                        return findDistancesBetweenOneNode(dsf, edgeReversedGraph, source, pm);
+                } else if (graphType == UNDIRECT) {
+                        WMultigraphDataSource wMultigraphDataSource = new WMultigraphDataSource(dsf, dataSet, pm);
+                        wMultigraphDataSource.setWeigthFieldIndex(costField);
+                        return findDistancesBetweenOneNode(dsf, wMultigraphDataSource, source, pm);
+                } else {
+                        throw new GraphException("Only 3 type of graphs are allowed."
+                                + "1 if the path is computing using a directed graph.\n"
+                                + "2 if the path is computing using a directed graph and edges are reversed\n"
+                                + "3 if the path is computing using a undirected.");
+                }
+        }
+
+        /**
+         * Compute the shortest path distance between several nodes.
+         * @param dsf
+         * @param dataSet
+         * @param source
+         * @param target
+         * @param costField
+         * @param graphType
+         * @param pm
+         * @return
+         * @throws GraphException
+         * @throws DriverException 
+         */
+        public static DiskBufferDriver getMShortestPathLength(SQLDataSourceFactory dsf, DataSet dataSet, DataSet nodes, String costField, int graphType, ProgressMonitor pm) throws GraphException, DriverException {
+                if (checkMetadata(nodes)) {
+                        if (graphType == DIRECT) {
+                                DWMultigraphDataSource dwMultigraphDataSource = new DWMultigraphDataSource(dsf, dataSet, pm);
+                                dwMultigraphDataSource.setWeigthFieldIndex(costField);
+                                return findDistanceBetweenSeveralNodes(dsf, dwMultigraphDataSource, nodes, pm);
+                        } else if (graphType == DIRECT_REVERSED) {
+                                DWMultigraphDataSource dwMultigraphDataSource = new DWMultigraphDataSource(dsf, dataSet, pm);
+                                dwMultigraphDataSource.setWeigthFieldIndex(costField);
+                                EdgeReversedGraphDataSource edgeReversedGraph = new EdgeReversedGraphDataSource(dwMultigraphDataSource);
+                                return findDistanceBetweenSeveralNodes(dsf, edgeReversedGraph, nodes, pm);
+                        } else if (graphType == UNDIRECT) {
+                                WMultigraphDataSource wMultigraphDataSource = new WMultigraphDataSource(dsf, dataSet, pm);
+                                wMultigraphDataSource.setWeigthFieldIndex(costField);
+                                return findDistanceBetweenSeveralNodes(dsf, wMultigraphDataSource, nodes, pm);
                         } else {
                                 throw new GraphException("Only 3 type of graphs are allowed."
                                         + "1 if the path is computing using a directed graph.\n"
@@ -265,18 +554,57 @@ public class GraphAnalysis {
         private static boolean checkMetadata(DataSet nodes) throws DriverException {
                 Metadata nodesMD = nodes.getMetadata();
                 ID_FIELD_INDEX = nodesMD.getFieldIndex(GraphSchema.ID);
-                SOURCE_FIELD_INDEX = nodesMD.getFieldIndex("source");
-                TARGET_FIELD_INDEX = nodesMD.getFieldIndex("target");
+                SOURCE_FIELD_INDEX = nodesMD.getFieldIndex(GraphSchema.SOURCE_NODE);
+                TARGET_FIELD_INDEX = nodesMD.getFieldIndex(GraphSchema.TARGET_NODE);
                 if (ID_FIELD_INDEX == -1) {
-                        throw new IllegalArgumentException("The table must contains a field named id");
+                        throw new IllegalArgumentException("The table must contains a field named " + GraphSchema.ID);
                 }
 
                 if (SOURCE_FIELD_INDEX == -1) {
-                        throw new IllegalArgumentException("The table must contains a field named source");
+                        throw new IllegalArgumentException("The table must contains a field named " + GraphSchema.SOURCE_NODE);
                 }
                 if (TARGET_FIELD_INDEX == -1) {
-                        throw new IllegalArgumentException("The table must contains a field named target");
+                        throw new IllegalArgumentException("The table must contains a field named " + GraphSchema.TARGET_NODE);
                 }
                 return true;
+        }
+
+        /**
+         * A method to create an alphanumeric index on the field source
+         * stored in the datasource nodes.
+         * @param dsf
+         * @param nodes
+         * @param pm
+         * @throws GraphException 
+         */
+        private static void initIndex(SQLDataSourceFactory dsf, DataSet nodes, ProgressMonitor pm) throws GraphException {
+                try {
+                        if (!dsf.getIndexManager().isIndexed(nodes, GraphSchema.SOURCE_NODE)) {
+                                dsf.getIndexManager().buildIndex(nodes, GraphSchema.SOURCE_NODE, pm);
+                        }
+                } catch (IndexException ex) {
+                        throw new GraphException("Unable to create index.", ex);
+                } catch (NoSuchTableException ex) {
+                        throw new GraphException("Unable to find the table.", ex);
+                }
+        }
+
+        /**
+         * Query the dataset using an alphanumeric index
+         * @param fieldToQuery
+         * @param valueToQuery
+         * @return a list of target values
+         * @throws DriverException 
+         */
+        public static ArrayList<Integer> getTargets(SQLDataSourceFactory dsf, DataSet nodes, Integer valueToQuery) throws DriverException {
+                DefaultAlphaQuery defaultAlphaQuery = new DefaultAlphaQuery(
+                        GraphSchema.SOURCE_NODE, ValueFactory.createValue(valueToQuery));
+                Iterator<Integer> iterator = nodes.queryIndex(dsf, defaultAlphaQuery);
+                ArrayList<Integer> targets = new ArrayList<Integer>();
+                while (iterator.hasNext()) {
+                        Integer integer = iterator.next();
+                        targets.add(nodes.getInt(integer, TARGET_FIELD_INDEX));
+                }
+                return targets;
         }
 }

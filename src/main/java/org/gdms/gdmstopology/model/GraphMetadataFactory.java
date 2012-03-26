@@ -68,4 +68,16 @@ public final class GraphMetadataFactory {
                         new String[]{GraphSchema.ID, GraphSchema.PATH_ID, GraphSchema.START_NODE, GraphSchema.END_NODE, GraphSchema.WEIGHT});
                 return md;
         }
+
+        /**
+         * 
+         * @return 
+         */
+        public static Metadata createDistancesMetadataGraph() {
+                Metadata md = new DefaultMetadata(
+                        new Type[]{TypeFactory.createType(Type.INT), TypeFactory.createType(Type.INT), TypeFactory.createType(Type.INT), 
+                                TypeFactory.createType(Type.DOUBLE)},
+                        new String[]{GraphSchema.ID, GraphSchema.SOURCE_NODE, GraphSchema.TARGET_NODE, GraphSchema.WEIGHT});
+                return md;
+        }
 }

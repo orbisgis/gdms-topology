@@ -147,6 +147,7 @@ public final class GDMSGraph extends AbstractGraph<Integer, GraphEdge> implement
          * @return
          * @throws DriverException 
          */
+        @Override
         public Geometry getGeometry(GraphEdge graphEdge) throws DriverException {
                 return dataSet.getGeometry(graphEdge.getRowId(), GEOMETRY_FIELD_INDEX);
         }
