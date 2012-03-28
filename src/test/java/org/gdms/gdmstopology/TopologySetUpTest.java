@@ -39,7 +39,7 @@ import org.orbisgis.utils.FileUtils;
  *
  * @author ebocher
  */
-public class TopologySetUpTest {
+public abstract class TopologySetUpTest {
 
         protected static final GeometryFactory gf = new GeometryFactory();
         protected SQLDataSourceFactory dsf;
