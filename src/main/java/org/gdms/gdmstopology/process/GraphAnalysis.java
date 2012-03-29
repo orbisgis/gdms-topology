@@ -216,7 +216,6 @@ public class GraphAnalysis {
                         if (node != sourceVertex) {
                                 double length = cl.getShortestPathLength(node);
                                 diskBufferDriver.addValues(new Value[]{ValueFactory.createValue(k),
-                                                ValueFactory.createValue(sourceVertex), ValueFactory.createValue(node),
                                                 ValueFactory.createValue(length)});
                                 k++;
                         }
@@ -380,8 +379,6 @@ public class GraphAnalysis {
                                                 }
                                                 diskBufferDriver.addValues(new Value[]{
                                                                 ValueFactory.createValue(idNodes),
-                                                                ValueFactory.createValue(source),
-                                                                ValueFactory.createValue(vertex),
                                                                 ValueFactory.createValue(sum)});
 
                                         }

@@ -75,9 +75,9 @@ public final class GraphMetadataFactory {
          */
         public static Metadata createDistancesMetadataGraph() {
                 Metadata md = new DefaultMetadata(
-                        new Type[]{TypeFactory.createType(Type.INT), TypeFactory.createType(Type.INT), TypeFactory.createType(Type.INT), 
+                        new Type[]{TypeFactory.createType(Type.INT), 
                                 TypeFactory.createType(Type.DOUBLE)},
-                        new String[]{GraphSchema.ID, GraphSchema.SOURCE_NODE, GraphSchema.TARGET_NODE, GraphSchema.WEIGHT});
+                        new String[]{GraphSchema.ID, GraphSchema.DISTANCE});
                 return md;
         }
 }
