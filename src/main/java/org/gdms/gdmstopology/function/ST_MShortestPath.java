@@ -34,6 +34,7 @@ import org.gdms.driver.DataSet;
 import org.gdms.driver.DiskBufferDriver;
 import org.gdms.driver.DriverException;
 import org.gdms.gdmstopology.model.GraphMetadataFactory;
+import org.gdms.gdmstopology.model.GraphSchema;
 import org.gdms.gdmstopology.process.GraphAnalysis;
 import org.gdms.sql.function.FunctionException;
 import org.gdms.sql.function.FunctionSignature;
@@ -60,7 +61,7 @@ public class ST_MShortestPath extends AbstractTableFunction {
                                 return diskBufferDriver;
                         } else {
                                 DiskBufferDriver diskBufferDriver = GraphAnalysis.getMShortestPath(dsf, tables[0], tables[1],
-                                        values[0].getAsString(), GraphAnalysis.DIRECT, pm);
+                                        values[0].getAsString(), GraphSchema.DIRECT, pm);
                                 diskBufferDriver.start();
                                 return diskBufferDriver;
                         }
@@ -71,7 +72,7 @@ public class ST_MShortestPath extends AbstractTableFunction {
 
         @Override
         public Metadata getMetadata(Metadata[] tables) throws DriverException {
-                return GraphMetadataFactory.createEdgeMetadataGraph();
+                return GraphMetadataFactory.createEdgeMetadataShortestPath();
         }
 
         @Override
