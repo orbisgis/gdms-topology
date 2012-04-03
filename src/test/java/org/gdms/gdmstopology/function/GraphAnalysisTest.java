@@ -33,7 +33,6 @@ import org.jgrapht.Graphs;
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.DirectedGraph;
-import com.vividsolutions.jts.geom.Geometry;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -54,7 +53,7 @@ import static org.junit.Assert.*;
 
 /**
  *
- * @author ebocher
+ * @author ebocher IRSTV FR CNRS 2488
  */
 public class GraphAnalysisTest extends TopologySetUpTest {
 
@@ -179,120 +178,7 @@ public class GraphAnalysisTest extends TopologySetUpTest {
                 assertTrue(result.getFieldValue(2, 0).getAsGeometry().equals(wktReader.read("LINESTRING(0 0, 2 2)")));
         }
 
-        @Test
-        public void testFindReachableEdges() throws Exception {
-                MemoryDataSetDriver mdsd = new MemoryDataSetDriver(new String[]{"geom", "start_node", "end_node", "weigth"},
-                        new Type[]{
-                                TypeFactory.createType(Type.GEOMETRY),
-                                TypeFactory.createType(Type.INT), TypeFactory.createType(Type.INT), TypeFactory.createType(Type.DOUBLE)});
-
-                mdsd.addValues(new Value[]{ValueFactory.createValue(wktReader.read("LINESTRING(0 0, 5 0)")),
-                                ValueFactory.createValue(1), ValueFactory.createValue(2), ValueFactory.createValue(1)});
-                mdsd.addValues(new Value[]{ValueFactory.createValue(wktReader.read("LINESTRING(5 0, 7 0)")),
-                                ValueFactory.createValue(3), ValueFactory.createValue(2), ValueFactory.createValue(1)});
-                mdsd.addValues(new Value[]{ValueFactory.createValue(wktReader.read("LINESTRING(7 0 , 10 0)")),
-                                ValueFactory.createValue(4), ValueFactory.createValue(3), ValueFactory.createValue(1)});
-                mdsd.addValues(new Value[]{ValueFactory.createValue(wktReader.read("LINESTRING(10 0  , 20 0)")),
-                                ValueFactory.createValue(5), ValueFactory.createValue(4), ValueFactory.createValue(1)});
-
-                DataSet[] tables = new DataSet[]{mdsd};
-                int source = 1;
-                ST_FindReachableEdges stspl = new ST_FindReachableEdges();
-                DataSet result = stspl.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source),
-                                ValueFactory.createValue("weigth")}, new NullProgressMonitor());
-                assertTrue(result.getRowCount() == 1);
-                assertTrue(result.getGeometry(0, 0).equalsExact(wktReader.read("LINESTRING(0 0, 5 0)")));
-
-        }
-
-        @Test
-        public void testFindReachableEdges2() throws Exception {
-                MemoryDataSetDriver mdsd = new MemoryDataSetDriver(new String[]{"geom", "start_node", "end_node", "weigth"},
-                        new Type[]{
-                                TypeFactory.createType(Type.GEOMETRY),
-                                TypeFactory.createType(Type.INT), TypeFactory.createType(Type.INT),
-                                TypeFactory.createType(Type.DOUBLE)});
-
-                mdsd.addValues(new Value[]{ValueFactory.createValue(wktReader.read("LINESTRING(0 0, 5 0)")),
-                                ValueFactory.createValue(1), ValueFactory.createValue(2), ValueFactory.createValue(1)});
-                mdsd.addValues(new Value[]{ValueFactory.createValue(wktReader.read("LINESTRING(5 0, 7 0)")),
-                                ValueFactory.createValue(3), ValueFactory.createValue(2), ValueFactory.createValue(1)});
-                mdsd.addValues(new Value[]{ValueFactory.createValue(wktReader.read("LINESTRING(7 0 , 10 0)")),
-                                ValueFactory.createValue(4), ValueFactory.createValue(3), ValueFactory.createValue(1)});
-                mdsd.addValues(new Value[]{ValueFactory.createValue(wktReader.read("LINESTRING(10 0  , 20 0)")),
-                                ValueFactory.createValue(5), ValueFactory.createValue(4), ValueFactory.createValue(1)});
-
-                DataSet[] tables = new DataSet[]{mdsd};
-                int source = 2;
-                ST_FindReachableEdges stspl = new ST_FindReachableEdges();
-                DataSet result = stspl.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source),
-                                ValueFactory.createValue("weigth")}, new NullProgressMonitor());
-                assertTrue(result.getRowCount() == 0);
-
-        }
-
-        @Test
-        public void testFindReachableEdges3() throws Exception {
-                MemoryDataSetDriver mdsd = new MemoryDataSetDriver(new String[]{"geom", "start_node", "end_node", "weigth"},
-                        new Type[]{
-                                TypeFactory.createType(Type.GEOMETRY),
-                                TypeFactory.createType(Type.INT), TypeFactory.createType(Type.INT), TypeFactory.createType(Type.DOUBLE)});
-
-                mdsd.addValues(new Value[]{ValueFactory.createValue(wktReader.read("LINESTRING(0 0, 5 0)")),
-                                ValueFactory.createValue(1), ValueFactory.createValue(2), ValueFactory.createValue(1)});
-                mdsd.addValues(new Value[]{ValueFactory.createValue(wktReader.read("LINESTRING(5 0, 7 0)")),
-                                ValueFactory.createValue(3), ValueFactory.createValue(2), ValueFactory.createValue(1)});
-                mdsd.addValues(new Value[]{ValueFactory.createValue(wktReader.read("LINESTRING(7 0 , 10 0)")),
-                                ValueFactory.createValue(4), ValueFactory.createValue(3), ValueFactory.createValue(1)});
-                mdsd.addValues(new Value[]{ValueFactory.createValue(wktReader.read("LINESTRING(10 0  , 20 0)")),
-                                ValueFactory.createValue(5), ValueFactory.createValue(4), ValueFactory.createValue(1)});
-
-                DataSet[] tables = new DataSet[]{mdsd};
-                int source = 5;
-                ST_FindReachableEdges stspl = new ST_FindReachableEdges();
-                DataSet result = stspl.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source),
-                                ValueFactory.createValue("weigth")}, new NullProgressMonitor());
-                assertTrue(result.getRowCount() == 3);
-                assertTrue(result.getGeometry(0, 0).equalsExact(wktReader.read("LINESTRING(10 0 , 20 0)")));
-                assertTrue(result.getGeometry(1, 0).equalsExact(wktReader.read("LINESTRING(7 0 , 10 0)")));
-                assertTrue(result.getGeometry(2, 0).equalsExact(wktReader.read("LINESTRING(5 0, 7 0)")));
-        }
-
-        @Test
-        public void testFindReachableEdges4() throws Exception {
-                MemoryDataSetDriver mdsd = new MemoryDataSetDriver(new String[]{"geom", "start_node", "end_node", "weigth"},
-                        new Type[]{
-                                TypeFactory.createType(Type.GEOMETRY),
-                                TypeFactory.createType(Type.INT), TypeFactory.createType(Type.INT),
-                                TypeFactory.createType(Type.DOUBLE)});
-
-                mdsd.addValues(new Value[]{ValueFactory.createValue(wktReader.read("LINESTRING(0 0, 5 0)")),
-                                ValueFactory.createValue(1), ValueFactory.createValue(2), ValueFactory.createValue(1)});
-                mdsd.addValues(new Value[]{ValueFactory.createValue(wktReader.read("LINESTRING(5 0, 7 0)")),
-                                ValueFactory.createValue(3), ValueFactory.createValue(2), ValueFactory.createValue(1)});
-                mdsd.addValues(new Value[]{ValueFactory.createValue(wktReader.read("LINESTRING(7 0 , 10 0)")),
-                                ValueFactory.createValue(4), ValueFactory.createValue(3), ValueFactory.createValue(1)});
-                mdsd.addValues(new Value[]{ValueFactory.createValue(wktReader.read("LINESTRING(10 0  , 20 0)")),
-                                ValueFactory.createValue(5), ValueFactory.createValue(4), ValueFactory.createValue(1)});
-
-                DataSet[] tables = new DataSet[]{mdsd};
-                int source = 2;
-                ST_FindReachableEdges stspl = new ST_FindReachableEdges();
-                DataSet result = stspl.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source),
-                                ValueFactory.createValue("weigth"), ValueFactory.createValue(3)}, new NullProgressMonitor());
-                assertTrue(result.getRowCount() == 4);
-
-                int count = 0;
-                for (int i = 0; i < result.getRowCount(); i++) {
-                        Geometry geom = result.getGeometry(0, 0);
-                        for (int j = 0; j < mdsd.getRowCount(); j++) {
-                                if (geom.equalsExact(mdsd.getGeometry(j, 0))) {
-                                        count++;
-                                }
-                        }
-                }
-                assertTrue(count == 4);
-        }
+       
 
         @Test
         public void testST_ShortestPathLength() throws Exception {
@@ -310,8 +196,8 @@ public class GraphAnalysisTest extends TopologySetUpTest {
                 results.put(1, (211.6687715105811 + 51.35172830587107));
                 results.put(4, (211.6687715105811 + 51.35172830587107) + 56.32051136131489);
                 for (int i = 0; i < result.getRowCount(); i++) {
-                        int key = result.getInt(i, 2);
-                        double cost = result.getDouble(i, 3);
+                        int key = result.getInt(i, 0);
+                        double cost = result.getDouble(i, 1);
                         assertTrue((results.get(key) - cost) == 0);
 
                 }
@@ -331,8 +217,8 @@ public class GraphAnalysisTest extends TopologySetUpTest {
                 HashMap<Integer, Double> results = new HashMap<Integer, Double>();
                 results.put(2, 129.63024338479042);
                 for (int i = 0; i < result.getRowCount(); i++) {
-                        int key = result.getInt(i, 2);
-                        double cost = result.getDouble(i, 3);
+                        int key = result.getInt(i, 0);
+                        double cost = result.getDouble(i, 1);
                         assertTrue((results.get(key) - cost) == 0);
                 }
                 ds.close();
@@ -356,8 +242,8 @@ public class GraphAnalysisTest extends TopologySetUpTest {
                 results.put(1, (211.6687715105811 + 51.35172830587107));
                 results.put(4, (211.6687715105811 + 51.35172830587107) + 56.32051136131489);
                 for (int i = 0; i < result.getRowCount(); i++) {
-                        int key = result.getInt(i, 2);
-                        double cost = result.getDouble(i, 3);
+                        int key = result.getInt(i, 0);
+                        double cost = result.getDouble(i, 1);
                         assertTrue((results.get(key) - cost) == 0);
                 }
                 ds.close();
@@ -490,7 +376,7 @@ public class GraphAnalysisTest extends TopologySetUpTest {
                                 sum += values[0].getAsGeometry().getLength();
                         }
                 }
-                assertEquals(result.getDouble(0, 3), sum, 0.000001);
+                assertEquals(result.getDouble(0, 1), sum, 0.000001);
 
                 ds.close();
         }

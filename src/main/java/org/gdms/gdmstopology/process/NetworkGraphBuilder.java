@@ -45,6 +45,7 @@ import org.gdms.data.values.ValueFactory;
 import org.gdms.driver.DataSet;
 import org.gdms.driver.DiskBufferDriver;
 import org.gdms.driver.DriverException;
+import org.gdms.gdmstopology.model.GraphMetadataFactory;
 import org.gdms.gdmstopology.model.GraphSchema;
 import org.orbisgis.progress.ProgressMonitor;
 
@@ -129,17 +130,13 @@ public class NetworkGraphBuilder {
          * @throws NonEditableDataSourceException
          */
         public void buildGraph(DataSet dataSet) throws DriverException, IOException, NonEditableDataSourceException {
-                pm.startTask("Create the graph", 100);
+
 
                 int geomFieldIndex = MetadataUtilities.getSpatialFieldIndex(dataSet.getMetadata());
 
-                if (geomFieldIndex != -1) {                        
-                        DefaultMetadata nodeMedata = new DefaultMetadata(new Type[]{
-                                        TypeFactory.createType(Type.GEOMETRY),
-                                        TypeFactory.createType(Type.INT)}, new String[]{"the_geom",
-                                        GraphSchema.ID});
+                if (geomFieldIndex != -1) {
 
-                        DiskBufferDriver nodesDriver = new DiskBufferDriver(dsf.getResultFile("gdms"), nodeMedata);
+                        DiskBufferDriver nodesDriver = new DiskBufferDriver(dsf.getResultFile("gdms"), GraphMetadataFactory.createNodesMetadataGraph());
 
                         String diskTreePath = dsf.getTempFile();
                         DiskRTree diskRTree = new DiskRTree();
@@ -162,7 +159,7 @@ public class NetworkGraphBuilder {
 
                         long rowCount = dataSet.getRowCount();
                         int gidNode = 1;
-
+                        pm.startTask("Create the graph", 100);
                         for (int rowIndex = 0; rowIndex < rowCount; rowIndex++) {
                                 if (rowIndex / 100 == rowIndex / 100.0) {
                                         if (pm.isCancelled()) {
@@ -241,6 +238,7 @@ public class NetworkGraphBuilder {
 
                         //Remove the Rtree on disk
                         new File(diskTreePath).delete();
+                        pm.endTask();
                 } else {
                         throw new DriverException("The table must contains a geometry field");
                 }

@@ -61,10 +61,6 @@ import org.orbisgis.progress.ProgressMonitor;
  */
 public class GraphAnalysis {
 
-        //Constants used in the functions
-        public static int DIRECT = 1;
-        public static int DIRECT_REVERSED = 2;
-        public static int UNDIRECT = 3;
         private static int ID_FIELD_INDEX = -1;
         private static int SOURCE_FIELD_INDEX = -1;
         private static int TARGET_FIELD_INDEX = -1;
@@ -126,7 +122,7 @@ public class GraphAnalysis {
                                 "The graph must contain the target vertex");
                 }
                 ClosestFirstIterator<Integer, GraphEdge> cl = new ClosestFirstIterator<Integer, GraphEdge>(graph, sourceVertex, radius);
-                DiskBufferDriver diskBufferDriver = new DiskBufferDriver(dsf, GraphMetadataFactory.createEdgeMetadataGraph());
+                DiskBufferDriver diskBufferDriver = new DiskBufferDriver(dsf, GraphMetadataFactory.createEdgeMetadataShortestPath());
                 int count = 0;
                 pm.startTask("Find shortest path", 100);
                 while (cl.hasNext()) {
@@ -204,7 +200,6 @@ public class GraphAnalysis {
 
                 int count = 0;
                 pm.startTask("Calculate distances path", 100);
-                int k = 0;
                 while (cl.hasNext()) {
                         if (count >= 100 && count % 100 == 0) {
                                 if (pm.isCancelled()) {
@@ -215,9 +210,9 @@ public class GraphAnalysis {
                         Integer node = cl.next();
                         if (node != sourceVertex) {
                                 double length = cl.getShortestPathLength(node);
-                                diskBufferDriver.addValues(new Value[]{ValueFactory.createValue(k),
+                                diskBufferDriver.addValues(new Value[]{ValueFactory.createValue(node),
                                                 ValueFactory.createValue(length)});
-                                k++;
+
                         }
                 }
                 diskBufferDriver.writingFinished();
@@ -266,15 +261,24 @@ public class GraphAnalysis {
         public static DiskBufferDriver findPathBetweenSeveralNodes(SQLDataSourceFactory dsf, GDMSValueGraph<Integer, GraphEdge> graph,
                 DataSet nodes, double radius, ProgressMonitor pm) throws GraphException, DriverException {
                 initIndex(dsf, nodes, pm);
-                DiskBufferDriver diskBufferDriver = new DiskBufferDriver(dsf, GraphMetadataFactory.createEdgeMetadataGraph());
+                DiskBufferDriver diskBufferDriver = new DiskBufferDriver(dsf, GraphMetadataFactory.createEdgeMetadataShortestPath());
 
                 Iterator<Value[]> it = nodes.iterator();
                 ClosestFirstIterator<Integer, GraphEdge> cl = null;
                 HashSet<Integer> visitedSources = new HashSet<Integer>();
+                int count = 0;
+                pm.startTask("Processing input nodes", 100);
                 while (it.hasNext()) {
                         Value[] values = it.next();
                         int source = values[SOURCE_FIELD_INDEX].getAsInt();
                         HashMap<Integer, Integer> targets = null;
+                        if (count >= 100 && count % 100 == 0) {
+                                if (pm.isCancelled()) {
+                                        break;
+                                }
+                        }
+                        count++;
+
                         if (!visitedSources.contains(source)) {
                                 cl = new ClosestFirstIterator<Integer, GraphEdge>(graph, source);
                                 targets = getTargets(dsf, nodes, source);
@@ -311,6 +315,7 @@ public class GraphAnalysis {
                 }
                 diskBufferDriver.writingFinished();
                 diskBufferDriver.stop();
+                pm.endTask();
                 return diskBufferDriver;
         }
 
@@ -349,8 +354,17 @@ public class GraphAnalysis {
                 Iterator<Value[]> it = nodes.iterator();
                 ClosestFirstIterator<Integer, GraphEdge> cl = null;
                 HashSet<Integer> visitedSources = new HashSet<Integer>();
+                int count = 0;
+                pm.startTask("Compute distance from nodes", 100);
                 while (it.hasNext()) {
                         Value[] values = it.next();
+                        if (count >= 100 && count % 100 == 0) {
+                                if (pm.isCancelled()) {
+                                        break;
+                                }
+                        }
+                        count++;
+
                         int source = values[SOURCE_FIELD_INDEX].getAsInt();
                         HashMap<Integer, Integer> targets = null;
                         if (!visitedSources.contains(source)) {
@@ -390,6 +404,7 @@ public class GraphAnalysis {
                 }
                 diskBufferDriver.writingFinished();
                 diskBufferDriver.stop();
+                pm.endTask();
                 return diskBufferDriver;
         }
 
@@ -407,16 +422,16 @@ public class GraphAnalysis {
          * @throws DriverException 
          */
         public static DiskBufferDriver getShortestPath(SQLDataSourceFactory dsf, DataSet dataSet, int source, int target, String costField, int graphType, ProgressMonitor pm) throws GraphException, DriverException {
-                if (graphType == DIRECT) {
+                if (graphType == GraphSchema.DIRECT) {
                         DWMultigraphDataSource dwMultigraphDataSource = new DWMultigraphDataSource(dsf, dataSet, pm);
                         dwMultigraphDataSource.setWeigthFieldIndex(costField);
                         return findPathBetween2Nodes(dsf, dwMultigraphDataSource, source, target, pm);
-                } else if (graphType == DIRECT_REVERSED) {
+                } else if (graphType == GraphSchema.DIRECT_REVERSED) {
                         DWMultigraphDataSource dwMultigraphDataSource = new DWMultigraphDataSource(dsf, dataSet, pm);
                         dwMultigraphDataSource.setWeigthFieldIndex(costField);
                         EdgeReversedGraphDataSource edgeReversedGraph = new EdgeReversedGraphDataSource(dwMultigraphDataSource);
                         return findPathBetween2Nodes(dsf, edgeReversedGraph, source, target, pm);
-                } else if (graphType == UNDIRECT) {
+                } else if (graphType == GraphSchema.UNDIRECT) {
                         WMultigraphDataSource wMultigraphDataSource = new WMultigraphDataSource(dsf, dataSet, pm);
                         wMultigraphDataSource.setWeigthFieldIndex(costField);
                         return findPathBetween2Nodes(dsf, wMultigraphDataSource, source, target, pm);
@@ -444,16 +459,16 @@ public class GraphAnalysis {
          */
         public static DiskBufferDriver getMShortestPath(SQLDataSourceFactory dsf, DataSet dataSet, DataSet nodes, String costField, int graphType, ProgressMonitor pm) throws GraphException, DriverException {
                 if (checkMetadata(nodes)) {
-                        if (graphType == DIRECT) {
+                        if (graphType == GraphSchema.DIRECT) {
                                 DWMultigraphDataSource dwMultigraphDataSource = new DWMultigraphDataSource(dsf, dataSet, pm);
                                 dwMultigraphDataSource.setWeigthFieldIndex(costField);
                                 return findPathBetweenSeveralNodes(dsf, dwMultigraphDataSource, nodes, pm);
-                        } else if (graphType == DIRECT_REVERSED) {
+                        } else if (graphType == GraphSchema.DIRECT_REVERSED) {
                                 DWMultigraphDataSource dwMultigraphDataSource = new DWMultigraphDataSource(dsf, dataSet, pm);
                                 dwMultigraphDataSource.setWeigthFieldIndex(costField);
                                 EdgeReversedGraphDataSource edgeReversedGraph = new EdgeReversedGraphDataSource(dwMultigraphDataSource);
                                 return findPathBetweenSeveralNodes(dsf, edgeReversedGraph, nodes, pm);
-                        } else if (graphType == UNDIRECT) {
+                        } else if (graphType == GraphSchema.UNDIRECT) {
                                 WMultigraphDataSource wMultigraphDataSource = new WMultigraphDataSource(dsf, dataSet, pm);
                                 wMultigraphDataSource.setWeigthFieldIndex(costField);
                                 return findPathBetweenSeveralNodes(dsf, wMultigraphDataSource, nodes, pm);
@@ -482,16 +497,16 @@ public class GraphAnalysis {
          * @throws DriverException 
          */
         public static DiskBufferDriver getShortestPathLength(SQLDataSourceFactory dsf, DataSet dataSet, int source, String costField, int graphType, ProgressMonitor pm) throws GraphException, DriverException {
-                if (graphType == DIRECT) {
+                if (graphType == GraphSchema.DIRECT) {
                         DWMultigraphDataSource dwMultigraphDataSource = new DWMultigraphDataSource(dsf, dataSet, pm);
                         dwMultigraphDataSource.setWeigthFieldIndex(costField);
                         return computeDistancesBetweenOneNode(dsf, dwMultigraphDataSource, source, pm);
-                } else if (graphType == DIRECT_REVERSED) {
+                } else if (graphType == GraphSchema.DIRECT_REVERSED) {
                         DWMultigraphDataSource dwMultigraphDataSource = new DWMultigraphDataSource(dsf, dataSet, pm);
                         dwMultigraphDataSource.setWeigthFieldIndex(costField);
                         EdgeReversedGraphDataSource edgeReversedGraph = new EdgeReversedGraphDataSource(dwMultigraphDataSource);
                         return computeDistancesBetweenOneNode(dsf, edgeReversedGraph, source, pm);
-                } else if (graphType == UNDIRECT) {
+                } else if (graphType == GraphSchema.UNDIRECT) {
                         WMultigraphDataSource wMultigraphDataSource = new WMultigraphDataSource(dsf, dataSet, pm);
                         wMultigraphDataSource.setWeigthFieldIndex(costField);
                         return computeDistancesBetweenOneNode(dsf, wMultigraphDataSource, source, pm);
@@ -518,16 +533,16 @@ public class GraphAnalysis {
          */
         public static DiskBufferDriver getMShortestPathLength(SQLDataSourceFactory dsf, DataSet dataSet, DataSet nodes, String costField, int graphType, ProgressMonitor pm) throws GraphException, DriverException {
                 if (checkMetadata(nodes)) {
-                        if (graphType == DIRECT) {
+                        if (graphType == GraphSchema.DIRECT) {
                                 DWMultigraphDataSource dwMultigraphDataSource = new DWMultigraphDataSource(dsf, dataSet, pm);
                                 dwMultigraphDataSource.setWeigthFieldIndex(costField);
                                 return computeDistanceBetweenSeveralNodes(dsf, dwMultigraphDataSource, nodes, pm);
-                        } else if (graphType == DIRECT_REVERSED) {
+                        } else if (graphType == GraphSchema.DIRECT_REVERSED) {
                                 DWMultigraphDataSource dwMultigraphDataSource = new DWMultigraphDataSource(dsf, dataSet, pm);
                                 dwMultigraphDataSource.setWeigthFieldIndex(costField);
                                 EdgeReversedGraphDataSource edgeReversedGraph = new EdgeReversedGraphDataSource(dwMultigraphDataSource);
                                 return computeDistanceBetweenSeveralNodes(dsf, edgeReversedGraph, nodes, pm);
-                        } else if (graphType == UNDIRECT) {
+                        } else if (graphType == GraphSchema.UNDIRECT) {
                                 WMultigraphDataSource wMultigraphDataSource = new WMultigraphDataSource(dsf, dataSet, pm);
                                 wMultigraphDataSource.setWeigthFieldIndex(costField);
                                 return computeDistanceBetweenSeveralNodes(dsf, wMultigraphDataSource, nodes, pm);

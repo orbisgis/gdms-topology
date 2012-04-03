@@ -44,10 +44,21 @@ public final class GraphMetadataFactory {
         }
 
         /**
+         * Create the metadata needs for the graph nodes datasource.
+         * @return 
+         */
+        public static Metadata createNodesMetadataGraph() {
+                return new DefaultMetadata(new Type[]{
+                                TypeFactory.createType(Type.POINT),
+                                TypeFactory.createType(Type.INT)}, new String[]{"the_geom",
+                                GraphSchema.ID});
+        }
+
+        /**
          * 
          * @return 
          */
-        public static Metadata createEdgeMetadataGraph() {
+        public static Metadata createEdgeMetadataShortestPath() {
                 Metadata md = new DefaultMetadata(
                         new Type[]{TypeFactory.createType(Type.GEOMETRY, new Constraint[]{new GeometryDimensionConstraint(GeometryDimensionConstraint.DIMENSION_CURVE)}),
                                 TypeFactory.createType(Type.INT), TypeFactory.createType(Type.INT),
@@ -57,27 +68,25 @@ public final class GraphMetadataFactory {
         }
 
         /**
-         * 
-         * @return 
-         */
-        public static Metadata createEdgeMetadataGraphWithoutGeometry() {
-                Metadata md = new DefaultMetadata(
-                        new Type[]{
-                                TypeFactory.createType(Type.INT), TypeFactory.createType(Type.INT),
-                                TypeFactory.createType(Type.INT), TypeFactory.createType(Type.INT), TypeFactory.createType(Type.DOUBLE)},
-                        new String[]{GraphSchema.ID, GraphSchema.PATH_ID, GraphSchema.START_NODE, GraphSchema.END_NODE, GraphSchema.WEIGHT});
-                return md;
-        }
-
-        /**
-         * 
+         * Create the metadata model used by the distance functions.
          * @return 
          */
         public static Metadata createDistancesMetadataGraph() {
                 Metadata md = new DefaultMetadata(
-                        new Type[]{TypeFactory.createType(Type.INT), 
+                        new Type[]{TypeFactory.createType(Type.INT),
                                 TypeFactory.createType(Type.DOUBLE)},
                         new String[]{GraphSchema.ID, GraphSchema.DISTANCE});
                 return md;
+        }
+
+        /**
+         * Create the metadata model used by the reachable edges function.
+         * @return 
+         */
+        public static Metadata createReachablesEdgesMetadata() {
+                return new DefaultMetadata(
+                        new Type[]{TypeFactory.createType(Type.GEOMETRY), TypeFactory.createType(Type.INT),
+                                TypeFactory.createType(Type.DOUBLE), TypeFactory.createType(Type.DOUBLE)},
+                        new String[]{"the_geom", GraphSchema.ID, GraphSchema.WEIGHT, GraphSchema.DISTANCE});
         }
 }

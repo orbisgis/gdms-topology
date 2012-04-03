@@ -45,6 +45,11 @@ public final class GraphSchema {
         public static final String TARGET_NODE = "target";
         public static final String DISTANCE = "distance";
 
+        //Constants used in the functions to specify the type of graph
+        public static int DIRECT = 1;
+        public static int DIRECT_REVERSED = 2;
+        public static int UNDIRECT = 3;
+        
         /**
          * Some fields needed for the input datasource.
          */
