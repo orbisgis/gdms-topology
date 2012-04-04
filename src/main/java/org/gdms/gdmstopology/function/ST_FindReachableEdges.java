@@ -27,24 +27,14 @@
  */
 package org.gdms.gdmstopology.function;
 
-import com.vividsolutions.jts.geom.Geometry;
-import org.gdms.data.DataSourceFactory;
 import org.gdms.data.SQLDataSourceFactory;
-import org.gdms.data.schema.DefaultMetadata;
 import org.gdms.data.schema.Metadata;
-import org.gdms.data.types.Type;
-import org.gdms.data.types.TypeFactory;
 import org.gdms.data.values.Value;
-import org.gdms.data.values.ValueFactory;
 import org.gdms.driver.DiskBufferDriver;
 import org.gdms.driver.DriverException;
 import org.gdms.driver.DataSet;
-import org.gdms.gdmstopology.model.DWMultigraphDataSource;
-import org.gdms.gdmstopology.model.GraphEdge;
 import org.gdms.gdmstopology.model.GraphMetadataFactory;
 import org.gdms.gdmstopology.model.GraphSchema;
-import org.gdms.gdmstopology.model.WMultigraphDataSource;
-import org.gdms.gdmstopology.process.GraphAnalysis;
 import org.gdms.gdmstopology.process.GraphUtilities;
 import org.gdms.sql.function.FunctionException;
 import org.gdms.sql.function.FunctionSignature;
@@ -54,8 +44,6 @@ import org.gdms.sql.function.table.TableArgument;
 import org.gdms.sql.function.table.TableDefinition;
 import org.gdms.sql.function.table.TableFunctionSignature;
 import org.orbisgis.progress.ProgressMonitor;
-import org.jgrapht.traverse.ClosestFirstIterator;
-import org.jgrapht.graph.EdgeReversedGraph;
 
 /**
  *

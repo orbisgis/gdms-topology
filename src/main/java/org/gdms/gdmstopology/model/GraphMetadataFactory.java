@@ -36,7 +36,7 @@ import org.gdms.data.types.TypeFactory;
 
 /**
  *
- * @author ebocher
+ * @author ebocher IRSTV FR CNRS 2488
  */
 public final class GraphMetadataFactory {
 
@@ -80,7 +80,7 @@ public final class GraphMetadataFactory {
         }
 
         /**
-         * Create the metadata model used by the reachable edges function.
+         * Create the metadata model used by the reachable edge function.
          * @return 
          */
         public static Metadata createReachablesEdgesMetadata() {
@@ -88,5 +88,17 @@ public final class GraphMetadataFactory {
                         new Type[]{TypeFactory.createType(Type.GEOMETRY), TypeFactory.createType(Type.INT),
                                 TypeFactory.createType(Type.DOUBLE), TypeFactory.createType(Type.DOUBLE)},
                         new String[]{"the_geom", GraphSchema.ID, GraphSchema.WEIGHT, GraphSchema.DISTANCE});
+        }
+
+        /**
+         * Create the metadata model used by the multi-reachable edges function.
+         * @return 
+         */
+        public static Metadata createMReachablesEdgesMetadata() {
+                return new DefaultMetadata(
+                        new Type[]{TypeFactory.createType(Type.GEOMETRY), TypeFactory.createType(Type.INT),
+                                TypeFactory.createType(Type.INT),
+                                TypeFactory.createType(Type.DOUBLE), TypeFactory.createType(Type.DOUBLE)},
+                        new String[]{"the_geom", GraphSchema.ID, GraphSchema.SOURCE_NODE, GraphSchema.WEIGHT, GraphSchema.DISTANCE});
         }
 }

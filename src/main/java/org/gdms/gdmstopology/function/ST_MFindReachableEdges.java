@@ -25,25 +25,16 @@
  * or contact directly:
  * info_at_ orbisgis.org
  */
-
 package org.gdms.gdmstopology.function;
 
-import com.vividsolutions.jts.geom.Geometry;
-import org.gdms.data.DataSourceFactory;
 import org.gdms.data.SQLDataSourceFactory;
-import org.gdms.data.schema.DefaultMetadata;
 import org.gdms.data.schema.Metadata;
-import org.gdms.data.types.Type;
-import org.gdms.data.types.TypeFactory;
 import org.gdms.data.values.Value;
-import org.gdms.data.values.ValueFactory;
-import org.gdms.driver.DiskBufferDriver;
 import org.gdms.driver.DriverException;
 import org.gdms.driver.DataSet;
-import org.gdms.gdmstopology.model.DWMultigraphDataSource;
-import org.gdms.gdmstopology.model.GraphEdge;
+import org.gdms.gdmstopology.model.GraphMetadataFactory;
 import org.gdms.gdmstopology.model.GraphSchema;
-import org.gdms.gdmstopology.model.WMultigraphDataSource;
+import org.gdms.gdmstopology.process.GraphUtilities;
 import org.gdms.sql.function.FunctionException;
 import org.gdms.sql.function.FunctionSignature;
 import org.gdms.sql.function.ScalarArgument;
@@ -52,8 +43,6 @@ import org.gdms.sql.function.table.TableArgument;
 import org.gdms.sql.function.table.TableDefinition;
 import org.gdms.sql.function.table.TableFunctionSignature;
 import org.orbisgis.progress.ProgressMonitor;
-import org.jgrapht.traverse.ClosestFirstIterator;
-import org.jgrapht.graph.EdgeReversedGraph;
 
 /**
  *
@@ -61,41 +50,23 @@ import org.jgrapht.graph.EdgeReversedGraph;
  */
 public class ST_MFindReachableEdges extends AbstractTableFunction {
 
-        private DiskBufferDriver diskBufferDriver;
-        private int ID_FIELD_INDEX = -1;
-
         @Override
         public DataSet evaluate(SQLDataSourceFactory dsf, DataSet[] tables, Value[] values, ProgressMonitor pm) throws FunctionException {
                 try {
                         DataSet sdsEdges = tables[0];
                         DataSet vertexes = tables[1];
-                        checkMetadata(vertexes);
-
-                        diskBufferDriver = new DiskBufferDriver(dsf, getMetadata(null));
 
                         if (values.length == 2) {
-                                if (values[0].getAsBoolean()) {
-                                        return computeWMPath(dsf, sdsEdges, vertexes, pm);
-                                } else {
-                                        return computeDWMPath(dsf, sdsEdges, vertexes, values[1].getAsBoolean(), pm);
-                                }
-
+                                return GraphUtilities.getMReachableEdges(dsf, sdsEdges, vertexes, values[0].getAsString(), Double.POSITIVE_INFINITY, values[1].getAsInt(), pm);
                         } else {
-                                return computeDWMPath(dsf, sdsEdges, vertexes, false, pm);
+                                return GraphUtilities.getMReachableEdges(dsf, sdsEdges, vertexes, values[0].getAsString(), Double.POSITIVE_INFINITY, GraphSchema.DIRECT, pm);
                         }
 
-                } catch (DriverException ex) {
-                        throw new FunctionException("Cannot compute the shortest path length", ex);
+                } catch (Exception ex) {
+                        throw new FunctionException("Cannot find reachable edges", ex);
                 }
 
 
-        }
-
-        @Override
-        public void workFinished() throws DriverException {
-                if (diskBufferDriver != null) {
-                        diskBufferDriver.stop();
-                }
         }
 
         @Override
@@ -106,116 +77,27 @@ public class ST_MFindReachableEdges extends AbstractTableFunction {
         @Override
         public String getDescription() {
                 return "Find reachable edges from sereral vertexes to all other in a graph.\n"
-                        + "Optional arguments : \n"
-                        + "true is the graph is undirected\n"
-                        + "true is the graph is reversed.";
+                        + "Optional argument : \n"
+                        + "1 if the graph is directed\n"
+                        + "2 if the graph is directed and edges are reversed."
+                        + "3 if the graph is undirected\n";
         }
 
         @Override
         public String getSqlOrder() {
-                return "SELECT * from ST_MFindReachableEdges(table, table2, vertexes[,true, true]) );";
+                return "SELECT * from ST_MFindReachableEdges(graph, nodes, costField [,1]) );";
         }
 
         @Override
         public Metadata getMetadata(Metadata[] tables) throws DriverException {
-                Metadata md = new DefaultMetadata(
-                        new Type[]{TypeFactory.createType(Type.GEOMETRY), TypeFactory.createType(Type.INT), TypeFactory.createType(Type.INT), TypeFactory.createType(Type.INT),
-                                TypeFactory.createType(Type.DOUBLE), TypeFactory.createType(Type.DOUBLE)},
-                        new String[]{"the_geom", GraphSchema.ID, GraphSchema.START_NODE, GraphSchema.END_NODE, GraphSchema.WEIGHT, GraphSchema.WEIGHT_SUM});
-                return md;
+                return GraphMetadataFactory.createMReachablesEdgesMetadata();
         }
 
         @Override
         public FunctionSignature[] getFunctionSignatures() {
                 return new FunctionSignature[]{
-                                new TableFunctionSignature(TableDefinition.GEOMETRY, new TableArgument(TableDefinition.GEOMETRY), new TableArgument(TableDefinition.ANY)),
-                                new TableFunctionSignature(TableDefinition.GEOMETRY, new TableArgument(TableDefinition.GEOMETRY), new TableArgument(TableDefinition.ANY), ScalarArgument.BOOLEAN, ScalarArgument.BOOLEAN)
+                                new TableFunctionSignature(TableDefinition.GEOMETRY, new TableArgument(TableDefinition.GEOMETRY), new TableArgument(TableDefinition.ANY), ScalarArgument.STRING),
+                                new TableFunctionSignature(TableDefinition.GEOMETRY, new TableArgument(TableDefinition.GEOMETRY), new TableArgument(TableDefinition.ANY), ScalarArgument.STRING, ScalarArgument.INT)
                         };
-        }
-
-        private DiskBufferDriver computeWMPath(DataSourceFactory dsf, DataSet sds, DataSet vertexes, ProgressMonitor pm) throws DriverException {
-                WMultigraphDataSource wMultigraphDataSource = new WMultigraphDataSource(dsf, sds, pm);
-                long rowCount = vertexes.getRowCount();
-                ClosestFirstIterator<Integer, GraphEdge> cl;
-                for (int i = 0; i < rowCount; i++) {
-                        int source = vertexes.getInt(i, ID_FIELD_INDEX);
-                        cl = new ClosestFirstIterator<Integer, GraphEdge>(
-                                wMultigraphDataSource, source);
-
-                        int previous = source;
-                        while (cl.hasNext()) {
-                                Integer node = cl.next();
-                                if (node != source) {
-                                        double length = cl.getShortestPathLength(node);
-                                        GraphEdge edge = cl.getSpanningTreeEdge(node);
-                                        Geometry geom = wMultigraphDataSource.getGeometry(edge);
-                                        diskBufferDriver.addValues(new Value[]{ValueFactory.createValue(geom), ValueFactory.createValue(source), ValueFactory.createValue(previous), ValueFactory.createValue(node), ValueFactory.createValue(edge.getWeight()), ValueFactory.createValue(length)});
-                                        previous = node;
-                                }
-                        }
-                }
-                diskBufferDriver.writingFinished();
-                diskBufferDriver.start();
-                return diskBufferDriver;
-
-        }
-
-        private DiskBufferDriver computeDWMPath(DataSourceFactory dsf, DataSet sds, DataSet vertexes, boolean reverseGraph, ProgressMonitor pm) throws DriverException {
-                DWMultigraphDataSource dwMultigraphDataSource = new DWMultigraphDataSource(dsf, sds, pm);
-                ClosestFirstIterator<Integer, GraphEdge> cl;
-                if (reverseGraph) {
-                        long rowCount = vertexes.getRowCount();
-                        for (int i = 0; i < rowCount; i++) {
-                                int source = vertexes.getInt(i, ID_FIELD_INDEX);
-                                cl = new ClosestFirstIterator<Integer, GraphEdge>(new EdgeReversedGraph(dwMultigraphDataSource), source);
-                                int previous = source;
-                                while (cl.hasNext()) {
-                                        Integer node = cl.next();
-                                        if (node != source) {
-                                                double length = cl.getShortestPathLength(node);
-                                                GraphEdge edge = cl.getSpanningTreeEdge(node);
-                                                Geometry geom = dwMultigraphDataSource.getGeometry(edge);
-                                                diskBufferDriver.addValues(new Value[]{ValueFactory.createValue(geom), ValueFactory.createValue(source), ValueFactory.createValue(previous), ValueFactory.createValue(node), ValueFactory.createValue(edge.getWeight()), ValueFactory.createValue(length)});
-                                                previous = node;
-                                        }
-                                }
-                        }
-                } else {
-                        long rowCount = vertexes.getRowCount();
-                        for (int i = 0; i < rowCount; i++) {
-                                int source = vertexes.getInt(i, ID_FIELD_INDEX);
-                                cl = new ClosestFirstIterator<Integer, GraphEdge>(dwMultigraphDataSource, source);
-
-                                int previous = source;
-                                while (cl.hasNext()) {
-                                        Integer node = cl.next();
-                                        if (node != source) {
-                                                double length = cl.getShortestPathLength(node);
-                                                GraphEdge edge = cl.getSpanningTreeEdge(node);
-                                                Geometry geom = dwMultigraphDataSource.getGeometry(edge);
-                                                diskBufferDriver.addValues(new Value[]{ValueFactory.createValue(geom), ValueFactory.createValue(source), ValueFactory.createValue(previous), ValueFactory.createValue(node), ValueFactory.createValue(edge.getWeight()), ValueFactory.createValue(length)});
-                                                previous = node;
-                                        }
-                                }
-                        }
-                }
-
-
-                diskBufferDriver.writingFinished();
-                diskBufferDriver.start();
-                return diskBufferDriver;
-        }
-
-        /**
-         * A method to check if the schema are well populated to use this function.
-         *
-         * @throws DriverException
-         */
-        private void checkMetadata(DataSet dataSet) throws DriverException {
-                Metadata metadata = dataSet.getMetadata();
-                ID_FIELD_INDEX = metadata.getFieldIndex(GraphSchema.ID);
-                if (ID_FIELD_INDEX == -1) {
-                        throw new IllegalArgumentException("The table must contains a field named id");
-                }
         }
 }

@@ -28,6 +28,7 @@
 package org.gdms.gdmstopology.process;
 
 import com.vividsolutions.jts.geom.Geometry;
+import java.util.Iterator;
 import org.gdms.data.SQLDataSourceFactory;
 import org.gdms.data.values.Value;
 import org.gdms.data.values.ValueFactory;
@@ -49,7 +50,7 @@ import org.orbisgis.progress.ProgressMonitor;
  *
  * @author ebocher IRSTV FR CNRS 2488
  */
-public class GraphUtilities {
+public class GraphUtilities extends GraphAnalysis {
 
         /**
          * Return all reachable edges from a node.
@@ -125,7 +126,9 @@ public class GraphUtilities {
                                 double length = cl.getShortestPathLength(node);
                                 GraphEdge edge = cl.getSpanningTreeEdge(node);
                                 Geometry geom = graph.getGeometry(edge);
-                                diskBufferDriver.addValues(new Value[]{ValueFactory.createValue(geom), ValueFactory.createValue(edge.getRowId()), ValueFactory.createValue(edge.getWeight()), ValueFactory.createValue(length)});
+                                diskBufferDriver.addValues(new Value[]{ValueFactory.createValue(geom),
+                                                ValueFactory.createValue(edge.getRowId()),
+                                                ValueFactory.createValue(edge.getWeight()), ValueFactory.createValue(length)});
 
                         }
                 }
@@ -134,5 +137,100 @@ public class GraphUtilities {
                 pm.endTask();
                 return diskBufferDriver;
 
+        }
+
+        /**
+         * Return all reachable edges from several nodes.
+         * A radius can be used to limit the area.
+         * 
+         * @param dsf
+         * @param dataSet
+         * @param nodes
+         * @param costField
+         * @param radius
+         * @param graphType
+         * @param pm
+         * @return
+         * @throws GraphException
+         * @throws DriverException 
+         */
+        public static DiskBufferDriver getMReachableEdges(SQLDataSourceFactory dsf, DataSet dataSet, DataSet nodes, String costField, double radius, int graphType, ProgressMonitor pm) throws GraphException, DriverException {
+                if (graphType == GraphSchema.DIRECT) {
+                        DWMultigraphDataSource dwMultigraphDataSource = new DWMultigraphDataSource(dsf, dataSet, pm);
+                        dwMultigraphDataSource.setWeigthFieldIndex(costField);
+                        return findMReachableEdges(dsf, dwMultigraphDataSource, nodes, Double.POSITIVE_INFINITY, pm);
+                } else if (graphType == GraphSchema.DIRECT_REVERSED) {
+                        DWMultigraphDataSource dwMultigraphDataSource = new DWMultigraphDataSource(dsf, dataSet, pm);
+                        dwMultigraphDataSource.setWeigthFieldIndex(costField);
+                        EdgeReversedGraphDataSource edgeReversedGraph = new EdgeReversedGraphDataSource(dwMultigraphDataSource);
+                        return findMReachableEdges(dsf, edgeReversedGraph, nodes, Double.POSITIVE_INFINITY, pm);
+                } else if (graphType == GraphSchema.UNDIRECT) {
+                        WMultigraphDataSource wMultigraphDataSource = new WMultigraphDataSource(dsf, dataSet, pm);
+                        wMultigraphDataSource.setWeigthFieldIndex(costField);
+                        return findMReachableEdges(dsf, wMultigraphDataSource, nodes, Double.POSITIVE_INFINITY, pm);
+                } else {
+                        throw new GraphException("Only 3 type of graphs are allowed."
+                                + "1 if the path is computing using a directed graph.\n"
+                                + "2 if the path is computing using a directed graph and edges are reversed\n"
+                                + "3 if the path is computing using a undirected.");
+                }
+        }
+
+        /**
+         * Return all reachable edges from several nodes.
+         * A radius can be used to limit the area.
+         * @param dsf
+         * @param graph
+         * @param nodes
+         * @param radius 
+         * @param pm 
+         * @return
+         * @throws DriverException 
+         */
+        public static DiskBufferDriver findMReachableEdges(SQLDataSourceFactory dsf, GDMSValueGraph<Integer, GraphEdge> graph,
+                DataSet nodes, double radius, ProgressMonitor pm) throws DriverException, GraphException {
+
+                if (checkSourceColumn(nodes)) {
+                        Iterator<Value[]> it = nodes.iterator();
+                        DiskBufferDriver diskBufferDriver = new DiskBufferDriver(dsf, GraphMetadataFactory.createMReachablesEdgesMetadata());
+
+                        while (it.hasNext()) {
+                                Value[] values = it.next();
+                                int source = values[SOURCE_FIELD_INDEX].getAsInt();
+                                if (!graph.containsVertex(source)) {
+                                        throw new GraphException(
+                                                "The graph must contain the source vertex");
+                                }
+                                ClosestFirstIterator<Integer, GraphEdge> cl = new ClosestFirstIterator<Integer, GraphEdge>(
+                                        graph, source);
+                                int count = 0;
+                                pm.startTask("Find reachable edges", 100);
+
+                                while (cl.hasNext()) {
+                                        if (count >= 100 && count % 100 == 0) {
+                                                if (pm.isCancelled()) {
+                                                        break;
+                                                }
+                                        }
+                                        count++;
+                                        Integer node = cl.next();
+                                        if (node != source) {
+                                                double length = cl.getShortestPathLength(node);
+                                                GraphEdge edge = cl.getSpanningTreeEdge(node);
+                                                Geometry geom = graph.getGeometry(edge);
+                                                diskBufferDriver.addValues(new Value[]{ValueFactory.createValue(geom),
+                                                                ValueFactory.createValue(edge.getRowId()), ValueFactory.createValue(source),
+                                                                ValueFactory.createValue(edge.getWeight()), ValueFactory.createValue(length)});
+
+                                        }
+                                }
+                        }
+                        diskBufferDriver.writingFinished();
+                        diskBufferDriver.start();
+                        pm.endTask();
+                        return diskBufferDriver;
+                } else {
+                        throw new GraphException("The table nodes must contains the column source");
+                }
         }
 }

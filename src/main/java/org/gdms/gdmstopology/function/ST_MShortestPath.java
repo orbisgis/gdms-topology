@@ -35,7 +35,7 @@ import org.gdms.driver.DiskBufferDriver;
 import org.gdms.driver.DriverException;
 import org.gdms.gdmstopology.model.GraphMetadataFactory;
 import org.gdms.gdmstopology.model.GraphSchema;
-import org.gdms.gdmstopology.process.GraphAnalysis;
+import org.gdms.gdmstopology.process.GraphPath;
 import org.gdms.sql.function.FunctionException;
 import org.gdms.sql.function.FunctionSignature;
 import org.gdms.sql.function.ScalarArgument;
@@ -55,12 +55,12 @@ public class ST_MShortestPath extends AbstractTableFunction {
         public DataSet evaluate(SQLDataSourceFactory dsf, DataSet[] tables, Value[] values, ProgressMonitor pm) throws FunctionException {
                 try {
                         if (values.length == 2) {
-                                DiskBufferDriver diskBufferDriver = GraphAnalysis.getMShortestPath(dsf, tables[0], tables[1],
+                                DiskBufferDriver diskBufferDriver = GraphPath.getMShortestPath(dsf, tables[0], tables[1],
                                         values[0].getAsString(), values[1].getAsInt(), pm);
                                 diskBufferDriver.start();
                                 return diskBufferDriver;
                         } else {
-                                DiskBufferDriver diskBufferDriver = GraphAnalysis.getMShortestPath(dsf, tables[0], tables[1],
+                                DiskBufferDriver diskBufferDriver = GraphPath.getMShortestPath(dsf, tables[0], tables[1],
                                         values[0].getAsString(), GraphSchema.DIRECT, pm);
                                 diskBufferDriver.start();
                                 return diskBufferDriver;
