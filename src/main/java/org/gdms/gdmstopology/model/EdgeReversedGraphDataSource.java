@@ -59,4 +59,9 @@ public class EdgeReversedGraphDataSource extends EdgeReversedGraph<Integer, Grap
         public Value[] getValues(int rowid) throws DriverException {
                 return dWMultigraphDataSource.getValues(rowid);
         }
+
+        @Override
+        public long getRowCount() throws DriverException {
+                return dWMultigraphDataSource.getRowCount();
+        }
 }

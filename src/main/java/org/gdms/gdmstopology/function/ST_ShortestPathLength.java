@@ -58,13 +58,13 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
                         String costField = values[1].getAsString();
                         if (values.length == 3) {
                                 DiskBufferDriver diskBufferDriver = GraphPath.getShortestPathLength(dsf, tables[0], source, costField, values[2].getAsInt(), pm);
-                                diskBufferDriver.start();
+                                diskBufferDriver.open();
                                 return diskBufferDriver;
 
                         } else {
                                 DiskBufferDriver diskBufferDriver = GraphPath.getShortestPathLength(dsf, tables[0],
                                         source, costField, GraphSchema.DIRECT, pm);
-                                diskBufferDriver.start();
+                                diskBufferDriver.open();
                                 return diskBufferDriver;
                         }
 

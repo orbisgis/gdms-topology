@@ -168,7 +168,7 @@ public class ST_BlockIdentity extends AbstractTableFunction {
                                 pm.endTask();
                                 diskBufferDriver.writingFinished();
                                 pm.endTask();
-                                diskBufferDriver.start();
+                                diskBufferDriver.open();
                                 return diskBufferDriver;
                         } else {
                                 throw new FunctionException("The table doesn't contain the geometry field " + geomField);
@@ -186,7 +186,7 @@ public class ST_BlockIdentity extends AbstractTableFunction {
         @Override
         public void workFinished() throws DriverException {
                 if (diskBufferDriver != null) {
-                        diskBufferDriver.stop();
+                        diskBufferDriver.close();
                 }
         }
 

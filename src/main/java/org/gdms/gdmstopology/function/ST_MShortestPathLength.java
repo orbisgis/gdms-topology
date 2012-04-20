@@ -59,13 +59,13 @@ public class ST_MShortestPathLength extends AbstractTableFunction {
                         if (values.length == 2) {
                                 DiskBufferDriver diskBufferDriver = GraphPath.getMShortestPathLength(dsf, sdsEdges, vertexes, values[0].getAsString(),
                                         values[1].getAsInt(), pm);
-                                diskBufferDriver.start();
+                                diskBufferDriver.open();
                                 return diskBufferDriver;
 
                         } else {
                                 DiskBufferDriver diskBufferDriver = GraphPath.getMShortestPathLength(dsf, sdsEdges, vertexes, values[0].getAsString(),
                                         GraphSchema.DIRECT, pm);
-                                diskBufferDriver.start();
+                                diskBufferDriver.open();
                                 return diskBufferDriver;
                         }
 

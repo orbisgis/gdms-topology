@@ -149,4 +149,9 @@ public class WMultigraphDataSource extends WeightedMultigraph<Integer, GraphEdge
         public Value[] getValues(int rowid) throws DriverException {
                 return GDMSGraph.getValues(rowid);
         }
+
+        @Override
+        public long getRowCount() throws DriverException {
+                return GDMSGraph.getRowCount();
+        }
 }

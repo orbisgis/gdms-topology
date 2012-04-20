@@ -57,12 +57,12 @@ public class ST_MShortestPath extends AbstractTableFunction {
                         if (values.length == 2) {
                                 DiskBufferDriver diskBufferDriver = GraphPath.getMShortestPath(dsf, tables[0], tables[1],
                                         values[0].getAsString(), values[1].getAsInt(), pm);
-                                diskBufferDriver.start();
+                                diskBufferDriver.open();
                                 return diskBufferDriver;
                         } else {
                                 DiskBufferDriver diskBufferDriver = GraphPath.getMShortestPath(dsf, tables[0], tables[1],
                                         values[0].getAsString(), GraphSchema.DIRECT, pm);
-                                diskBufferDriver.start();
+                                diskBufferDriver.open();
                                 return diskBufferDriver;
                         }
                 } catch (Exception ex) {
@@ -78,10 +78,10 @@ public class ST_MShortestPath extends AbstractTableFunction {
         @Override
         public String getDescription() {
                 return "Return the shortest path beetwen several vertexes using the Dijkstra algorithm.\n"
-                        + "Optional argument : \n"
-                        + "1 if the graph is directed ."
-                        + "2 if the graph is directed and edges reversed\n"
-                        + "3 if the graph is undirected\n";
+                        + " Optional argument : \n"
+                        + " 1 if the graph is directed ."
+                        + " 2 if the graph is directed and edges reversed\n"
+                        + " 3 if the graph is undirected\n";
         }
 
         @Override

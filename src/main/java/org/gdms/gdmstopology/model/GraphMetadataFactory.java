@@ -101,4 +101,16 @@ public final class GraphMetadataFactory {
                                 TypeFactory.createType(Type.DOUBLE), TypeFactory.createType(Type.DOUBLE)},
                         new String[]{"the_geom", GraphSchema.ID, GraphSchema.SOURCE_NODE, GraphSchema.WEIGHT, GraphSchema.DISTANCE});
         }
+
+        /**
+         * Metadata for the subgraph statistics utility.
+         * @return 
+         */
+        public static Metadata createSubGraphStatsMetadata() {
+                Metadata md = new DefaultMetadata(
+                        new Type[]{TypeFactory.createType(Type.INT), TypeFactory.createType(Type.INT),
+                                TypeFactory.createType(Type.DOUBLE)},
+                        new String[]{GraphSchema.ID, "count", GraphSchema.SUM});
+                return md;
+        }
 }

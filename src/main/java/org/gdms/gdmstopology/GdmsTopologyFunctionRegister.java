@@ -36,6 +36,7 @@ import org.gdms.gdmstopology.function.ST_MShortestPathLength;
 import org.gdms.gdmstopology.function.ST_PlanarGraph;
 import org.gdms.gdmstopology.function.ST_ShortestPath;
 import org.gdms.gdmstopology.function.ST_ShortestPathLength;
+import org.gdms.gdmstopology.function.ST_SubGraphStatistics;
 import org.gdms.gdmstopology.function.ST_ToLineNoder;
 import org.gdms.sql.function.FunctionManager;
 
@@ -65,5 +66,6 @@ public class GdmsTopologyFunctionRegister {
                 FunctionManager.addFunction(ST_FindReachableEdges.class);
                 FunctionManager.addFunction(ST_MFindReachableEdges.class);
                 FunctionManager.addFunction(ST_MShortestPath.class);
+                FunctionManager.addFunction(ST_SubGraphStatistics.class);
         }
 }

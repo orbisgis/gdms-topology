@@ -62,4 +62,12 @@ public interface GDMSValueGraph<V extends Integer, E extends GraphEdge> extends 
          * @throws DriverException 
          */
         Value[] getValues(int rowid ) throws DriverException ;
+        
+        
+        /**
+         * Return the number of rows
+         * @return
+         * @throws DriverException 
+         */
+        long getRowCount()throws DriverException ;
 }

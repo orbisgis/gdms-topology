@@ -39,7 +39,7 @@ public final class GraphSchema {
         public static final String WEIGHT = "weight";
         public static final String LEFT_FACE = "left_polygon";
         public static final String RIGHT_FACE = "right_polygon";
-        public static final String WEIGHT_SUM = "weight_sum";
+        public static final String SUM = "sum";
         public static final String PATH_ID = "path_id";
         public static final String SOURCE_NODE = "source";
         public static final String TARGET_NODE = "target";

@@ -33,6 +33,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import org.apache.log4j.Logger;
 import org.gdms.data.DataSourceFactory;
 import org.gdms.data.NoSuchTableException;
 import org.gdms.data.indexes.DefaultAlphaQuery;
@@ -62,6 +63,7 @@ public final class GDMSGraph extends AbstractGraph<Integer, GraphEdge> implement
         public int GEOMETRY_FIELD_INDEX = -1;
         public final ProgressMonitor pm;
         private Metadata edgesMetadata;
+        private static final Logger LOGGER = Logger.getLogger(GDMSGraph.class);
 
         /*
          * Be carefull the schema of the input datasource must match the fields below:
@@ -92,11 +94,11 @@ public final class GDMSGraph extends AbstractGraph<Integer, GraphEdge> implement
                                 }
                         }
                 } catch (DriverException ex) {
-                        throw new DriverException("Unable to get metadata.", ex);
+                        LOGGER.error("Unable to get metadata.", ex);
                 } catch (IndexException ex) {
-                        throw new DriverException("Unable to create index.", ex);
+                        LOGGER.error("Unable to create index.", ex);
                 } catch (NoSuchTableException ex) {
-                        throw new DriverException("Unable to find the table.", ex);
+                        LOGGER.error("Unable to find the table.", ex);
                 }
         }
 
@@ -185,7 +187,6 @@ public final class GDMSGraph extends AbstractGraph<Integer, GraphEdge> implement
                                                 getWeigthVertex(rowId), rowId);
                                 }
                         }
-
                 } catch (DriverException ex) {
                 }
                 return null;
@@ -221,7 +222,6 @@ public final class GDMSGraph extends AbstractGraph<Integer, GraphEdge> implement
                                         return true;
                                 }
                         }
-
                 } catch (DriverException ex) {
                 }
                 return false;
@@ -246,7 +246,6 @@ public final class GDMSGraph extends AbstractGraph<Integer, GraphEdge> implement
                                         return false;
                                 }
                         }
-
                 } catch (DriverException ex) {
                 }
                 return false;
@@ -254,7 +253,7 @@ public final class GDMSGraph extends AbstractGraph<Integer, GraphEdge> implement
 
         @Override
         public Set<GraphEdge> edgeSet() {
-                throw new UnsupportedOperationException("Not supported yet.");
+                return new GraphEdgeSet(this);
         }
 
         @Override
@@ -457,5 +456,20 @@ public final class GDMSGraph extends AbstractGraph<Integer, GraphEdge> implement
         @Override
         public Value[] getValues(int rowid) throws DriverException {
                 return dataSet.getRow(rowid);
+        }
+
+        @Override
+        public long getRowCount() throws DriverException {
+                return dataSet.getRowCount();
+        }
+
+        /**
+         * Create a graphEdge based on the values stored in the input dataset.
+         * @param index
+         * @return
+         * @throws DriverException 
+         */
+        public GraphEdge getGraphEdge(long index) throws DriverException {
+                return new GraphEdge(getSourceVertex(index), getTargetVertex(index), getWeigthVertex(index), index);
         }
 }

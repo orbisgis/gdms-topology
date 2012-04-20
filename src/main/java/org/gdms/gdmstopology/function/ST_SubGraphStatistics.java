@@ -30,9 +30,9 @@ package org.gdms.gdmstopology.function;
 import org.gdms.data.SQLDataSourceFactory;
 import org.gdms.data.schema.Metadata;
 import org.gdms.data.values.Value;
+import org.gdms.driver.DataSet;
 import org.gdms.driver.DiskBufferDriver;
 import org.gdms.driver.DriverException;
-import org.gdms.driver.DataSet;
 import org.gdms.gdmstopology.model.GraphMetadataFactory;
 import org.gdms.gdmstopology.model.GraphSchema;
 import org.gdms.gdmstopology.process.GraphUtilities;
@@ -48,61 +48,53 @@ import org.orbisgis.progress.ProgressMonitor;
 /**
  *
  * @author ebocher IRSTV FR CNRS 2488
- *
  */
-public class ST_FindReachableEdges extends AbstractTableFunction {
+public class ST_SubGraphStatistics extends AbstractTableFunction {
 
         @Override
         public DataSet evaluate(SQLDataSourceFactory dsf, DataSet[] tables, Value[] values, ProgressMonitor pm) throws FunctionException {
                 try {
-                        int source = values[0].getAsInt();
-                        String fieldCost = values[1].getAsString();
-                        if (values.length == 3) {
-                                DiskBufferDriver diskBufferDriver = GraphUtilities.getReachableEdges(dsf, tables[0], source, fieldCost, Double.POSITIVE_INFINITY, values[2].getAsInt(), pm);
+                        String costField = values[0].getAsString();
+                        if (values.length == 2) {
+                                DiskBufferDriver diskBufferDriver = GraphUtilities.getGraphStatistics(dsf, tables[0], costField, values[1].getAsInt(), pm);
                                 diskBufferDriver.open();
                                 return diskBufferDriver;
-
                         } else {
-                                DiskBufferDriver diskBufferDriver = GraphUtilities.getReachableEdges(dsf, tables[0], source, fieldCost, Double.POSITIVE_INFINITY, GraphSchema.DIRECT, pm);
+                                DiskBufferDriver diskBufferDriver = GraphUtilities.getGraphStatistics(dsf, tables[0], costField, GraphSchema.DIRECT, pm);
                                 diskBufferDriver.open();
                                 return diskBufferDriver;
                         }
 
                 } catch (Exception ex) {
-                        throw new FunctionException("Cannot find reachable edges", ex);
+                        throw new FunctionException("Cannot compute the statistics on the graph", ex);
                 }
-
-        }
-
-        @Override
-        public String getName() {
-                return "ST_FindReachableEdges";
-        }
-
-        @Override
-        public String getDescription() {
-                return "Find reachable edges from one vertex to all other in a graph."
-                        + "Optional argument : \n"
-                        + "1 if the graph is directed\n"
-                        + "2 if the graph is directed and edges are reversed."
-                        + "3 if the graph is undirected\n";
-        }
-
-        @Override
-        public String getSqlOrder() {
-                return "SELECT * from ST_FindReachableEdges(table, 12, costField [,1]) );";
         }
 
         @Override
         public Metadata getMetadata(Metadata[] tables) throws DriverException {
-                return GraphMetadataFactory.createReachablesEdgesMetadata();
+                return GraphMetadataFactory.createSubGraphStatsMetadata();
+        }
+
+        @Override
+        public String getDescription() {
+                return "Returns for all subsgraphs the number of edges and the sum of weigth";
         }
 
         @Override
         public FunctionSignature[] getFunctionSignatures() {
                 return new FunctionSignature[]{
-                                new TableFunctionSignature(TableDefinition.GEOMETRY, new TableArgument(TableDefinition.GEOMETRY), ScalarArgument.INT, ScalarArgument.STRING),
-                                new TableFunctionSignature(TableDefinition.GEOMETRY, new TableArgument(TableDefinition.GEOMETRY), ScalarArgument.INT, ScalarArgument.STRING, ScalarArgument.INT)
+                                new TableFunctionSignature(TableDefinition.GEOMETRY, new TableArgument(TableDefinition.GEOMETRY), ScalarArgument.STRING),
+                                new TableFunctionSignature(TableDefinition.GEOMETRY, new TableArgument(TableDefinition.GEOMETRY), ScalarArgument.STRING, ScalarArgument.INT)
                         };
+        }
+
+        @Override
+        public String getName() {
+                return "ST_SubGraphStatistics";
+        }
+
+        @Override
+        public String getSqlOrder() {
+                return "SELECT * FROM  ST_SubGraphStatistics(table,costField [,1]);";
         }
 }

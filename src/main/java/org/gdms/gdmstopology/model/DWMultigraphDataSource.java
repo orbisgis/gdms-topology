@@ -40,7 +40,7 @@ import org.orbisgis.progress.ProgressMonitor;
  *
  * @author ebocher
  */
-public class DWMultigraphDataSource extends DirectedWeightedMultigraph<Integer, GraphEdge> implements GDMSValueGraph<Integer, GraphEdge>{
+public class DWMultigraphDataSource extends DirectedWeightedMultigraph<Integer, GraphEdge> implements GDMSValueGraph<Integer, GraphEdge> {
 
         private final GDMSGraph GDMSGraph;
 
@@ -59,7 +59,7 @@ public class DWMultigraphDataSource extends DirectedWeightedMultigraph<Integer, 
         public void setWeigthFieldIndex(String fieldName) throws DriverException {
                 GDMSGraph.setWeigthFieldIndex(fieldName);
         }
-        
+
         @Override
         public Set<GraphEdge> incomingEdgesOf(Integer vertex) {
                 return GDMSGraph.incomingEdgesOf(vertex);
@@ -146,9 +146,11 @@ public class DWMultigraphDataSource extends DirectedWeightedMultigraph<Integer, 
 
         @Override
         public Value[] getValues(int rowid) throws DriverException {
-               return GDMSGraph.getValues(rowid);
+                return GDMSGraph.getValues(rowid);
         }
-        
-        
-        
+
+        @Override
+        public long getRowCount() throws DriverException {
+                return GDMSGraph.getRowCount();
+        }
 }

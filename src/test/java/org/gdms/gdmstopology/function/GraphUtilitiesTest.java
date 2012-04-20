@@ -27,6 +27,7 @@
  */
 package org.gdms.gdmstopology.function;
 
+import org.gdms.data.DataSource;
 import com.vividsolutions.jts.geom.Geometry;
 import org.gdms.data.types.Type;
 import org.gdms.data.types.TypeFactory;
@@ -160,5 +161,24 @@ public class GraphUtilitiesTest extends TopologySetUpTest {
                         }
                 }
                 assertTrue(count == 4);
+        }
+
+        @Test
+        public void testST_SubGraphStatistics() throws Exception {
+                ST_SubGraphStatistics sT_SubGraphStatistics = new ST_SubGraphStatistics();
+                DataSource ds = dsf.getDataSource(GRAPH2D_EDGES);
+                ds.open();
+                DataSet[] tables = new DataSet[]{ds};
+                DataSet result = sT_SubGraphStatistics.evaluate(dsf, tables, new Value[]{
+                                ValueFactory.createValue("length")}, new NullProgressMonitor());
+                ds.close();
+                System.out.println(result.getRowCount());
+
+        }
+        
+        
+        @Test
+        public void testMySubGraph(){
+                
         }
 }

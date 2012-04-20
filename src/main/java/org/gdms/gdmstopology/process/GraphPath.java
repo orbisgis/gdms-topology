@@ -150,7 +150,7 @@ public class GraphPath extends GraphAnalysis{
                 }
                 diskBufferDriver.writingFinished();
                 pm.endTask();
-                diskBufferDriver.stop();
+                diskBufferDriver.close();
 
                 return diskBufferDriver;
 
@@ -212,7 +212,7 @@ public class GraphPath extends GraphAnalysis{
                 }
                 diskBufferDriver.writingFinished();
                 pm.endTask();
-                diskBufferDriver.stop();
+                diskBufferDriver.close();
 
                 return diskBufferDriver;
 
@@ -309,7 +309,7 @@ public class GraphPath extends GraphAnalysis{
 
                 }
                 diskBufferDriver.writingFinished();
-                diskBufferDriver.stop();
+                diskBufferDriver.close();
                 pm.endTask();
                 return diskBufferDriver;
         }
@@ -398,7 +398,7 @@ public class GraphPath extends GraphAnalysis{
 
                 }
                 diskBufferDriver.writingFinished();
-                diskBufferDriver.stop();
+                diskBufferDriver.close();
                 pm.endTask();
                 return diskBufferDriver;
         }

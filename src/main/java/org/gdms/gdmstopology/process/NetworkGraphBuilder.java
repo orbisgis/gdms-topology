@@ -33,6 +33,7 @@ import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import java.io.File;
 import java.io.IOException;
+import java.util.Iterator;
 import org.gdms.data.DataSourceFactory;
 import org.gdms.data.NonEditableDataSourceException;
 import org.gdms.data.indexes.rtree.DiskRTree;
@@ -157,23 +158,23 @@ public class NetworkGraphBuilder {
 
                         DiskBufferDriver edgesDriver = new DiskBufferDriver(dsf.getResultFile("gdms"), edgeMedata);
 
-                        long rowCount = dataSet.getRowCount();
+                        Iterator<Value[]> it = dataSet.iterator();
                         int gidNode = 1;
                         pm.startTask("Create the graph", 100);
-                        for (int rowIndex = 0; rowIndex < rowCount; rowIndex++) {
-                                if (rowIndex / 100 == rowIndex / 100.0) {
+
+                        int count = 0;
+                        while (it.hasNext()) {
+                                Value[] values = it.next();
+                                if (count >= 100 && count % 100 == 0) {
                                         if (pm.isCancelled()) {
                                                 break;
-                                        } else {
-                                                pm.progressTo((int) (100 * rowIndex / rowCount));
                                         }
                                 }
-                                final Value[] fieldsValues = dataSet.getRow(rowIndex);
                                 final Value[] newValues = new Value[fieldsCount];
-                                System.arraycopy(fieldsValues, 0, newValues, 0,
+                                System.arraycopy(values, 0, newValues, 0,
                                         srcFieldsCount);
-                                newValues[idIndex] = ValueFactory.createValue(rowIndex + 1);
-                                Geometry geom = fieldsValues[geomFieldIndex].getAsGeometry();
+                                newValues[idIndex] = ValueFactory.createValue(count + 1);
+                                Geometry geom = values[geomFieldIndex].getAsGeometry();
                                 double length = geom.getLength();
                                 if (tolerance > 0 && length >= tolerance) {
                                         expand = true;
@@ -221,8 +222,8 @@ public class NetworkGraphBuilder {
                                         newValues[finalIndex] =
                                                 ValueFactory.createValue(gidsEnd[0]);
                                 }
-
                                 edgesDriver.addValues(newValues);
+                                count++;
 
                         }
                         nodesDriver.writingFinished();

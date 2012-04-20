@@ -59,12 +59,12 @@ public class ST_ShortestPath extends AbstractTableFunction {
                         String costField = values[2].getAsString();
                         if (values.length == 4) {
                                 DiskBufferDriver diskBufferDriver = GraphPath.getShortestPath(dsf, tables[0], source, target, costField, values[3].getAsInt(), pm);
-                                diskBufferDriver.start();
+                                diskBufferDriver.open();
                                 return diskBufferDriver;
 
                         } else {
                                 DiskBufferDriver diskBufferDriver = GraphPath.getShortestPath(dsf, tables[0], source, target, costField, GraphSchema.DIRECT, pm);
-                                diskBufferDriver.start();
+                                diskBufferDriver.open();
                                 return diskBufferDriver;
                         }
 

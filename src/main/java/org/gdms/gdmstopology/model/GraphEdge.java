@@ -69,6 +69,10 @@ public class GraphEdge extends DefaultWeightedEdge {
                 return target;
         }
 
+        /**
+         * It returns the rowid of the datasource
+         * @return 
+         */
         public long getRowId() {
                 return rowId;
         }
