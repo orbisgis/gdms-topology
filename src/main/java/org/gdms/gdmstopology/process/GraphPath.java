@@ -31,7 +31,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import org.gdms.data.SQLDataSourceFactory;
+import org.gdms.data.DataSourceFactory;
 import org.gdms.data.indexes.DefaultAlphaQuery;
 import org.gdms.data.values.Value;
 import org.gdms.data.values.ValueFactory;
@@ -76,7 +76,7 @@ public class GraphPath extends GraphAnalysis{
          * @param endNode
          * @return 
          */
-        public static List<GraphEdge> findPathBetween(SQLDataSourceFactory dsf, GDMSValueGraph<Integer, GraphEdge> graph,
+        public static List<GraphEdge> findPathBetween(DataSourceFactory dsf, GDMSValueGraph<Integer, GraphEdge> graph,
                 Integer startNode, Integer endNode) {
                 return DijkstraShortestPath.findPathBetween(graph, startNode, endNode);
         }
@@ -91,7 +91,7 @@ public class GraphPath extends GraphAnalysis{
          * @param endNode
          * @return 
          */
-        public static DiskBufferDriver findPathBetween2Nodes(SQLDataSourceFactory dsf, GDMSValueGraph<Integer, GraphEdge> graph,
+        public static DiskBufferDriver findPathBetween2Nodes(DataSourceFactory dsf, GDMSValueGraph<Integer, GraphEdge> graph,
                 Integer sourceVertex, Integer targetVertex, ProgressMonitor pm) throws GraphException, DriverException {
                 return findPathBetween2Nodes(dsf, graph, sourceVertex, targetVertex, Double.POSITIVE_INFINITY, pm);
         }
@@ -109,7 +109,7 @@ public class GraphPath extends GraphAnalysis{
          * @param radius
          * @return 
          */
-        public static DiskBufferDriver findPathBetween2Nodes(SQLDataSourceFactory dsf, GDMSValueGraph<Integer, GraphEdge> graph,
+        public static DiskBufferDriver findPathBetween2Nodes(DataSourceFactory dsf, GDMSValueGraph<Integer, GraphEdge> graph,
                 Integer sourceVertex, Integer targetVertex, double radius, ProgressMonitor pm) throws GraphException, DriverException {
 
                 if (!graph.containsVertex(targetVertex)) {
@@ -165,7 +165,7 @@ public class GraphPath extends GraphAnalysis{
          * @param endNode
          * @return 
          */
-        public static DiskBufferDriver computeDistancesBetweenOneNode(SQLDataSourceFactory dsf, GDMSValueGraph<Integer, GraphEdge> graph,
+        public static DiskBufferDriver computeDistancesBetweenOneNode(DataSourceFactory dsf, GDMSValueGraph<Integer, GraphEdge> graph,
                 Integer sourceVertex, ProgressMonitor pm) throws GraphException, DriverException {
                 return computeDistancesBetweenOneNode(dsf, graph, sourceVertex, Double.POSITIVE_INFINITY, pm);
         }
@@ -181,7 +181,7 @@ public class GraphPath extends GraphAnalysis{
          * @param radius
          * @return 
          */
-        public static DiskBufferDriver computeDistancesBetweenOneNode(SQLDataSourceFactory dsf, GDMSValueGraph<Integer, GraphEdge> graph,
+        public static DiskBufferDriver computeDistancesBetweenOneNode(DataSourceFactory dsf, GDMSValueGraph<Integer, GraphEdge> graph,
                 Integer sourceVertex, double radius, ProgressMonitor pm) throws GraphException, DriverException {
 
                 if (!graph.containsVertex(sourceVertex)) {
@@ -234,7 +234,7 @@ public class GraphPath extends GraphAnalysis{
          * @throws GraphException
          * @throws DriverException 
          */
-        public static DiskBufferDriver findPathBetweenSeveralNodes(SQLDataSourceFactory dsf, GDMSValueGraph<Integer, GraphEdge> graph,
+        public static DiskBufferDriver findPathBetweenSeveralNodes(DataSourceFactory dsf, GDMSValueGraph<Integer, GraphEdge> graph,
                 DataSet nodes, ProgressMonitor pm) throws GraphException, DriverException {
                 return findPathBetweenSeveralNodes(dsf, graph, nodes, Double.POSITIVE_INFINITY, pm);
         }
@@ -253,7 +253,7 @@ public class GraphPath extends GraphAnalysis{
          * @throws GraphException
          * @throws DriverException 
          */
-        public static DiskBufferDriver findPathBetweenSeveralNodes(SQLDataSourceFactory dsf, GDMSValueGraph<Integer, GraphEdge> graph,
+        public static DiskBufferDriver findPathBetweenSeveralNodes(DataSourceFactory dsf, GDMSValueGraph<Integer, GraphEdge> graph,
                 DataSet nodes, double radius, ProgressMonitor pm) throws GraphException, DriverException {
                 initIndex(dsf, nodes, pm);
                 DiskBufferDriver diskBufferDriver = new DiskBufferDriver(dsf, GraphMetadataFactory.createEdgeMetadataShortestPath());
@@ -324,7 +324,7 @@ public class GraphPath extends GraphAnalysis{
          * @throws GraphException
          * @throws DriverException 
          */
-        public static DiskBufferDriver computeDistanceBetweenSeveralNodes(SQLDataSourceFactory dsf, GDMSValueGraph<Integer, GraphEdge> graph,
+        public static DiskBufferDriver computeDistanceBetweenSeveralNodes(DataSourceFactory dsf, GDMSValueGraph<Integer, GraphEdge> graph,
                 DataSet nodes, ProgressMonitor pm) throws GraphException, DriverException {
                 return computeDistanceBetweenSeveralNodes(dsf, graph, nodes, Double.POSITIVE_INFINITY, pm);
 
@@ -341,7 +341,7 @@ public class GraphPath extends GraphAnalysis{
          * @throws GraphException
          * @throws DriverException 
          */
-        public static DiskBufferDriver computeDistanceBetweenSeveralNodes(SQLDataSourceFactory dsf, GDMSValueGraph<Integer, GraphEdge> graph,
+        public static DiskBufferDriver computeDistanceBetweenSeveralNodes(DataSourceFactory dsf, GDMSValueGraph<Integer, GraphEdge> graph,
                 DataSet nodes, double radius, ProgressMonitor pm) throws GraphException, DriverException {
                 initIndex(dsf, nodes, new NullProgressMonitor());
                 DiskBufferDriver diskBufferDriver = new DiskBufferDriver(dsf, GraphMetadataFactory.createDistancesMetadataGraph());
@@ -416,7 +416,7 @@ public class GraphPath extends GraphAnalysis{
          * @throws GraphException
          * @throws DriverException 
          */
-        public static DiskBufferDriver getShortestPath(SQLDataSourceFactory dsf, DataSet dataSet, int source, int target, String costField, int graphType, ProgressMonitor pm) throws GraphException, DriverException {
+        public static DiskBufferDriver getShortestPath(DataSourceFactory dsf, DataSet dataSet, int source, int target, String costField, int graphType, ProgressMonitor pm) throws GraphException, DriverException {
                 if (graphType == GraphSchema.DIRECT) {
                         DWMultigraphDataSource dwMultigraphDataSource = new DWMultigraphDataSource(dsf, dataSet, pm);
                         dwMultigraphDataSource.setWeigthFieldIndex(costField);
@@ -452,7 +452,7 @@ public class GraphPath extends GraphAnalysis{
          * @throws GraphException
          * @throws DriverException 
          */
-        public static DiskBufferDriver getMShortestPath(SQLDataSourceFactory dsf, DataSet dataSet, DataSet nodes, String costField, int graphType, ProgressMonitor pm) throws GraphException, DriverException {
+        public static DiskBufferDriver getMShortestPath(DataSourceFactory dsf, DataSet dataSet, DataSet nodes, String costField, int graphType, ProgressMonitor pm) throws GraphException, DriverException {
                 if (checkMetadata(nodes)) {
                         if (graphType == GraphSchema.DIRECT) {
                                 DWMultigraphDataSource dwMultigraphDataSource = new DWMultigraphDataSource(dsf, dataSet, pm);
@@ -491,7 +491,7 @@ public class GraphPath extends GraphAnalysis{
          * @throws GraphException
          * @throws DriverException 
          */
-        public static DiskBufferDriver getShortestPathLength(SQLDataSourceFactory dsf, DataSet dataSet, int source, String costField, int graphType, ProgressMonitor pm) throws GraphException, DriverException {
+        public static DiskBufferDriver getShortestPathLength(DataSourceFactory dsf, DataSet dataSet, int source, String costField, int graphType, ProgressMonitor pm) throws GraphException, DriverException {
                 if (graphType == GraphSchema.DIRECT) {
                         DWMultigraphDataSource dwMultigraphDataSource = new DWMultigraphDataSource(dsf, dataSet, pm);
                         dwMultigraphDataSource.setWeigthFieldIndex(costField);
@@ -526,7 +526,7 @@ public class GraphPath extends GraphAnalysis{
          * @throws GraphException
          * @throws DriverException 
          */
-        public static DiskBufferDriver getMShortestPathLength(SQLDataSourceFactory dsf, DataSet dataSet, DataSet nodes, String costField, int graphType, ProgressMonitor pm) throws GraphException, DriverException {
+        public static DiskBufferDriver getMShortestPathLength(DataSourceFactory dsf, DataSet dataSet, DataSet nodes, String costField, int graphType, ProgressMonitor pm) throws GraphException, DriverException {
                 if (checkMetadata(nodes)) {
                         if (graphType == GraphSchema.DIRECT) {
                                 DWMultigraphDataSource dwMultigraphDataSource = new DWMultigraphDataSource(dsf, dataSet, pm);
@@ -561,7 +561,7 @@ public class GraphPath extends GraphAnalysis{
          * @return a map where key = target value and value = id value
          * @throws DriverException 
          */
-        public static HashMap<Integer, Integer> getTargets(SQLDataSourceFactory dsf, DataSet nodes, Integer valueToQuery) throws DriverException {
+        public static HashMap<Integer, Integer> getTargets(DataSourceFactory dsf, DataSet nodes, Integer valueToQuery) throws DriverException {
                 DefaultAlphaQuery defaultAlphaQuery = new DefaultAlphaQuery(
                         GraphSchema.SOURCE_NODE, ValueFactory.createValue(valueToQuery));
                 Iterator<Integer> iterator = nodes.queryIndex(dsf, defaultAlphaQuery);

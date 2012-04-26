@@ -27,7 +27,7 @@
  */
 package org.gdms.gdmstopology.function;
 
-import org.gdms.data.SQLDataSourceFactory;
+import org.gdms.data.DataSourceFactory;
 import org.gdms.data.schema.Metadata;
 import org.gdms.data.values.Value;
 import org.gdms.driver.DiskBufferDriver;
@@ -52,7 +52,7 @@ import org.orbisgis.progress.ProgressMonitor;
 public class ST_MShortestPathLength extends AbstractTableFunction {
 
         @Override
-        public DataSet evaluate(SQLDataSourceFactory dsf, DataSet[] tables, Value[] values, ProgressMonitor pm) throws FunctionException {
+        public DataSet evaluate(DataSourceFactory dsf, DataSet[] tables, Value[] values, ProgressMonitor pm) throws FunctionException {
                 try {
                         DataSet sdsEdges = tables[0];
                         DataSet vertexes = tables[1];

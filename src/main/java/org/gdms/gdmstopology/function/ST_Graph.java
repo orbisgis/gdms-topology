@@ -30,7 +30,7 @@ package org.gdms.gdmstopology.function;
 import org.gdms.gdmstopology.process.NetworkGraphBuilder;
 import java.io.IOException;
 import org.gdms.data.NonEditableDataSourceException;
-import org.gdms.data.SQLDataSourceFactory;
+import org.gdms.data.DataSourceFactory;
 import org.gdms.data.values.Value;
 import org.gdms.driver.DriverException;
 import org.gdms.driver.driverManager.DriverLoadException;
@@ -65,7 +65,7 @@ public class ST_Graph extends AbstractExecutorFunction {
         }
 
         @Override
-        public void evaluate(SQLDataSourceFactory dsf, DataSet[] tables,
+        public void evaluate(DataSourceFactory dsf, DataSet[] tables,
                 Value[] values, ProgressMonitor pm) throws FunctionException {
                 try {
                         final DataSet dataSet = tables[0];

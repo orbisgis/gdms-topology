@@ -34,7 +34,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import org.gdms.data.NoSuchTableException;
-import org.gdms.data.SQLDataSourceFactory;
+import org.gdms.data.DataSourceFactory;
 import org.gdms.data.indexes.DefaultSpatialIndexQuery;
 import org.gdms.data.indexes.IndexException;
 import org.gdms.data.schema.DefaultMetadata;
@@ -86,7 +86,7 @@ public class ST_BlockIdentity extends AbstractTableFunction {
         private DiskBufferDriver diskBufferDriver;
 
         @Override
-        public DataSet evaluate(SQLDataSourceFactory dsf, DataSet[] tables,
+        public DataSet evaluate(DataSourceFactory dsf, DataSet[] tables,
                 Value[] values, ProgressMonitor pm) throws
                 FunctionException {
                 dataSet = tables[0];
@@ -190,7 +190,7 @@ public class ST_BlockIdentity extends AbstractTableFunction {
                 }
         }
 
-        private void aggregateNeighbours(SQLDataSourceFactory dsf, int id, Set<Integer> agg) throws DriverException {
+        private void aggregateNeighbours(DataSourceFactory dsf, int id, Set<Integer> agg) throws DriverException {
                 int size = agg.size();
 
                 Set<Integer> re = relativesOf(dsf, id, agg);
@@ -209,7 +209,7 @@ public class ST_BlockIdentity extends AbstractTableFunction {
                 }
         }
 
-        private Set<Integer> relativesOf(SQLDataSourceFactory dsf, int id, Set<Integer> excluded) throws DriverException {
+        private Set<Integer> relativesOf(DataSourceFactory dsf, int id, Set<Integer> excluded) throws DriverException {
                 Geometry geom = dataSet.getFieldValue(id, geomFieldIndex).getAsGeometry();
 
                 // query index

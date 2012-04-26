@@ -27,6 +27,7 @@
  */
 package org.gdms.gdmstopology;
 
+import org.gdms.data.DataSourceFactory;
 import org.gdms.gdmstopology.function.ST_BlockIdentity;
 import org.gdms.gdmstopology.function.ST_FindReachableEdges;
 import org.gdms.gdmstopology.function.ST_Graph;
@@ -38,7 +39,6 @@ import org.gdms.gdmstopology.function.ST_ShortestPath;
 import org.gdms.gdmstopology.function.ST_ShortestPathLength;
 import org.gdms.gdmstopology.function.ST_SubGraphStatistics;
 import org.gdms.gdmstopology.function.ST_ToLineNoder;
-import org.gdms.sql.function.FunctionManager;
 
 /**
  *
@@ -55,17 +55,17 @@ public class GdmsTopologyFunctionRegister {
         /**
          * Register all functions from gdms-topology.
          */
-        public static void register() {
-                FunctionManager.addFunction(ST_BlockIdentity.class);
-                FunctionManager.addFunction(ST_Graph.class);
-                FunctionManager.addFunction(ST_PlanarGraph.class);
-                FunctionManager.addFunction(ST_ShortestPath.class);
-                FunctionManager.addFunction(ST_ShortestPathLength.class);
-                FunctionManager.addFunction(ST_ToLineNoder.class);
-                FunctionManager.addFunction(ST_MShortestPathLength.class);
-                FunctionManager.addFunction(ST_FindReachableEdges.class);
-                FunctionManager.addFunction(ST_MFindReachableEdges.class);
-                FunctionManager.addFunction(ST_MShortestPath.class);
-                FunctionManager.addFunction(ST_SubGraphStatistics.class);
+        public static void register(DataSourceFactory dsf) {
+                dsf.getFunctionManager().addFunction(ST_BlockIdentity.class);
+                dsf.getFunctionManager().addFunction(ST_Graph.class);
+                dsf.getFunctionManager().addFunction(ST_PlanarGraph.class);
+                dsf.getFunctionManager().addFunction(ST_ShortestPath.class);
+                dsf.getFunctionManager().addFunction(ST_ShortestPathLength.class);
+                dsf.getFunctionManager().addFunction(ST_ToLineNoder.class);
+                dsf.getFunctionManager().addFunction(ST_MShortestPathLength.class);
+                dsf.getFunctionManager().addFunction(ST_FindReachableEdges.class);
+                dsf.getFunctionManager().addFunction(ST_MFindReachableEdges.class);
+                dsf.getFunctionManager().addFunction(ST_MShortestPath.class);
+                dsf.getFunctionManager().addFunction(ST_SubGraphStatistics.class);
         }
 }

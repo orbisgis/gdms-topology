@@ -30,7 +30,7 @@ package org.gdms.gdmstopology;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.io.WKTReader;
 import java.io.File;
-import org.gdms.data.SQLDataSourceFactory;
+import org.gdms.data.DataSourceFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.orbisgis.utils.FileUtils;
@@ -42,7 +42,7 @@ import org.orbisgis.utils.FileUtils;
 public abstract class TopologySetUpTest {
 
         protected static final GeometryFactory gf = new GeometryFactory();
-        protected SQLDataSourceFactory dsf;
+        protected DataSourceFactory dsf;
         protected WKTReader wktReader;
         protected String GRAPH2D = "graph2D";
         protected String GRAPH2D_EDGES = "graph2D_edges";
@@ -58,7 +58,7 @@ public abstract class TopologySetUpTest {
                 }
                 backupDir.mkdir();
                 //Create the datasourcefactory that uses the folder
-                dsf = new SQLDataSourceFactory(backupDir.getAbsolutePath(), backupDir.getAbsolutePath());
+                dsf = new DataSourceFactory(backupDir.getAbsolutePath(), backupDir.getAbsolutePath());
 
                 //Create some geometries
                 wktReader = new WKTReader();

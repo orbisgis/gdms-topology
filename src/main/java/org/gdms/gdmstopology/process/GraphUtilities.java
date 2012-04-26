@@ -31,7 +31,7 @@ import com.vividsolutions.jts.geom.Geometry;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import org.gdms.data.SQLDataSourceFactory;
+import org.gdms.data.DataSourceFactory;
 import org.gdms.data.values.Value;
 import org.gdms.data.values.ValueFactory;
 import org.gdms.driver.DataSet;
@@ -71,7 +71,7 @@ public class GraphUtilities extends GraphAnalysis {
          * @throws GraphException
          * @throws DriverException 
          */
-        public static DiskBufferDriver getReachableEdges(SQLDataSourceFactory dsf, DataSet dataSet, int source, String costField, double radius, int graphType, ProgressMonitor pm) throws GraphException, DriverException {
+        public static DiskBufferDriver getReachableEdges(DataSourceFactory dsf, DataSet dataSet, int source, String costField, double radius, int graphType, ProgressMonitor pm) throws GraphException, DriverException {
                 if (graphType == GraphSchema.DIRECT) {
                         DWMultigraphDataSource dwMultigraphDataSource = new DWMultigraphDataSource(dsf, dataSet, pm);
                         dwMultigraphDataSource.setWeigthFieldIndex(costField);
@@ -104,7 +104,7 @@ public class GraphUtilities extends GraphAnalysis {
          * @return
          * @throws DriverException 
          */
-        public static DiskBufferDriver findReachableEdges(SQLDataSourceFactory dsf, GDMSValueGraph<Integer, GraphEdge> graph,
+        public static DiskBufferDriver findReachableEdges(DataSourceFactory dsf, GDMSValueGraph<Integer, GraphEdge> graph,
                 Integer source, double radius, ProgressMonitor pm) throws DriverException, GraphException {
 
                 if (!graph.containsVertex(source)) {
@@ -158,7 +158,7 @@ public class GraphUtilities extends GraphAnalysis {
          * @throws GraphException
          * @throws DriverException 
          */
-        public static DiskBufferDriver getMReachableEdges(SQLDataSourceFactory dsf, DataSet dataSet, DataSet nodes, String costField, double radius, int graphType, ProgressMonitor pm) throws GraphException, DriverException {
+        public static DiskBufferDriver getMReachableEdges(DataSourceFactory dsf, DataSet dataSet, DataSet nodes, String costField, double radius, int graphType, ProgressMonitor pm) throws GraphException, DriverException {
                 if (graphType == GraphSchema.DIRECT) {
                         DWMultigraphDataSource dwMultigraphDataSource = new DWMultigraphDataSource(dsf, dataSet, pm);
                         dwMultigraphDataSource.setWeigthFieldIndex(costField);
@@ -191,7 +191,7 @@ public class GraphUtilities extends GraphAnalysis {
          * @return
          * @throws DriverException 
          */
-        public static DiskBufferDriver findMReachableEdges(SQLDataSourceFactory dsf, GDMSValueGraph<Integer, GraphEdge> graph,
+        public static DiskBufferDriver findMReachableEdges(DataSourceFactory dsf, GDMSValueGraph<Integer, GraphEdge> graph,
                 DataSet nodes, double radius, ProgressMonitor pm) throws DriverException, GraphException {
 
                 if (checkSourceColumn(nodes)) {
@@ -257,7 +257,7 @@ public class GraphUtilities extends GraphAnalysis {
          * @return
          * @throws DriverException 
          */
-        public boolean isGraphConnected(SQLDataSourceFactory dsf, DataSet dataSet, String costField, ProgressMonitor pm) throws DriverException {
+        public boolean isGraphConnected(DataSourceFactory dsf, DataSet dataSet, String costField, ProgressMonitor pm) throws DriverException {
                 WMultigraphDataSource wMultigraphDataSource = new WMultigraphDataSource(dsf, dataSet, pm);
                 wMultigraphDataSource.setWeigthFieldIndex(costField);
                 ConnectivityInspector connectivityInspector = new ConnectivityInspector(wMultigraphDataSource);
@@ -272,7 +272,7 @@ public class GraphUtilities extends GraphAnalysis {
          * @param pm
          * @throws DriverException 
          */
-        public static DiskBufferDriver getGraphStatistics(SQLDataSourceFactory dsf, DataSet dataSet, String costField, int graphType, ProgressMonitor pm) throws DriverException, GraphException {
+        public static DiskBufferDriver getGraphStatistics(DataSourceFactory dsf, DataSet dataSet, String costField, int graphType, ProgressMonitor pm) throws DriverException, GraphException {
                 if (graphType == GraphSchema.DIRECT) {
                         DWMultigraphDataSource dwMultigraphDataSource = new DWMultigraphDataSource(dsf, dataSet, pm);
                         dwMultigraphDataSource.setWeigthFieldIndex(costField);
@@ -306,7 +306,7 @@ public class GraphUtilities extends GraphAnalysis {
          * @return
          * @throws DriverException 
          */
-        public static DiskBufferDriver graphStatistics(SQLDataSourceFactory dsf, ConnectivityInspector connectivityInspector, GDMSValueGraph<Integer, GraphEdge> graph) throws DriverException {
+        public static DiskBufferDriver graphStatistics(DataSourceFactory dsf, ConnectivityInspector connectivityInspector, GDMSValueGraph<Integer, GraphEdge> graph) throws DriverException {
                 DiskBufferDriver diskBufferDriver = new DiskBufferDriver(dsf, GraphMetadataFactory.createSubGraphStatsMetadata());
 
                 List connectedSets = connectivityInspector.connectedSets();

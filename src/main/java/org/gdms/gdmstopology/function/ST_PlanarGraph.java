@@ -31,7 +31,7 @@ import java.io.IOException;
 import org.gdms.data.DataSourceCreationException;
 import org.gdms.data.NoSuchTableException;
 import org.gdms.data.NonEditableDataSourceException;
-import org.gdms.data.SQLDataSourceFactory;
+import org.gdms.data.DataSourceFactory;
 import org.gdms.data.indexes.IndexException;
 import org.gdms.data.values.Value;
 import org.gdms.driver.DataSet;
@@ -66,7 +66,7 @@ public class ST_PlanarGraph extends AbstractExecutorFunction {
         }
 
         @Override
-        public void evaluate(SQLDataSourceFactory dsf, DataSet[] tables,
+        public void evaluate(DataSourceFactory dsf, DataSet[] tables,
                 Value[] values, ProgressMonitor pm) throws FunctionException {
                 try {
                         PlanarGraphBuilder planarGraph = new PlanarGraphBuilder(dsf, pm);

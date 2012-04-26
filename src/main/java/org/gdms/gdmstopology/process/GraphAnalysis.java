@@ -28,7 +28,7 @@
 package org.gdms.gdmstopology.process;
 
 import org.gdms.data.NoSuchTableException;
-import org.gdms.data.SQLDataSourceFactory;
+import org.gdms.data.DataSourceFactory;
 import org.gdms.data.indexes.IndexException;
 import org.gdms.data.schema.Metadata;
 import org.gdms.driver.DataSet;
@@ -96,7 +96,7 @@ public class GraphAnalysis {
          * @param pm
          * @throws GraphException 
          */
-        protected static void initIndex(SQLDataSourceFactory dsf, DataSet nodes, ProgressMonitor pm) throws GraphException {
+        protected static void initIndex(DataSourceFactory dsf, DataSet nodes, ProgressMonitor pm) throws GraphException {
                 try {
                         if (!dsf.getIndexManager().isIndexed(nodes, GraphSchema.SOURCE_NODE)) {
                                 dsf.getIndexManager().buildIndex(nodes, GraphSchema.SOURCE_NODE, pm);
