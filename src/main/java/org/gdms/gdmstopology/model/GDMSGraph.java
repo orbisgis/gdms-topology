@@ -80,15 +80,21 @@ public final class GDMSGraph extends AbstractGraph<Integer, GraphEdge> implement
 
         /**
          * Create indexes for start and end node.
-         * @param pm
+         * @param pm    
          * @throws ExecutionException
          */
         public void initIndex() throws DriverException {
                 try {
                         if (checkMetadata()) {
+                                if (!dsf.getIndexManager().isIndexed(dataSet, new String[]{
+                                                GraphSchema.START_NODE, GraphSchema.END_NODE})) {
+                                        dsf.getIndexManager().buildIndex(dataSet, new String[]{
+                                                        GraphSchema.START_NODE, GraphSchema.END_NODE}, pm);
+                                }
                                 if (!dsf.getIndexManager().isIndexed(dataSet, GraphSchema.START_NODE)) {
                                         dsf.getIndexManager().buildIndex(dataSet, GraphSchema.START_NODE, pm);
                                 }
+
                                 if (!dsf.getIndexManager().isIndexed(dataSet, GraphSchema.END_NODE)) {
                                         dsf.getIndexManager().buildIndex(dataSet, GraphSchema.END_NODE, pm);
                                 }
@@ -160,16 +166,15 @@ public final class GDMSGraph extends AbstractGraph<Integer, GraphEdge> implement
         }
 
         @Override
-        public Set<GraphEdge> getAllEdges(Integer v, Integer v1) {
+        public Set<GraphEdge> getAllEdges(Integer startVertex, Integer endVertex) {
                 try {
-                        Iterator<Integer> queryResult = getIndexIterator(GraphSchema.START_NODE, v);
-                        if (queryResult.hasNext()) {
-                                HashSet<GraphEdge> edges = new HashSet<GraphEdge>();
-                                while (queryResult.hasNext()) {
-                                        Integer rowId = queryResult.next();
-                                        edges.add(new GraphEdge(v, v1, getWeigthVertex(rowId), rowId));
-                                }
+                        Iterator<Integer> queryResult = getMultiIndexIterator(startVertex, endVertex);
+                        HashSet<GraphEdge> edges = new HashSet<GraphEdge>();
+                        while (queryResult.hasNext()) {
+                                Integer rowId = queryResult.next();
+                                edges.add(new GraphEdge(startVertex, endVertex, getWeigthVertex(rowId), rowId));
                         }
+
                 } catch (DriverException ex) {
                 }
                 return Collections.EMPTY_SET;
@@ -179,14 +184,10 @@ public final class GDMSGraph extends AbstractGraph<Integer, GraphEdge> implement
         @Override
         public GraphEdge getEdge(Integer startVertex, Integer endVertex) {
                 try {
-                        Iterator<Integer> queryResult = getIndexIterator(GraphSchema.START_NODE, startVertex);
-                        while (queryResult.hasNext()) {
-                                Integer rowId = queryResult.next();
-                                if (getTargetVertex(rowId) == endVertex) {
-                                        return new GraphEdge(startVertex, endVertex,
-                                                getWeigthVertex(rowId), rowId);
-                                }
-                        }
+                        Iterator<Integer> queryResult = getMultiIndexIterator(startVertex, endVertex);
+                        Integer rowId = queryResult.next();
+                        return new GraphEdge(startVertex, endVertex,
+                                getWeigthVertex(rowId), rowId);
                 } catch (DriverException ex) {
                 }
                 return null;
@@ -215,13 +216,8 @@ public final class GDMSGraph extends AbstractGraph<Integer, GraphEdge> implement
         @Override
         public boolean containsEdge(Integer startVertex, Integer endVertex) {
                 try {
-                        Iterator<Integer> queryResult = getIndexIterator(GraphSchema.START_NODE, startVertex);
-                        while (queryResult.hasNext()) {
-                                Integer rowId = queryResult.next();
-                                if (getTargetVertex(rowId) == endVertex) {
-                                        return true;
-                                }
-                        }
+                        Iterator<Integer> queryResult = getMultiIndexIterator(startVertex, endVertex);
+                        return queryResult.hasNext();
                 } catch (DriverException ex) {
                 }
                 return false;
@@ -378,6 +374,21 @@ public final class GDMSGraph extends AbstractGraph<Integer, GraphEdge> implement
         public Iterator<Integer> getIndexIterator(String fieldToQuery, Integer valueToQuery) throws DriverException {
                 DefaultAlphaQuery defaultAlphaQuery = new DefaultAlphaQuery(
                         fieldToQuery, ValueFactory.createValue(valueToQuery));
+                return dataSet.queryIndex(dsf, defaultAlphaQuery);
+        }
+
+        /**
+         * Query the dataset using an alphanumeric index on the two columns start and end nodes
+         * @param start and end nodes id         * 
+         * @return
+         * @throws DriverException 
+         */
+        public Iterator<Integer> getMultiIndexIterator(Integer startNode, Integer endNode) throws DriverException {
+                DefaultAlphaQuery defaultAlphaQuery = new DefaultAlphaQuery(new String[]{
+                                GraphSchema.START_NODE, GraphSchema.END_NODE},
+                        ValueFactory.createValue(new Value[]{
+                                ValueFactory.createValue(startNode), ValueFactory.createValue(endNode)
+                        }));
                 return dataSet.queryIndex(dsf, defaultAlphaQuery);
         }
 
