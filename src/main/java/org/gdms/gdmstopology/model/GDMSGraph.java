@@ -64,6 +64,7 @@ public final class GDMSGraph extends AbstractGraph<Integer, GraphEdge> implement
         public final ProgressMonitor pm;
         private Metadata edgesMetadata;
         private static final Logger LOGGER = Logger.getLogger(GDMSGraph.class);
+        private HashSet<Integer> vertexSet=null;        
 
         /*
          * Be carefull the schema of the input datasource must match the fields below:
@@ -293,7 +294,8 @@ public final class GDMSGraph extends AbstractGraph<Integer, GraphEdge> implement
 
         @Override
         public Set<Integer> vertexSet() {
-                HashSet<Integer> vertexSet = new HashSet<Integer>();
+                if (vertexSet == null) {
+                        vertexSet = new HashSet<Integer>();
                 try {
                         long rowCount = dataSet.getRowCount();
                         for (int i = 0; i < rowCount; i++) {
@@ -304,6 +306,7 @@ public final class GDMSGraph extends AbstractGraph<Integer, GraphEdge> implement
                         }
                         return vertexSet;
                 } catch (DriverException ex) {
+                }
                 }
                 return vertexSet;
         }
