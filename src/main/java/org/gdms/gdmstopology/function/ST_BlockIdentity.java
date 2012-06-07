@@ -213,7 +213,7 @@ public class ST_BlockIdentity extends AbstractTableFunction {
                 Geometry geom = dataSet.getFieldValue(id, geomFieldIndex).getAsGeometry();
 
                 // query index
-                DefaultSpatialIndexQuery query = new DefaultSpatialIndexQuery(geom.getEnvelopeInternal(), geomField);
+                DefaultSpatialIndexQuery query = new DefaultSpatialIndexQuery(geomField, geom.getEnvelopeInternal());
                 Iterator<Integer> s = dataSet.queryIndex(dsf, query);
 
                 HashSet<Integer> h = new HashSet<Integer>();

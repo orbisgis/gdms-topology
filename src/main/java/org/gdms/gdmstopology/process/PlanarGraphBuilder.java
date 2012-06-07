@@ -335,7 +335,7 @@ public class PlanarGraphBuilder {
                         dsf.getIndexManager().buildIndex(ds_polygons_name, "the_geom", pm);
                 }
 
-                DefaultSpatialIndexQuery query = new DefaultSpatialIndexQuery(envelope, "the_geom");
+                DefaultSpatialIndexQuery query = new DefaultSpatialIndexQuery("the_geom", envelope);
                 Iterator<Integer> it = sdsFaces.queryIndex(query);
                 return it;
         }
