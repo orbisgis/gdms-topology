@@ -13,9 +13,6 @@
  *
  * Copyright (C) 2009-2012 IRSTV (FR CNRS 2488)
  *
- * Contributors:
- *  - 2009-2012: Erwan Bocher, Alexis Guéganno
- *
  * GDMS-Topology is free software: you can redistribute it and/or modify it under the
  * terms of the GNU General Public License as published by the Free Software
  * Foundation, either version 3 of the License, or (at your option) any later version.
@@ -27,7 +24,7 @@
  * You should have received a copy of the GNU General Public License along with
  * GDMS-Topology. If not, see <http://www.gnu.org/licenses/>.
  *
- * For more information, please consult: <http://trac.orbisgis.org/>
+ * For more information, please consult: <http://wwwc.orbisgis.org/>
  * or contact directly:
  * info_at_ orbisgis.org
  */
@@ -58,6 +55,10 @@ import org.gdms.sql.function.table.TableArgument;
 import org.gdms.sql.function.table.TableDefinition;
 import org.gdms.sql.function.table.TableFunctionSignature;
 
+ /**
+ *
+ * @author Erwan Bocher
+ */
 public class ST_ToLineNoder extends AbstractTableFunction {
 
         @SuppressWarnings({"unchecked", "static-access"})
