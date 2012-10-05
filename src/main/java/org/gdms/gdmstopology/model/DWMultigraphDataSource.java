@@ -59,8 +59,8 @@ public class DWMultigraphDataSource extends DirectedWeightedMultigraph<Integer, 
                 GDMSGraph = new GDMSGraph(dsf, dataSet, pm);
         }
 
-        public void setWeigthFieldIndex(String fieldName) throws DriverException {
-                GDMSGraph.setWeigthFieldIndex(fieldName);
+        public void setWeightFieldIndex(String fieldName) throws DriverException {
+                GDMSGraph.setWeightFieldIndex(fieldName);
         }
 
         @Override

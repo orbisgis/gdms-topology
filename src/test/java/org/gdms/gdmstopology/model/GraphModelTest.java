@@ -52,7 +52,7 @@ public class GraphModelTest extends TopologySetUpTest {
                 DataSource ds = dsf.getDataSource(GRAPH2D_EDGES);
                 ds.open();
                 DWMultigraphDataSource dWMultigraphDataSource = new DWMultigraphDataSource(dsf, ds, new NullProgressMonitor());
-                dWMultigraphDataSource.setWeigthFieldIndex("length");
+                dWMultigraphDataSource.setWeightFieldIndex("length");
                 //Tests to validate the graph model and some properties
                 GraphEdge ge = (GraphEdge) dWMultigraphDataSource.getEdge(3, 5);
                 assertTrue(ge != null);
@@ -78,7 +78,7 @@ public class GraphModelTest extends TopologySetUpTest {
                 DataSource ds = dsf.getDataSource(GRAPH2D_EDGES);
                 ds.open();
                 WMultigraphDataSource wMultigraphDataSource = new WMultigraphDataSource(dsf, ds, new NullProgressMonitor());
-                wMultigraphDataSource.setWeigthFieldIndex("length");
+                wMultigraphDataSource.setWeightFieldIndex("length");
 
                 //Tests to validate the graph model and some properties
                 GraphEdge ge = (GraphEdge) wMultigraphDataSource.getEdge(3, 5);

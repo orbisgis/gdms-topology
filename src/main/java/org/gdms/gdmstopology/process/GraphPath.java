@@ -422,16 +422,16 @@ public class GraphPath extends GraphAnalysis{
         public static DiskBufferDriver getShortestPath(DataSourceFactory dsf, DataSet dataSet, int source, int target, String costField, int graphType, ProgressMonitor pm) throws GraphException, DriverException {
                 if (graphType == GraphSchema.DIRECT) {
                         DWMultigraphDataSource dwMultigraphDataSource = new DWMultigraphDataSource(dsf, dataSet, pm);
-                        dwMultigraphDataSource.setWeigthFieldIndex(costField);
+                        dwMultigraphDataSource.setWeightFieldIndex(costField);
                         return findPathBetween2Nodes(dsf, dwMultigraphDataSource, source, target, pm);
                 } else if (graphType == GraphSchema.DIRECT_REVERSED) {
                         DWMultigraphDataSource dwMultigraphDataSource = new DWMultigraphDataSource(dsf, dataSet, pm);
-                        dwMultigraphDataSource.setWeigthFieldIndex(costField);
+                        dwMultigraphDataSource.setWeightFieldIndex(costField);
                         EdgeReversedGraphDataSource edgeReversedGraph = new EdgeReversedGraphDataSource(dwMultigraphDataSource);
                         return findPathBetween2Nodes(dsf, edgeReversedGraph, source, target, pm);
                 } else if (graphType == GraphSchema.UNDIRECT) {
                         WMultigraphDataSource wMultigraphDataSource = new WMultigraphDataSource(dsf, dataSet, pm);
-                        wMultigraphDataSource.setWeigthFieldIndex(costField);
+                        wMultigraphDataSource.setWeightFieldIndex(costField);
                         return findPathBetween2Nodes(dsf, wMultigraphDataSource, source, target, pm);
                 } else {
                         throw new GraphException("Only 3 type of graphs are allowed."
@@ -459,16 +459,16 @@ public class GraphPath extends GraphAnalysis{
                 if (checkMetadata(nodes)) {
                         if (graphType == GraphSchema.DIRECT) {
                                 DWMultigraphDataSource dwMultigraphDataSource = new DWMultigraphDataSource(dsf, dataSet, pm);
-                                dwMultigraphDataSource.setWeigthFieldIndex(costField);
+                                dwMultigraphDataSource.setWeightFieldIndex(costField);
                                 return findPathBetweenSeveralNodes(dsf, dwMultigraphDataSource, nodes, pm);
                         } else if (graphType == GraphSchema.DIRECT_REVERSED) {
                                 DWMultigraphDataSource dwMultigraphDataSource = new DWMultigraphDataSource(dsf, dataSet, pm);
-                                dwMultigraphDataSource.setWeigthFieldIndex(costField);
+                                dwMultigraphDataSource.setWeightFieldIndex(costField);
                                 EdgeReversedGraphDataSource edgeReversedGraph = new EdgeReversedGraphDataSource(dwMultigraphDataSource);
                                 return findPathBetweenSeveralNodes(dsf, edgeReversedGraph, nodes, pm);
                         } else if (graphType == GraphSchema.UNDIRECT) {
                                 WMultigraphDataSource wMultigraphDataSource = new WMultigraphDataSource(dsf, dataSet, pm);
-                                wMultigraphDataSource.setWeigthFieldIndex(costField);
+                                wMultigraphDataSource.setWeightFieldIndex(costField);
                                 return findPathBetweenSeveralNodes(dsf, wMultigraphDataSource, nodes, pm);
                         } else {
                                 throw new GraphException("Only 3 type of graphs are allowed."
@@ -497,16 +497,16 @@ public class GraphPath extends GraphAnalysis{
         public static DiskBufferDriver getShortestPathLength(DataSourceFactory dsf, DataSet dataSet, int source, String costField, int graphType, ProgressMonitor pm) throws GraphException, DriverException {
                 if (graphType == GraphSchema.DIRECT) {
                         DWMultigraphDataSource dwMultigraphDataSource = new DWMultigraphDataSource(dsf, dataSet, pm);
-                        dwMultigraphDataSource.setWeigthFieldIndex(costField);
+                        dwMultigraphDataSource.setWeightFieldIndex(costField);
                         return computeDistancesBetweenOneNode(dsf, dwMultigraphDataSource, source, pm);
                 } else if (graphType == GraphSchema.DIRECT_REVERSED) {
                         DWMultigraphDataSource dwMultigraphDataSource = new DWMultigraphDataSource(dsf, dataSet, pm);
-                        dwMultigraphDataSource.setWeigthFieldIndex(costField);
+                        dwMultigraphDataSource.setWeightFieldIndex(costField);
                         EdgeReversedGraphDataSource edgeReversedGraph = new EdgeReversedGraphDataSource(dwMultigraphDataSource);
                         return computeDistancesBetweenOneNode(dsf, edgeReversedGraph, source, pm);
                 } else if (graphType == GraphSchema.UNDIRECT) {
                         WMultigraphDataSource wMultigraphDataSource = new WMultigraphDataSource(dsf, dataSet, pm);
-                        wMultigraphDataSource.setWeigthFieldIndex(costField);
+                        wMultigraphDataSource.setWeightFieldIndex(costField);
                         return computeDistancesBetweenOneNode(dsf, wMultigraphDataSource, source, pm);
                 } else {
                         throw new GraphException("Only 3 type of graphs are allowed."
@@ -533,16 +533,16 @@ public class GraphPath extends GraphAnalysis{
                 if (checkMetadata(nodes)) {
                         if (graphType == GraphSchema.DIRECT) {
                                 DWMultigraphDataSource dwMultigraphDataSource = new DWMultigraphDataSource(dsf, dataSet, pm);
-                                dwMultigraphDataSource.setWeigthFieldIndex(costField);
+                                dwMultigraphDataSource.setWeightFieldIndex(costField);
                                 return computeDistanceBetweenSeveralNodes(dsf, dwMultigraphDataSource, nodes, pm);
                         } else if (graphType == GraphSchema.DIRECT_REVERSED) {
                                 DWMultigraphDataSource dwMultigraphDataSource = new DWMultigraphDataSource(dsf, dataSet, pm);
-                                dwMultigraphDataSource.setWeigthFieldIndex(costField);
+                                dwMultigraphDataSource.setWeightFieldIndex(costField);
                                 EdgeReversedGraphDataSource edgeReversedGraph = new EdgeReversedGraphDataSource(dwMultigraphDataSource);
                                 return computeDistanceBetweenSeveralNodes(dsf, edgeReversedGraph, nodes, pm);
                         } else if (graphType == GraphSchema.UNDIRECT) {
                                 WMultigraphDataSource wMultigraphDataSource = new WMultigraphDataSource(dsf, dataSet, pm);
-                                wMultigraphDataSource.setWeigthFieldIndex(costField);
+                                wMultigraphDataSource.setWeightFieldIndex(costField);
                                 return computeDistanceBetweenSeveralNodes(dsf, wMultigraphDataSource, nodes, pm);
                         } else {
                                 throw new GraphException("Only 3 type of graphs are allowed."

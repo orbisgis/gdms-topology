@@ -39,11 +39,16 @@ package org.gdms.gdmstopology.model;
  * graph we are dealing with.
  * </p>
  * 
+ * <p>
  * The constructor is private since this class is only used to
- * access constants.
- *
+ * access constants. 
+ * </p>
+ * 
+ * <p>
+ * Documentation added by Adam Gouge.
+ * </p>
+ * 
  * @author Erwan Bocher
- * Documentation added by Adam Gouge
  */
 public final class GraphSchema {
 
