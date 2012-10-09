@@ -4,7 +4,7 @@
         <groupId>org.gdms</groupId>
         <artifactId>gdms-topology</artifactId>
         <packaging>jar</packaging>
-        <version>1.1-SNAPSHOT</version>
+        <version>1.2</version>
         <name>gdms-topology</name>
         <description>Tool for topological analysis</description>
         <url>http://www.orbisgis.org</url>
@@ -27,7 +27,7 @@
                 <dependency>
                         <groupId>org.jgrapht</groupId>
                         <artifactId>jgrapht</artifactId>
-                        <version>0.8.2</version>
+                        <version>0.8.3</version>
                         <type>jar</type>
                 </dependency>
         </dependencies>
