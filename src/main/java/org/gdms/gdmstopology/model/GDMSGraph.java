@@ -54,7 +54,8 @@ import org.jgrapht.graph.ClassBasedEdgeFactory;
 import org.orbisgis.progress.ProgressMonitor;
 
 /**
- * <p> Creates a (JGraphT) graph from an existing {@link DataSet}. 
+ * A class to create a (JGraphT) graph from an existing 
+ * data source. 
  * 
  * <b>Warning</b>: The input {@link DataSet} must have the 
  * following fields: 
@@ -64,7 +65,7 @@ import org.orbisgis.progress.ProgressMonitor;
  * <LI> weight (double) </LI> 
  * </UL>
  *
- * <p>Documentation added by Adam Gouge.</p>
+ * <p> October 10, 2012: Documentation updated by Adam Gouge.
  *
  * @author Erwan Bocher
  */
@@ -209,7 +210,7 @@ public final class GDMSGraph extends AbstractGraph<Integer, GraphEdge> implement
 
     /**
      * Sets the name of the field that contains the weight value 
-     * to process the graph.
+     * in order to process the graph.
      *
      * @param fieldName The name of the field that contains the weight value.
      * @throws DriverException
@@ -236,24 +237,18 @@ public final class GDMSGraph extends AbstractGraph<Integer, GraphEdge> implement
     }
 
     /**
-     * Returns the {@link Geometry} of a given {@link GraphEdge}.
-     *
-     * @param graphEdge The given {@link GraphEdge}.
-     * @return The {@link Geometry} of this [@link GraphEdge}.
-     * @throws DriverException
+     * @see org.gdms.driver.DataSet#getGeometry(long, int) 
      */
+    // Javadoc will be copied from the GDMSValueGraph interface.
     @Override
     public Geometry getGeometry(GraphEdge graphEdge) throws DriverException {
         return dataSet.getGeometry(graphEdge.getRowId(), GEOMETRY_FIELD_INDEX);
     }
 
     /**
-     * Returns the {@link Geometry} located at a given row.
-     * 
-     * @param rowid The row id.
-     * @return The {@link Geometry} located at this row.
-     * @throws DriverException 
+     * @see org.gdms.driver.DataSet#getGeometry(long, int) 
      */
+    // Javadoc will be copied from the GDMSValueGraph interface.
     @Override
     public Geometry getGeometry(int rowid) throws DriverException {
         return dataSet.getGeometry(rowid, GEOMETRY_FIELD_INDEX);
@@ -261,9 +256,9 @@ public final class GDMSGraph extends AbstractGraph<Integer, GraphEdge> implement
 
     /**
      * Returns a {@link Set} of (new) {@link GraphEdge} objects
-     * corresponding to the edges in the data set from a given start vertex 
-     * to a given end vertex if such edges exist; otherwise returns
-     * {@link Collections.EMPTY_SET}.
+     * corresponding to the edges in the data set from a given start 
+     * vertex to a given end vertex if such edges exist; otherwise 
+     * returns {@link Collections.EMPTY_SET}.
      * 
      * @param startVertex The start vertex.
      * @param endVertex The end vertex.
@@ -298,7 +293,9 @@ public final class GDMSGraph extends AbstractGraph<Integer, GraphEdge> implement
      * 
      * @param startVertex The start vertex.
      * @param endVertex The end vertex.
-     * @return 
+     * @return A (new) {@link GraphEdge} object from the given start vertex
+     * to the given end vertex if such an edge exists in the data set; 
+     * {@code null} otherwise.
      */
     @Override
     public GraphEdge getEdge(Integer startVertex, Integer endVertex) {
@@ -339,8 +336,8 @@ public final class GDMSGraph extends AbstractGraph<Integer, GraphEdge> implement
     }
 
     /**
-     * Adds a given {@link GraphEdge} from a given start vertex to a given 
-     * end vertex (NOT YET SUPPORTED!).
+     * Adds a given {@link GraphEdge} from a given start vertex to 
+     * a given end vertex (NOT YET SUPPORTED!).
      *
      * @param startVertex The start vertex.
      * @param endVertex The end vertex.
@@ -366,13 +363,13 @@ public final class GDMSGraph extends AbstractGraph<Integer, GraphEdge> implement
     }
 
     /**
-     * Returns {@code true} if the data set contains an edge from a given start
-     * vertex to a given end vertex.
+     * Returns {@code true} if the data set contains an edge from a 
+     * given start vertex to a given end vertex.
      * 
      * @param startVertex The start vertex.
      * @param endVertex The end vertex.
-     * @return {@code true} if there exists an edge from the start vertex
-     * to the end vertex.
+     * @return {@code true} if and only if there exists an edge from the start 
+     * vertex to the end vertex.
      */
     @Override
     public boolean containsEdge(Integer startVertex, Integer endVertex) {
@@ -385,10 +382,12 @@ public final class GDMSGraph extends AbstractGraph<Integer, GraphEdge> implement
     }
 
     /**
-     * Returns {@code true} if the data set contains a given {@link GraphEdge}.
+     * Returns {@code true} if the data set contains a given 
+     * {@link GraphEdge}.
      * 
      * @param graphEdge The {@link GraphEdge}.
-     * @return {@code true} if the {@link GraphEdge} is contained in the data set.
+     * @return {@code true} if and only if the {@link GraphEdge} is contained 
+     * in the data set.
      */
     @Override
     public boolean containsEdge(GraphEdge graphEdge) {
@@ -399,7 +398,8 @@ public final class GDMSGraph extends AbstractGraph<Integer, GraphEdge> implement
      * Returns {@code true} if the data set contains a given vertex.
      * 
      * @param vertex The vertex.
-     * @return {@code true} if the vertex is contained in the data set.
+     * @return {@code true} if and only if the vertex is contained in 
+     * the data set.
      */
     @Override
     public boolean containsVertex(Integer vertex) {
@@ -434,11 +434,12 @@ public final class GDMSGraph extends AbstractGraph<Integer, GraphEdge> implement
     }
 
     /**
-     * Returns the set of all edges touching the specified vertex, or
-     * the empty set if no edges touch the vertex.
+     * Returns the {@link Set} of all edges touching the specified 
+     * vertex, or the empty set if no edges touch the vertex.
      * 
      * @param vertex The vertex to be examined.
-     * @return The edges touching this vertex.
+     * @return The edges touching this vertex, or the empty set if no edges
+     * touch this vertex.
      */
     @Override
     public Set<GraphEdge> edgesOf(Integer vertex) {
@@ -465,15 +466,13 @@ public final class GDMSGraph extends AbstractGraph<Integer, GraphEdge> implement
             return edgesOf;
         } catch (DriverException ex) {
         }
-        // The constructor of HashSet creates an empty set, 
-        // so if no edges were added, then here we return the empty set.
-        // TODO: Should we just return Collections.EMPTY_SET ?
-        return edgesOf;
+        // If no edges were added, then just return the empty set.
+        return Collections.EMPTY_SET;
     }
 
     /**
-     * Removes an edge beginning at a given start vertex and ending at a given
-     * end vertex (NOT YET SUPPORTED!).
+     * Removes an edge beginning at a given start vertex and ending 
+     * at a given end vertex (NOT YET SUPPORTED!).
      *
      * @param startVertex The start vertex.
      * @param endVertex The end vertex.
@@ -512,34 +511,44 @@ public final class GDMSGraph extends AbstractGraph<Integer, GraphEdge> implement
     }
 
     /**
-     * Checks to see if the vertexSet is null: if so, recovers all source and
-     * target vertices into the vertexSet and returns the vertexSet; if not,
-     * returns the vertexSet directly.
+     * Checks to see if the vertex set of this graph is {@code null}:
+     * if so, recovers all source and target vertices into the vertex 
+     * set and returns the vertex set; if not, returns the vertex set 
+     * directly.
      *
-     * @return The set of vertices located in the data source.
+     * @return The {@link Set} of vertices located in the data source.
      */
     // Why does this method return Set<Integer> and not HashSet<Integer>?
     @Override
     public Set<Integer> vertexSet() {
+        // Make sure we haven't already done this calculation.
         if (vertexSet == null) {
+            // Initialize the vertex set.
             vertexSet = new HashSet<Integer>();
             try {
+                // Count the number of rows.
                 long rowCount = dataSet.getRowCount();
+                // For each row, add the source and target vertices to the set.
                 for (int i = 0; i < rowCount; i++) {
                     Integer source = getSourceVertex(i);
                     Integer dest = getTargetVertex(i);
                     vertexSet.add(source);
                     vertexSet.add(dest);
                 }
+                // Return the vertex set.
                 return vertexSet;
             } catch (DriverException ex) {
             }
         }
+        // If the vertex set was not null, then we already calculated
+        // the vertex set, so just return it directly.
         return vertexSet;
     }
 
     /**
      * Returns the source vertex of a given {@link GraphEdge}.
+     * 
+     * @see org.gdms.gdmstopology.model.GraphEdge#getSource() 
      * 
      * @param graphEdge The {@link GraphEdge}.
      * @return The source vertex.
@@ -552,6 +561,8 @@ public final class GDMSGraph extends AbstractGraph<Integer, GraphEdge> implement
     /**
      * Returns the target vertex of a given {@link GraphEdge}.
      * 
+     * @see org.gdms.gdmstopology.model.GraphEdge#getTarget() 
+     * 
      * @param graphEdge The {@link GraphEdge}.
      * @return The target vertex.
      */
@@ -562,6 +573,8 @@ public final class GDMSGraph extends AbstractGraph<Integer, GraphEdge> implement
 
     /**
      * Returns the weight of a given {@link GraphEdge}.
+     * 
+     * @see org.gdms.gdmstopology.model.GraphEdge#getWeight() 
      * 
      * @param graphEdge The {@link GraphEdge}.
      * @return The weight.
@@ -716,9 +729,8 @@ public final class GDMSGraph extends AbstractGraph<Integer, GraphEdge> implement
      *
      * @param vertex The vertex.
      * @return The indegree of the vertex.
-     * @throws DriverException  
      */
-    public int inDegreeOf(Integer vertex) throws DriverException {
+    public int inDegreeOf(Integer vertex) {
         try {
             Iterator<Integer> queryResult = getIndexIterator(GraphSchema.END_NODE, vertex);
             int counter = 0;
@@ -738,9 +750,8 @@ public final class GDMSGraph extends AbstractGraph<Integer, GraphEdge> implement
      * 
      * @param vertex The vertex.
      * @return The outdegree of the vertex.
-     * @throws DriverException  
      */
-    public int outDegreeOf(Integer vertex) throws DriverException {
+    public int outDegreeOf(Integer vertex) {
         try {
             Iterator<Integer> queryResult = getIndexIterator(GraphSchema.START_NODE, vertex);
             int counter = 0;
@@ -755,24 +766,29 @@ public final class GDMSGraph extends AbstractGraph<Integer, GraphEdge> implement
     }
 
     /**
-     * Returns the values of all fields at a given row.
+     * Returns the degree of a vertex (the sum of the indegree
+     * and the outdegree of the vertex).
      * 
-     * @param rowid The row id.
-     * @return The values of all fields at the specified row in
-     * a {@link Values[]}.
-     * @throws DriverException 
+     * @param vertex The vertex.
+     * @return The degree of the vertex.
      */
+    public int degreeOf(Integer vertex) {
+        return inDegreeOf(vertex) + outDegreeOf(vertex);
+    }
+    
+    /**
+     * @see org.gdms.driver.DataSet#getRow(long) 
+     */
+    // Javadoc will be copied from the GDMSValueGraph interface.
     @Override
     public Value[] getValues(int rowid) throws DriverException {
         return dataSet.getRow(rowid);
     }
 
     /**
-     * Returns the number of rows in the data set.
-     * 
-     * @return The number of rows in the data set.
-     * @throws DriverException 
+     * @see org.gdms.driver.DataSet#getRowCount() 
      */
+    // Javadoc will be copied from the GDMSValueGraph interface.
     @Override
     public long getRowCount() throws DriverException {
         return dataSet.getRowCount();
