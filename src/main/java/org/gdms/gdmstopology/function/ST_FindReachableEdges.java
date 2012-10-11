@@ -98,7 +98,7 @@ public class ST_FindReachableEdges extends AbstractTableFunction {
 
         @Override
         public Metadata getMetadata(Metadata[] tables) throws DriverException {
-                return GraphMetadataFactory.createReachablesEdgesMetadata();
+                return GraphMetadataFactory.createReachableEdgesMetadata();
         }
 
         @Override

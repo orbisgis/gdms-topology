@@ -33,21 +33,14 @@
 package org.gdms.gdmstopology.model;
 
 /**
- * <p>
- * This class defines several constants used to read the input fields of
- * the data source, as well as some constants to specify which type of 
- * graph we are dealing with.
- * </p>
- * 
- * <p>
- * The constructor is private since this class is only used to
- * access constants. 
- * </p>
- * 
- * <p>
- * Documentation added by Adam Gouge.
- * </p>
- * 
+ * Defines several constants used to read the input fields of the data source,
+ * as well as some constants to specify which type of graph we are dealing with.
+ *
+ * <p> The constructor is private since this class is only used to access
+ * constants.
+ *
+ * <p> October 3, 2012: Documentation added by Adam Gouge.
+ *
  * @author Erwan Bocher
  */
 public final class GraphSchema {
@@ -70,15 +63,13 @@ public final class GraphSchema {
      */
     public static final String WEIGHT = "weight";
     /**
-     * Specifies the field indicating which polygon is located to the 
-     * left when the border of the current polygon is traversed 
-     * clockwise.
+     * Specifies the field indicating which polygon is located to the left when
+     * the border of the current polygon is traversed clockwise.
      */
     public static final String LEFT_FACE = "left_polygon";
     /**
-     * Specifies the field indicating which polygon is located to the 
-     * right when the border of the current polygon is traversed 
-     * clockwise.
+     * Specifies the field indicating which polygon is located to the right when
+     * the border of the current polygon is traversed clockwise.
      */
     public static final String RIGHT_FACE = "right_polygon";
     /**
@@ -103,7 +94,6 @@ public final class GraphSchema {
      * Specifies the distance field.
      */
     public static final String DISTANCE = "distance";
-    
     // Constants for specifying which type of graph we are dealing with.
     // Added the "final" keyword to make sure these constants 
     // are never changed. (Adam)
@@ -120,6 +110,9 @@ public final class GraphSchema {
      */
     public static final int UNDIRECT = 3;
 
+    /**
+     * Empty constructor.r
+     */
     private GraphSchema() {
     }
 }

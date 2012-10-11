@@ -115,7 +115,7 @@ public class GraphUtilities extends GraphAnalysis {
                                 "The graph must contain the source vertex");
                 }
 
-                DiskBufferDriver diskBufferDriver = new DiskBufferDriver(dsf, GraphMetadataFactory.createReachablesEdgesMetadata());
+                DiskBufferDriver diskBufferDriver = new DiskBufferDriver(dsf, GraphMetadataFactory.createReachableEdgesMetadata());
                 ClosestFirstIterator<Integer, GraphEdge> cl = new ClosestFirstIterator<Integer, GraphEdge>(
                         graph, source);
                 int count = 0;
@@ -199,7 +199,7 @@ public class GraphUtilities extends GraphAnalysis {
 
                 if (checkSourceColumn(nodes)) {
                         Iterator<Value[]> it = nodes.iterator();
-                        DiskBufferDriver diskBufferDriver = new DiskBufferDriver(dsf, GraphMetadataFactory.createMReachablesEdgesMetadata());
+                        DiskBufferDriver diskBufferDriver = new DiskBufferDriver(dsf, GraphMetadataFactory.createMReachableEdgesMetadata());
 
                         while (it.hasNext()) {
                                 Value[] values = it.next();
