@@ -42,11 +42,11 @@ import org.jgrapht.graph.DirectedWeightedMultigraph;
 import org.orbisgis.progress.ProgressMonitor;
 
 /**
- * A class to create a (JGraphT) directed weighted multigraph 
- * from a data source. A directed weighted multigraph is a
- * non-simple directed graph in which loops and multiple edges between any two
- * vertices are permitted, and edges have weights.
- * 
+ * A (JGraphT) directed weighted multigraph created from a data source. A
+ * directed weighted multigraph is a non-simple directed graph in which loops
+ * and multiple edges between any two vertices are permitted, and edges have
+ * weights.
+ *
  * <p> Most operations are performed on a private {@link GDMSGraph}.
  *
  * <p> October 10, 2012: Documentation updated by Adam Gouge.
@@ -63,10 +63,10 @@ public class DWMultigraphDataSource
     private final GDMSGraph GDMSGraph;
 
     /**
-     * Creates a {@link DirectedWeightedMultigraph} based on the 
-     * {@link GraphEdge} class. Also creates a new {@link GDMSGraph} 
-     * using the given data source. Most operations are performed on 
-     * this private {@link GDMSGraph}.
+     * Constructs a {@link DirectedWeightedMultigraph} based on the
+     * {@link GraphEdge} class. Also creates a new {@link GDMSGraph} using the
+     * given data source. Most operations are performed on this private
+     * {@link GDMSGraph}.
      *
      * @param dsf The {@link DataSourceFactory} used to parse the data set.
      * @param dataSet The data set.
@@ -80,24 +80,23 @@ public class DWMultigraphDataSource
     }
 
     /**
-     * Sets the name of the field that contains the weight value 
-     * in order to process the graph.
-     * 
-     * @see org.gdms.gdmstopology.model.GDMSGraph#setWeightFieldIndex(String) 
-     * 
+     * Sets the name of the field that contains the weight value in order to
+     * process the graph.
+     *
+     * @see org.gdms.gdmstopology.model.GDMSGraph#setWeightFieldIndex(String)
+     *
      * @param fieldName The name of the field that contains the weight value.
-     * @throws DriverException 
+     * @throws DriverException
      */
     public void setWeightFieldIndex(String fieldName) throws DriverException {
         GDMSGraph.setWeightFieldIndex(fieldName);
     }
 
     /**
-     * Returns the {@link Set} of edges that end at a given
-     * vertex.
-     * 
+     * Returns the {@link Set} of edges that end at a given vertex.
+     *
      * @see org.gdms.gdmstopology.model.GDMSGraph#incomingEdgesOf(Integer)
-     * 
+     *
      * @param vertex The vertex.
      * @return The set of incoming edges.
      */
@@ -107,11 +106,10 @@ public class DWMultigraphDataSource
     }
 
     /**
-     * Returns the {@link Set} of edges that start at a given
-     * vertex.
-     * 
-     * @see org.gdms.gdmstopology.model.GDMSGraph#outgoingEdgesOf(Integer) 
-     * 
+     * Returns the {@link Set} of edges that start at a given vertex.
+     *
+     * @see org.gdms.gdmstopology.model.GDMSGraph#outgoingEdgesOf(Integer)
+     *
      * @param vertex The vertex.
      * @return The set of outgoing edges.
      */
@@ -121,17 +119,16 @@ public class DWMultigraphDataSource
     }
 
     /**
-     * Returns a (new) {@link GraphEdge} object if an edge from
-     * a given start vertex to a given end vertex exists
-     * in the data set.
-     * 
-     * @see org.gdms.gdmstopology.model.GDMSGraph#getEdge(Integer, Integer) 
-     * 
+     * Returns a (new) {@link GraphEdge} object if an edge from a given start
+     * vertex to a given end vertex exists in the data set.
+     *
+     * @see org.gdms.gdmstopology.model.GDMSGraph#getEdge(Integer, Integer)
+     *
      * @param startVertex The start vertex.
      * @param endVertex The end vertex.
-     * @return A (new) {@link GraphEdge} object from the given start vertex
-     * to the given end vertex if such an edge exists in the data set; 
-     * {@code null} otherwise.
+     * @return A (new) {@link GraphEdge} object from the given start vertex to
+     * the given end vertex if such an edge exists in the data set; {@code null}
+     * otherwise.
      */
     @Override
     public GraphEdge getEdge(Integer startVertex, Integer endVertex) {
@@ -140,12 +137,12 @@ public class DWMultigraphDataSource
 
     /**
      * Returns {@code true} if the data set contains a given vertex.
-     * 
-     * @see org.gdms.gdmstopology.model.GDMSGraph#containsVertex(Integer) 
-     * 
+     *
+     * @see org.gdms.gdmstopology.model.GDMSGraph#containsVertex(Integer)
+     *
      * @param vertex The vertex.
-     * @return {@code true} if and only if the vertex is contained in 
-     * the data set.
+     * @return {@code true} if and only if the vertex is contained in the data
+     * set.
      */
     @Override
     public boolean containsVertex(Integer vertex) {
@@ -153,14 +150,14 @@ public class DWMultigraphDataSource
     }
 
     /**
-     * Returns {@code true} if the data set contains a given 
-     * {@link GraphEdge}.
-     * 
-     * @see org.gdms.gdmstopology.model.GDMSGraph#containsEdge(org.gdms.gdmstopology.model.GraphEdge) 
-     * 
+     * Returns {@code true} if the data set contains a given {@link GraphEdge}.
+     *
+     * @see
+     * org.gdms.gdmstopology.model.GDMSGraph#containsEdge(org.gdms.gdmstopology.model.GraphEdge)
+     *
      * @param graphEdge The {@link GraphEdge}.
-     * @return {@code true} if and only if the {@link GraphEdge} is contained 
-     * in the data set.
+     * @return {@code true} if and only if the {@link GraphEdge} is contained in
+     * the data set.
      */
     @Override
     public boolean containsEdge(GraphEdge graphEdge) {
@@ -168,14 +165,14 @@ public class DWMultigraphDataSource
     }
 
     /**
-     * Returns {@code true} if the data set contains an edge from a 
-     * given start vertex to a given end vertex.
-     * 
-     * @see org.gdms.gdmstopology.model.GDMSGraph#containsEdge(Integer, Integer) 
-     * 
+     * Returns {@code true} if the data set contains an edge from a given start
+     * vertex to a given end vertex.
+     *
+     * @see org.gdms.gdmstopology.model.GDMSGraph#containsEdge(Integer, Integer)
+     *
      * @param startVertex The start vertex.
      * @param endVertex The end vertex.
-     * @return {@code true} if and only if there exists an edge from the start 
+     * @return {@code true} if and only if there exists an edge from the start
      * vertex to the end vertex.
      */
     @Override
@@ -184,11 +181,11 @@ public class DWMultigraphDataSource
     }
 
     /**
-     * Returns the {@link Set} of all edges touching the specified 
-     * vertex, or the empty set if no edges touch the vertex.
-     * 
-     * @see org.gdms.gdmstopology.model.GDMSGraph#edgesOf(Integer) 
-     * 
+     * Returns the {@link Set} of all edges touching the specified vertex, or
+     * the empty set if no edges touch the vertex.
+     *
+     * @see org.gdms.gdmstopology.model.GDMSGraph#edgesOf(Integer)
+     *
      * @param vertex The vertex to be examined.
      * @return The edges touching this vertex, or the empty set if no edges
      * touch this vertex.
@@ -200,9 +197,10 @@ public class DWMultigraphDataSource
 
     /**
      * Returns the source vertex of a given {@link GraphEdge}.
-     * 
-     * @see org.gdms.gdmstopology.model.GDMSGraph#getEdgeSource(org.gdms.gdmstopology.model.GraphEdge) 
-     * 
+     *
+     * @see
+     * org.gdms.gdmstopology.model.GDMSGraph#getEdgeSource(org.gdms.gdmstopology.model.GraphEdge)
+     *
      * @param graphEdge The {@link GraphEdge}.
      * @return The source vertex.
      */
@@ -213,9 +211,10 @@ public class DWMultigraphDataSource
 
     /**
      * Returns the target vertex of a given {@link GraphEdge}.
-     * 
-     * @see org.gdms.gdmstopology.model.GDMSGraph#getEdgeTarget(org.gdms.gdmstopology.model.GraphEdge) 
-     * 
+     *
+     * @see
+     * org.gdms.gdmstopology.model.GDMSGraph#getEdgeTarget(org.gdms.gdmstopology.model.GraphEdge)
+     *
      * @param graphEdge The {@link GraphEdge}.
      * @return The target vertex.
      */
@@ -226,9 +225,10 @@ public class DWMultigraphDataSource
 
     /**
      * Returns the weight of a given {@link GraphEdge}.
-     * 
-     * @see org.gdms.gdmstopology.model.GDMSGraph#getEdgeWeight(org.gdms.gdmstopology.model.GraphEdge) 
-     * 
+     *
+     * @see
+     * org.gdms.gdmstopology.model.GDMSGraph#getEdgeWeight(org.gdms.gdmstopology.model.GraphEdge)
+     *
      * @param graphEdge The {@link GraphEdge}.
      * @return The weight.
      */
@@ -238,11 +238,11 @@ public class DWMultigraphDataSource
     }
 
     /**
-     * Returns the indegree of a vertex (the number of head endpoints 
-     * adjacent to the vertex).
+     * Returns the indegree of a vertex (the number of head endpoints adjacent
+     * to the vertex).
      *
-     * @see org.gdms.gdmstopology.model.GDMSGraph#inDegreeOf(Integer) 
-     * 
+     * @see org.gdms.gdmstopology.model.GDMSGraph#inDegreeOf(Integer)
+     *
      * @param vertex The vertex.
      * @return The indegree of the vertex.
      */
@@ -251,12 +251,12 @@ public class DWMultigraphDataSource
         return GDMSGraph.inDegreeOf(vertex);
     }
 
-     /**
-     * Returns the outdegree of a vertex (the number of tail endpoints 
-     * adjacent to the vertex).
-     * 
-     * @see org.gdms.gdmstopology.model.GDMSGraph#outDegreeOf(Integer) 
-     * 
+    /**
+     * Returns the outdegree of a vertex (the number of tail endpoints adjacent
+     * to the vertex).
+     *
+     * @see org.gdms.gdmstopology.model.GDMSGraph#outDegreeOf(Integer)
+     *
      * @param vertex The vertex.
      * @return The outdegree of the vertex.
      */
@@ -266,11 +266,11 @@ public class DWMultigraphDataSource
     }
 
     /**
-     * Returns the degree of a vertex (the sum of the indegree
-     * and the outdegree of the vertex).
-     * 
-     * @see org.gdms.gdmstopology.model.GDMSGraph#degreeOf(Integer) 
-     * 
+     * Returns the degree of a vertex (the sum of the indegree and the outdegree
+     * of the vertex).
+     *
+     * @see org.gdms.gdmstopology.model.GDMSGraph#degreeOf(Integer)
+     *
      * @param vertex The vertex.
      * @return The degree of the vertex.
      */
@@ -280,12 +280,11 @@ public class DWMultigraphDataSource
     }
 
     /**
-     * Checks to see if the vertex set of this graph is {@code null}:
-     * if so, recovers all source and target vertices into the vertex 
-     * set and returns the vertex set; if not, returns the vertex set 
-     * directly.
-     * 
-     * @see org.gdms.gdmstopology.model.GDMSGraph#vertexSet() 
+     * Checks to see if the vertex set of this graph is {@code null}: if so,
+     * recovers all source and target vertices into the vertex set and returns
+     * the vertex set; if not, returns the vertex set directly.
+     *
+     * @see org.gdms.gdmstopology.model.GDMSGraph#vertexSet()
      *
      * @return The {@link Set} of vertices located in the data source.
      */
@@ -296,9 +295,9 @@ public class DWMultigraphDataSource
     }
 
     /**
-     * Returns the private {@link GDMSGraph} on which most
-     * operations are performed.
-     * 
+     * Returns the private {@link GDMSGraph} on which most operations are
+     * performed.
+     *
      * @return The private {@link GDMSGraph}.
      */
     public org.gdms.gdmstopology.model.GDMSGraph getGDMSGraph() {
@@ -306,7 +305,7 @@ public class DWMultigraphDataSource
     }
 
     /**
-     * @see org.gdms.gdmstopology.model.GDMSGraph#getGeometry(GraphEdge) 
+     * @see org.gdms.gdmstopology.model.GDMSGraph#getGeometry(GraphEdge)
      */
     // Javadoc will be copied from the GDMSValueGraph interface.
     @Override
@@ -315,7 +314,7 @@ public class DWMultigraphDataSource
     }
 
     /**
-     * @see org.gdms.gdmstopology.model.GDMSGraph#getGeometry(int) 
+     * @see org.gdms.gdmstopology.model.GDMSGraph#getGeometry(int)
      */
     // Javadoc will be copied from the GDMSValueGraph interface.
     @Override
@@ -324,7 +323,7 @@ public class DWMultigraphDataSource
     }
 
     /**
-     * @see org.gdms.gdmstopology.model.GDMSGraph#getValues(int) 
+     * @see org.gdms.gdmstopology.model.GDMSGraph#getValues(int)
      */
     // Javadoc will be copied from the GDMSValueGraph interface.
     @Override
@@ -333,7 +332,7 @@ public class DWMultigraphDataSource
     }
 
     /**
-     * @see org.gdms.gdmstopology.model.GDMSGraph#getRowCount() 
+     * @see org.gdms.gdmstopology.model.GDMSGraph#getRowCount()
      */
     // Javadoc will be copied from the GDMSValueGraph interface.
     @Override

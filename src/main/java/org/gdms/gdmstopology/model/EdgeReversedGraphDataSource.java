@@ -38,10 +38,9 @@ import org.gdms.driver.DriverException;
 import org.jgrapht.graph.EdgeReversedGraph;
 
 /**
- * A class to create an edge-reversed (JGraphT) directed weighted 
- * multigraph from a {@link DWMultigraphDataSource}. The vertex sets 
- * for the two graphs are the same, but g' contains an edge (v2, v1) iff 
- * g contains an edge (v1, v2).
+ * An edge-reversed (JGraphT) directed weighted multigraph created from a
+ * {@link DWMultigraphDataSource}. The vertex sets for the two graphs are the
+ * same, but g' contains an edge (v2, v1) iff g contains an edge (v1, v2).
  *
  * <p> October 10, 2012: Documentation updated by Adam Gouge.
  *
@@ -52,14 +51,13 @@ public class EdgeReversedGraphDataSource
         implements GDMSValueGraph<Integer, GraphEdge> {
 
     /**
-     * The {@link DWMultigraphDataSource} 
-     * whose edges are to be reversed.
+     * The {@link DWMultigraphDataSource} whose edges are to be reversed.
      */
     private DWMultigraphDataSource dWMultigraphDataSource;
 
     /**
-     * Creates a new {@link EdgeReversedGraphDataSource} by reversing 
-     * the edges of a given {@link DWMultigraphDataSource}.
+     * Constructs a new {@link EdgeReversedGraphDataSource} by reversing the
+     * edges of a given {@link DWMultigraphDataSource}.
      *
      * @param dWMultigraphDataSource The {@link DWMultigraphDataSource} to whose
      * edges are to be reversed.
@@ -70,7 +68,7 @@ public class EdgeReversedGraphDataSource
     }
 
     /**
-     * @see org.gdms.gdmstopology.model.DWMultigraphDataSource#getGeometry(int) 
+     * @see org.gdms.gdmstopology.model.DWMultigraphDataSource#getGeometry(int)
      */
     // Javadoc will be copied from the GDMSValueGraph interface.
     @Override
@@ -79,7 +77,8 @@ public class EdgeReversedGraphDataSource
     }
 
     /**
-     * @see org.gdms.gdmstopology.model.DWMultigraphDataSource#getGeometry(GraphEdge) 
+     * @see
+     * org.gdms.gdmstopology.model.DWMultigraphDataSource#getGeometry(GraphEdge)
      */
     // Javadoc will be copied from the GDMSValueGraph interface.
     @Override
@@ -88,7 +87,7 @@ public class EdgeReversedGraphDataSource
     }
 
     /**
-     * @see org.gdms.gdmstopology.model.DWMultigraphDataSource#getValues(int) 
+     * @see org.gdms.gdmstopology.model.DWMultigraphDataSource#getValues(int)
      */
     // Javadoc will be copied from the GDMSValueGraph interface.
     @Override
@@ -97,7 +96,7 @@ public class EdgeReversedGraphDataSource
     }
 
     /**
-     * @see org.gdms.gdmstopology.model.DWMultigraphDataSource#getRowCount() 
+     * @see org.gdms.gdmstopology.model.DWMultigraphDataSource#getRowCount()
      */
     // Javadoc will be copied from the GDMSValueGraph interface.
     @Override

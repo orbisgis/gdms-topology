@@ -39,19 +39,19 @@ import org.jgrapht.Graph;
 
 /**
  * The root interface in the GDMS graph hierarchy.
- * 
+ *
  * <p> October 10, 2012: Documentation updated by Adam Gouge.
- * 
+ *
  * @author Erwan Bocher
  */
 public interface GDMSValueGraph<V extends Integer, E extends GraphEdge> extends Graph<V, E> {
 
     /**
      * Returns the {@link Geometry} located at a given row.
-     * 
+     *
      * @param rowid The row id.
      * @return The {@link Geometry} located at this row.
-     * @throws DriverException 
+     * @throws DriverException
      */
     Geometry getGeometry(int rowid) throws DriverException;
 
@@ -66,7 +66,7 @@ public interface GDMSValueGraph<V extends Integer, E extends GraphEdge> extends 
 
     /**
      * Returns the values of all fields at a given row.
-     * 
+     *
      * @param rowid The row id.
      * @return The values of all fields at the specified row, in order.
      * @throws DriverException if the access fails.
@@ -75,9 +75,9 @@ public interface GDMSValueGraph<V extends Integer, E extends GraphEdge> extends 
 
     /**
      * Returns the number of rows in the data set.
-     * 
+     *
      * @return The number of rows in the data set.
-     * @throws DriverException 
+     * @throws DriverException
      */
     long getRowCount() throws DriverException;
 }
