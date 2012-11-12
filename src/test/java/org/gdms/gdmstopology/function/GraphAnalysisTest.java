@@ -257,15 +257,16 @@ public class GraphAnalysisTest extends TopologySetUpTest {
     /**
      * Tests finding the shortest path between non-neighboring vertices of a
      * directed graph (entered manually).
-     * 
-     * This is the same as Test 5 with a weight changed (and thus a new shortest path).
-     * 
-     * @throws Exception 
+     *
+     * This is the same as Test 5 with a weight changed (and thus a new shortest
+     * path).
+     *
+     * @throws Exception
      */
     @Test
     public void testST_ShortestPath6() throws Exception {
         ST_ShortestPath sT_ShortestPath = new ST_ShortestPath();
-        
+
         MemoryDataSetDriver mdsd = new MemoryDataSetDriver(
                 new String[]{
                     "geom",
@@ -283,41 +284,41 @@ public class GraphAnalysisTest extends TopologySetUpTest {
         mdsd.addValues(
                 new Value[]{
                     ValueFactory.createValue(wktReader.read("LINESTRING(0 0, 2 2)")),
-                    ValueFactory.createValue(1), 
-                    ValueFactory.createValue(2), 
+                    ValueFactory.createValue(1),
+                    ValueFactory.createValue(2),
                     ValueFactory.createValue(0)
                 });
         mdsd.addValues(
                 new Value[]{
                     ValueFactory.createValue(wktReader.read("LINESTRING(2 2, 4 4 , 6 2)")),
-                    ValueFactory.createValue(2), 
-                    ValueFactory.createValue(3), 
+                    ValueFactory.createValue(2),
+                    ValueFactory.createValue(3),
                     ValueFactory.createValue(10) // changed the weight
                 });
         mdsd.addValues(
                 new Value[]{
                     ValueFactory.createValue(wktReader.read("LINESTRING(2 2, 4 1 , 6 2)")),
-                    ValueFactory.createValue(2), 
-                    ValueFactory.createValue(3), 
+                    ValueFactory.createValue(2),
+                    ValueFactory.createValue(3),
                     ValueFactory.createValue(0)}); // changed the weight
         mdsd.addValues(
                 new Value[]{
                     ValueFactory.createValue(wktReader.read("LINESTRING(6 2  , 10 2)")),
-                    ValueFactory.createValue(3), 
-                    ValueFactory.createValue(4), 
+                    ValueFactory.createValue(3),
+                    ValueFactory.createValue(4),
                     ValueFactory.createValue(0)});
 
         DataSet[] tables = new DataSet[]{mdsd};
         int source = 1;
         int target = 4;
         DataSet result = sT_ShortestPath.evaluate(
-                dsf, 
-                tables, 
+                dsf,
+                tables,
                 new Value[]{
                     ValueFactory.createValue(source),
-                    ValueFactory.createValue(target), 
+                    ValueFactory.createValue(target),
                     ValueFactory.createValue("weigth") // TODO: weight is misspelled.
-                }, 
+                },
                 new NullProgressMonitor());
         assertTrue(result.getRowCount() == 3);
         assertTrue(result.getFieldValue(0, 0).getAsGeometry().equals(wktReader.read("LINESTRING(6 2  , 10 2)")));
@@ -325,17 +326,17 @@ public class GraphAnalysisTest extends TopologySetUpTest {
         assertTrue(result.getFieldValue(2, 0).getAsGeometry().equals(wktReader.read("LINESTRING(0 0, 2 2)")));
         printResult(result, 6, source, target);
     }
-    
+
     /**
      * Tests finding the shortest path between non-neighboring vertices of an
      * undirected graph (entered manually).
-     * 
-     * @throws Exception 
+     *
+     * @throws Exception
      */
     @Test
     public void testST_ShortestPath7() throws Exception {
         ST_ShortestPath sT_ShortestPath = new ST_ShortestPath();
-        
+
         MemoryDataSetDriver mdsd = new MemoryDataSetDriver(
                 new String[]{
                     "geom",
@@ -353,42 +354,42 @@ public class GraphAnalysisTest extends TopologySetUpTest {
         mdsd.addValues(
                 new Value[]{
                     ValueFactory.createValue(wktReader.read("LINESTRING(0 0, 2 2)")),
-                    ValueFactory.createValue(1), 
-                    ValueFactory.createValue(2), 
+                    ValueFactory.createValue(1),
+                    ValueFactory.createValue(2),
                     ValueFactory.createValue(0)
                 });
         mdsd.addValues(
                 new Value[]{
                     ValueFactory.createValue(wktReader.read("LINESTRING(2 2, 4 4 , 6 2)")),
-                    ValueFactory.createValue(2), 
-                    ValueFactory.createValue(3), 
-                    ValueFactory.createValue(10) 
+                    ValueFactory.createValue(2),
+                    ValueFactory.createValue(3),
+                    ValueFactory.createValue(10)
                 });
         mdsd.addValues(
                 new Value[]{
                     ValueFactory.createValue(wktReader.read("LINESTRING(2 2, 4 1 , 6 2)")),
-                    ValueFactory.createValue(2), 
-                    ValueFactory.createValue(3), 
-                    ValueFactory.createValue(0)}); 
+                    ValueFactory.createValue(2),
+                    ValueFactory.createValue(3),
+                    ValueFactory.createValue(0)});
         mdsd.addValues(
                 new Value[]{
                     ValueFactory.createValue(wktReader.read("LINESTRING(6 2  , 10 2)")),
-                    ValueFactory.createValue(3), 
-                    ValueFactory.createValue(4), 
+                    ValueFactory.createValue(3),
+                    ValueFactory.createValue(4),
                     ValueFactory.createValue(0)});
 
         DataSet[] tables = new DataSet[]{mdsd};
         int source = 1;
         int target = 4;
         DataSet result = sT_ShortestPath.evaluate(
-                dsf, 
-                tables, 
+                dsf,
+                tables,
                 new Value[]{
                     ValueFactory.createValue(source),
-                    ValueFactory.createValue(target), 
+                    ValueFactory.createValue(target),
                     ValueFactory.createValue("weight"),
                     ValueFactory.createValue(3) // Undirected
-                }, 
+                },
                 new NullProgressMonitor());
         assertTrue(result.getRowCount() == 3);
         assertTrue(result.getFieldValue(0, 0).getAsGeometry().equals(wktReader.read("LINESTRING(6 2  , 10 2)")));
