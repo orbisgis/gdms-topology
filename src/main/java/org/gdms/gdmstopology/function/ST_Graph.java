@@ -134,22 +134,25 @@ public class ST_Graph extends AbstractExecutorFunction {
     @Override
     public String getDescription() {
         return "Constructs a mathematical graph based on the data contained "
-                + "in the input_table. "
-                + "The tolerance is a double used to define how easily "
+                + "in the <code>input_table</code>. "
+                
+                + "<p>The <code>tolerance</code> is a double used to define how easily "
                 + "closely neighboring nodes 'snap together' to become a single "
-                + "node. More precisely, a tolerance value of r defines a disk "
-                + "of radius r around each node. If two disks intersect, then "
+                + "node. More precisely, a tolerance value of <i>r</i> defines a disk "
+                + "of radius <i>r</i> around each node. If two disks intersect, then "
                 + "the corresponding nodes are assigned the same id by "
                 + "preserving the id of the first node found in the index. "
-                + "The boolean orient_by_slope indicates whether the edges "
+                
+                + "<p>The boolean <code>orient_by_slope</code> indicates whether the edges "
                 + "should be oriented according to slope. That is, a value of "
-                + "true will orient each edge from the node with larger "
-                + "z-coordinate to the node with smaller z-coordinate. A value "
-                + "of false will orient the graph according to the input "
+                + "<code>true</code> will orient each edge from the node with larger "
+                + "<i>z</i>-coordinate to the node with smaller <i>z</i>-coordinate. A value "
+                + "of <code>false</code> will orient the graph according to the input "
                 + "geometry. That is, the orientation will be from the first "
                 + "point of a segment to the last point of the segment. "
-                + "Finally, 'output_table_prefix' prefix the names of the two "
-                + "output tables (.nodes and .edges).";
+                
+                + "<p>Finally, <code>output_table_prefix</code> prefixes the names of the two "
+                + "output tables (<code>.nodes</code> and <code>.edges</code>).";
     }
 
     /**
