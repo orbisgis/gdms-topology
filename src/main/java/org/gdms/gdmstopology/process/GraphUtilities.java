@@ -77,16 +77,16 @@ public class GraphUtilities extends GraphAnalysis {
         public static DiskBufferDriver getReachableEdges(DataSourceFactory dsf, DataSet dataSet, int source, String costField, double radius, int graphType, ProgressMonitor pm) throws GraphException, DriverException {
                 if (graphType == GraphSchema.DIRECT) {
                         DWMultigraphDataSource dwMultigraphDataSource = new DWMultigraphDataSource(dsf, dataSet, pm);
-                        dwMultigraphDataSource.setWeigthFieldIndex(costField);
+                        dwMultigraphDataSource.setWeightFieldIndex(costField);
                         return findReachableEdges(dsf, dwMultigraphDataSource, source, Double.POSITIVE_INFINITY, pm);
                 } else if (graphType == GraphSchema.DIRECT_REVERSED) {
                         DWMultigraphDataSource dwMultigraphDataSource = new DWMultigraphDataSource(dsf, dataSet, pm);
-                        dwMultigraphDataSource.setWeigthFieldIndex(costField);
+                        dwMultigraphDataSource.setWeightFieldIndex(costField);
                         EdgeReversedGraphDataSource edgeReversedGraph = new EdgeReversedGraphDataSource(dwMultigraphDataSource);
                         return findReachableEdges(dsf, edgeReversedGraph, source, Double.POSITIVE_INFINITY, pm);
                 } else if (graphType == GraphSchema.UNDIRECT) {
                         WMultigraphDataSource wMultigraphDataSource = new WMultigraphDataSource(dsf, dataSet, pm);
-                        wMultigraphDataSource.setWeigthFieldIndex(costField);
+                        wMultigraphDataSource.setWeightFieldIndex(costField);
                         return findReachableEdges(dsf, wMultigraphDataSource, source, Double.POSITIVE_INFINITY, pm);
                 } else {
                         throw new GraphException("Only 3 type of graphs are allowed."
@@ -115,7 +115,7 @@ public class GraphUtilities extends GraphAnalysis {
                                 "The graph must contain the source vertex");
                 }
 
-                DiskBufferDriver diskBufferDriver = new DiskBufferDriver(dsf, GraphMetadataFactory.createReachablesEdgesMetadata());
+                DiskBufferDriver diskBufferDriver = new DiskBufferDriver(dsf, GraphMetadataFactory.createReachableEdgesMetadata());
                 ClosestFirstIterator<Integer, GraphEdge> cl = new ClosestFirstIterator<Integer, GraphEdge>(
                         graph, source);
                 int count = 0;
@@ -164,16 +164,16 @@ public class GraphUtilities extends GraphAnalysis {
         public static DiskBufferDriver getMReachableEdges(DataSourceFactory dsf, DataSet dataSet, DataSet nodes, String costField, double radius, int graphType, ProgressMonitor pm) throws GraphException, DriverException {
                 if (graphType == GraphSchema.DIRECT) {
                         DWMultigraphDataSource dwMultigraphDataSource = new DWMultigraphDataSource(dsf, dataSet, pm);
-                        dwMultigraphDataSource.setWeigthFieldIndex(costField);
+                        dwMultigraphDataSource.setWeightFieldIndex(costField);
                         return findMReachableEdges(dsf, dwMultigraphDataSource, nodes, Double.POSITIVE_INFINITY, pm);
                 } else if (graphType == GraphSchema.DIRECT_REVERSED) {
                         DWMultigraphDataSource dwMultigraphDataSource = new DWMultigraphDataSource(dsf, dataSet, pm);
-                        dwMultigraphDataSource.setWeigthFieldIndex(costField);
+                        dwMultigraphDataSource.setWeightFieldIndex(costField);
                         EdgeReversedGraphDataSource edgeReversedGraph = new EdgeReversedGraphDataSource(dwMultigraphDataSource);
                         return findMReachableEdges(dsf, edgeReversedGraph, nodes, Double.POSITIVE_INFINITY, pm);
                 } else if (graphType == GraphSchema.UNDIRECT) {
                         WMultigraphDataSource wMultigraphDataSource = new WMultigraphDataSource(dsf, dataSet, pm);
-                        wMultigraphDataSource.setWeigthFieldIndex(costField);
+                        wMultigraphDataSource.setWeightFieldIndex(costField);
                         return findMReachableEdges(dsf, wMultigraphDataSource, nodes, Double.POSITIVE_INFINITY, pm);
                 } else {
                         throw new GraphException("Only 3 type of graphs are allowed."
@@ -199,7 +199,7 @@ public class GraphUtilities extends GraphAnalysis {
 
                 if (checkSourceColumn(nodes)) {
                         Iterator<Value[]> it = nodes.iterator();
-                        DiskBufferDriver diskBufferDriver = new DiskBufferDriver(dsf, GraphMetadataFactory.createMReachablesEdgesMetadata());
+                        DiskBufferDriver diskBufferDriver = new DiskBufferDriver(dsf, GraphMetadataFactory.createMReachableEdgesMetadata());
 
                         while (it.hasNext()) {
                                 Value[] values = it.next();
@@ -262,7 +262,7 @@ public class GraphUtilities extends GraphAnalysis {
          */
         public boolean isGraphConnected(DataSourceFactory dsf, DataSet dataSet, String costField, ProgressMonitor pm) throws DriverException {
                 WMultigraphDataSource wMultigraphDataSource = new WMultigraphDataSource(dsf, dataSet, pm);
-                wMultigraphDataSource.setWeigthFieldIndex(costField);
+                wMultigraphDataSource.setWeightFieldIndex(costField);
                 ConnectivityInspector connectivityInspector = new ConnectivityInspector(wMultigraphDataSource);
                 return connectivityInspector.isGraphConnected();
         }
@@ -278,17 +278,17 @@ public class GraphUtilities extends GraphAnalysis {
         public static DiskBufferDriver getGraphStatistics(DataSourceFactory dsf, DataSet dataSet, String costField, int graphType, ProgressMonitor pm) throws DriverException, GraphException {
                 if (graphType == GraphSchema.DIRECT) {
                         DWMultigraphDataSource dwMultigraphDataSource = new DWMultigraphDataSource(dsf, dataSet, pm);
-                        dwMultigraphDataSource.setWeigthFieldIndex(costField);
+                        dwMultigraphDataSource.setWeightFieldIndex(costField);
                         ConnectivityInspector connectivityInspector = new ConnectivityInspector(dwMultigraphDataSource);
                         return graphStatistics(dsf, connectivityInspector, dwMultigraphDataSource);
                 } else if (graphType == GraphSchema.UNDIRECT) {
                         WMultigraphDataSource wMultigraphDataSource = new WMultigraphDataSource(dsf, dataSet, pm);
-                        wMultigraphDataSource.setWeigthFieldIndex(costField);
+                        wMultigraphDataSource.setWeightFieldIndex(costField);
                         ConnectivityInspector connectivityInspector = new ConnectivityInspector(wMultigraphDataSource);
                         return graphStatistics(dsf, connectivityInspector, wMultigraphDataSource);
                 } else if (graphType == GraphSchema.DIRECT_REVERSED) {
                         DWMultigraphDataSource dwMultigraphDataSource = new DWMultigraphDataSource(dsf, dataSet, pm);
-                        dwMultigraphDataSource.setWeigthFieldIndex(costField);
+                        dwMultigraphDataSource.setWeightFieldIndex(costField);
                         EdgeReversedGraphDataSource edgeReversedGraph = new EdgeReversedGraphDataSource(dwMultigraphDataSource);
                         ConnectivityInspector connectivityInspector = new ConnectivityInspector(edgeReversedGraph);
                         return graphStatistics(dsf, connectivityInspector, edgeReversedGraph);
