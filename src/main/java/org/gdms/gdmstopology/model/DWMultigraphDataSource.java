@@ -80,8 +80,8 @@ public class DWMultigraphDataSource
     }
 
     /**
-     * Sets the name of the field that contains the weight value in order to
-     * process the graph.
+     * Sets the name of the field that contains the weight value for shortest
+     * path calculations.
      *
      * @see org.gdms.gdmstopology.model.GDMSGraph#setWeightFieldIndex(String)
      *

@@ -203,7 +203,10 @@ public final class GDMSGraph extends AbstractGraph<Integer, GraphEdge> implement
 
     /**
      * Sets the name of the field that contains the weight value in order to
-     * process the graph.
+     * perform shortest path calculations.
+     * 
+     * <p> The column containing the weights must be specified manually to 
+     * allow for arbitrary weights in shortest path calculations.
      *
      * @param fieldName The name of the field that contains the weight value.
      * @throws DriverException
