@@ -28,6 +28,11 @@
                         <groupId>org.jgrapht</groupId>
                         <artifactId>jgrapht</artifactId>
                         <version>0.8.3</version>
+                </dependency>
+                <dependency>
+                        <groupId>dk.aaue.sna</groupId>
+                        <artifactId>jgrapht-sna</artifactId>
+                        <version>1.2</version>
                         <type>jar</type>
                 </dependency>
         </dependencies>
@@ -36,6 +41,10 @@
                         <id>irstv</id>
                         <name>IRSTV repository</name>
                         <url>http://repo.orbisgis.org</url>
+                </repository>
+                <repository>
+                        <id>conjars.org</id>
+                        <url>http://conjars.org/repo</url>
                 </repository>
         </repositories>
         <distributionManagement>
