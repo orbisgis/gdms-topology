@@ -69,7 +69,7 @@ public class NetworkGraphBuilder {
         private boolean dim3 = false;
 
         /**
-         * This class is used to order edges and create requiered nodes to build a network graph
+         * This class is used to order edges and create required nodes to build a network graph
          * @param dsf
          * @param pm
          */

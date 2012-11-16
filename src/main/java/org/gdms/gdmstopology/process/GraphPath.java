@@ -105,7 +105,7 @@ public class GraphPath extends GraphAnalysis {
      * <p> A radius can be used to constrain the analysis of the graph. The list
      * of {@link GraphEdge}s is stored in a datasource. For each path, the
      * method returns all the geometries of the input graph datasource.
-     * 
+     *
      * Note that this returns the path in backwards order.
      *
      * @param dsf
@@ -129,7 +129,7 @@ public class GraphPath extends GraphAnalysis {
         DiskBufferDriver diskBufferDriver = new DiskBufferDriver(dsf, GraphMetadataFactory.createEdgeMetadataShortestPath());
 
         // CALCULATION
-        // A counter used to interupt the calculation.
+        // A counter used to interrupt the calculation.
         int count = 0;
         // Track the progress of the shortest path calculation.
         pm.startTask("Find shortest path", 100);
@@ -169,16 +169,17 @@ public class GraphPath extends GraphAnalysis {
                     // The only way to get out of this infinite loop.
                     // is by having a null current edge, which corresponds
                     // to the current vertex being the source vertex.
-                    if (currentEdge == null) { 
+                    if (currentEdge == null) {
                         // TODO: Should we add an if statement or change this 
                         // one to make sure we are actually at the start vertex?
                         break;
                     }
-                    
+
                     // Record the current edge in the shortest path.
                     diskBufferDriver.addValues(
-                            // the_geom
-                            new Value[]{ValueFactory.createValue(graph.getGeometry(currentEdge)),
+                            new Value[]{
+                                // the_geom
+                                ValueFactory.createValue(graph.getGeometry(currentEdge)),
                                 // The row ID of the edge in the data source.
                                 ValueFactory.createValue(currentEdge.getRowId()),
                                 // An id for this edge in the shortest path.
@@ -195,10 +196,10 @@ public class GraphPath extends GraphAnalysis {
                     // from the current edge.
                     currentVertex = Graphs.getOppositeVertex(graph, currentEdge, currentVertex);
                 }
-                
+
                 break; // TODO: What does this break do?
             } // Finished writing the shortest path to the diskBufferDriver.
-            
+
         } // Finished going through the iterator
 
         // CLEAN UP
@@ -278,8 +279,8 @@ public class GraphPath extends GraphAnalysis {
 
     /**
      * Find the shortest path between sereval nodes using the Dijkstra
-     * algorithm. A radius can be used to constrain the analysis of the graph.
-     * A datasource that contains all destinations must be used following the
+     * algorithm. A radius can be used to constrain the analysis of the graph. A
+     * datasource that contains all destinations must be used following the
      * schema : id :: int, source::int, target::int. The algorithm iters all
      * paths (source, target) and returns the results in a datasource. Duplicate
      * paths (ie rows with the same source and target values) are computed once
