@@ -109,9 +109,17 @@ public final class GraphSchema {
      * Specifies an undirected graph.
      */
     public static final int UNDIRECT = 3;
+    /**
+     * Specifies the connected components.
+     */
+    public static final String CONNECTED_COMPONENTS = "connected_components";
+    /**
+     * Specifies a connected component.
+     */
+    public static final String CONNECTED_COMPONENT = "connected_component";
 
     /**
-     * Empty constructor.r
+     * Empty constructor.
      */
     private GraphSchema() {
     }

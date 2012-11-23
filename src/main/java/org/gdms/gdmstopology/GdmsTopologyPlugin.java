@@ -1,4 +1,4 @@
-/**
+        /**
  * GDMS-Topology  is a library dedicated to graph analysis. It is based on the JGraphT
  * library available at <http://www.jgrapht.org/>. It enables computing and processing
  * large graphs using spatial and alphanumeric indexes.
@@ -58,6 +58,8 @@ public class GdmsTopologyPlugin implements GdmsPlugIn{
                 dsf.getFunctionManager().addFunction(ST_MFindReachableEdges.class);
                 dsf.getFunctionManager().addFunction(ST_MShortestPath.class);
                 dsf.getFunctionManager().addFunction(ST_SubGraphStatistics.class);
+                dsf.getFunctionManager().addFunction(ST_ConnectedComponents.class);
+                System.out.println("***** " + getName() + " version " + getVersion() + " loaded. *****");
         }
 
         @Override
