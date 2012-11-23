@@ -58,7 +58,7 @@ import org.orbisgis.progress.ProgressMonitor;
  * <code>jgrapht-sna</code> implementation of Freeman closeness centrality,
  * which uses the Floyd-Warshall algorithm to calculate all possible shortest
  * paths. The calculations are intense and can take a long time to complete.
- * 
+ *
  * <p> For the moment, only Freeman closeness centrality with all weights equal
  * to 1 has been implemented.
  *
@@ -111,7 +111,7 @@ public class ST_ClosenessCentrality extends AbstractExecutorFunction {
             // Set the weights column name.
             String weightsColumn = values[0].getAsString();
             // Set the output table prefix.
-            String outputTablePrefix = values[1].getAsString(); // TODO: Not used?
+            String outputTablePrefix = values[1].getAsString();
             // Calculate and return the closeness centrality indices.
             if (values.length == 3) {
                 // If the orientation is specified, we take it into account.
@@ -159,7 +159,6 @@ public class ST_ClosenessCentrality extends AbstractExecutorFunction {
      *
      * @return An example query using this function.
      */
-    // TODO: Make the output_table_prefix parameter optional.
     @Override
     public String getSqlOrder() {
         return "EXECUTE ST_ClosenessCentrality("
@@ -194,10 +193,10 @@ public class ST_ClosenessCentrality extends AbstractExecutorFunction {
                 + "(this is the <code>'weights_column'</code>). "
                 + "<li> <code>'weights_column'</code> - a string specifying the "
                 + "name of the column of the input table that gives the weight "
-                + "of each edge. </ul> "
-                + "<p> Optional parameters: <ul> "
+                + "of each edge. "
                 + "<li> <code>'output_table_prefix'</code> - a string used to prefix "
-                + "the name of the output table. "
+                + "the name of the output table. </ul>"
+                + "<p> Optional parameters: <ul> "
                 + "<li> <code>orientation</code> - an integer specifying the "
                 + "orientation of the graph: <ul> "
                 + "<li> 1 if the graph is directed, "
