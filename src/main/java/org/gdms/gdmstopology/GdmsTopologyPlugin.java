@@ -58,6 +58,7 @@ public class GdmsTopologyPlugin implements GdmsPlugIn{
                 dsf.getFunctionManager().addFunction(ST_MFindReachableEdges.class);
                 dsf.getFunctionManager().addFunction(ST_MShortestPath.class);
                 dsf.getFunctionManager().addFunction(ST_SubGraphStatistics.class);
+                dsf.getFunctionManager().addFunction(ST_ClosenessCentrality.class);
                 dsf.getFunctionManager().addFunction(ST_ConnectedComponents.class);
                 System.out.println("***** " + getName() + " version " + getVersion() + " loaded. *****");
         }

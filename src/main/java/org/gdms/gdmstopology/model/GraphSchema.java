@@ -110,6 +110,10 @@ public final class GraphSchema {
      */
     public static final int UNDIRECT = 3;
     /**
+     * Specifies closeness centrality.
+     */
+    public static final String CLOSENESS_CENTRALITY = "closeness_centrality";
+    /**
      * Specifies the connected components.
      */
     public static final String CONNECTED_COMPONENTS = "connected_components";
