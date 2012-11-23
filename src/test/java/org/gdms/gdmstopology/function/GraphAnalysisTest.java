@@ -32,30 +32,28 @@
  */
 package org.gdms.gdmstopology.function;
 
-import java.util.LinkedList;
-import org.gdms.data.DataSourceIterator;
-import org.jgrapht.Graphs;
-import org.jgrapht.graph.DefaultEdge;
-import org.jgrapht.graph.DefaultDirectedGraph;
-import org.jgrapht.DirectedGraph;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import org.gdms.data.types.TypeFactory;
-import org.gdms.data.types.Type;
-import org.junit.Test;
+import java.util.LinkedList;
 import org.gdms.data.DataSource;
+import org.gdms.data.DataSourceIterator;
+import org.gdms.data.types.Type;
+import org.gdms.data.types.TypeFactory;
 import org.gdms.data.values.Value;
 import org.gdms.data.values.ValueFactory;
 import org.gdms.driver.DataSet;
 import org.gdms.driver.DriverException;
 import org.gdms.driver.memory.MemoryDataSetDriver;
 import org.gdms.gdmstopology.TopologySetUpTest;
+import org.jgrapht.DirectedGraph;
+import org.jgrapht.Graphs;
+import org.jgrapht.graph.DefaultDirectedGraph;
+import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.traverse.ClosestFirstIterator;
-import org.orbisgis.progress.NullProgressMonitor;
-
-
 import static org.junit.Assert.*;
+import org.junit.Test;
+import org.orbisgis.progress.NullProgressMonitor;
 
 /**
  *
