@@ -67,7 +67,7 @@ public class GraphAnalysis {
         }
 
         /**
-         * A method to check if the dataset metadata contains requiered column names.
+         * A method to check if the dataset metadata contains required column names.
          * {id, source, target}         
          * @param nodes
          *

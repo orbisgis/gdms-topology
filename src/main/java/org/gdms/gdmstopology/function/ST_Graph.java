@@ -134,7 +134,8 @@ public class ST_Graph extends AbstractExecutorFunction {
     @Override
     public String getDescription() {
         return "Constructs a mathematical graph based on the data contained "
-                + "in the <code>input_table</code>. "
+                + "in the <code>input_table</code>. This table should contain "
+                + "one-dimensional geometries."
                 
                 + "<p>The <code>tolerance</code> is a double used to define how easily "
                 + "closely neighboring nodes 'snap together' to become a single "
@@ -142,6 +143,10 @@ public class ST_Graph extends AbstractExecutorFunction {
                 + "of radius <i>r</i> around each node. If two disks intersect, then "
                 + "the corresponding nodes are assigned the same id by "
                 + "preserving the id of the first node found in the index. "
+                + "The <code>output_table_prefix.edges</code> table is updated to "
+                + "reflect these labeling changes. If more than two disks intersect,"
+                + " a similar procedure is applied. A standard value for the "
+                + "tolerance is <code>0.01</code>."
                 
                 + "<p>The boolean <code>orient_by_slope</code> indicates whether the edges "
                 + "should be oriented according to slope. That is, a value of "
