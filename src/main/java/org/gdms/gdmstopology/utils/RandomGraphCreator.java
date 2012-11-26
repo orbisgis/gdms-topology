@@ -84,6 +84,11 @@ public class RandomGraphCreator {
      * Creates a random <i>connected</i> {@link WeightedMultigraph} with the
      * specified number of nodes and edges.
      *
+     * <i>Note</i>: There must be at least |V|-1 edges for the graph to be
+     * connected. In order to not get stuck in an infinite loop, this method
+     * should be called with the number of edges much larger than the number of
+     * nodes.
+     *
      * @param numNodes The number of nodes.
      * @param numEdges The number of edges.
      * @return A random connected graph with the specified number of nodes and
@@ -99,7 +104,6 @@ public class RandomGraphCreator {
             ConnectivityInspector inspector = new ConnectivityInspector((UndirectedGraph<Integer, DefaultEdge>) graph);
             System.out.println(count + ". Graph is connected <-- " + inspector.isGraphConnected());
             if (inspector.isGraphConnected()) {
-                System.out.println();
                 return graph;
             }
             count++;
