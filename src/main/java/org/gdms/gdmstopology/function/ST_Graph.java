@@ -214,28 +214,30 @@ public class ST_Graph extends AbstractExecutorFunction {
      * Returns an array of all possible signatures of this function. Multiple
      * signatures arise from some arguments being optional.
      *
-     * <p> Possible signatures: <OL> <li> {@code (TABLE)} <li>
-     * {@code (TABLE,DOUBLE)} <li> {@code (TABLE,DOUBLE,BOOLEAN)} <li>
-     * {@code (TABLE,DOUBLE,BOOLEAN,STRING)} </OL>
+     * <p> Possible signatures: <OL> <li> {@code (TABLE input_table)} <li>
+     * {@code (TABLE input_table, DOUBLE tolerance)} <li> {@code (TABLE input_table, DOUBLE tolerance, BOOLEAN orient_by_slope)} <li>
+     * {@code (TABLE input_table, DOUBLE tolerance, BOOLEAN orient_by_slope, STRING output_table_prefix)} </OL>
      *
      * @return An array of all possible signatures of this function.
      */
+    // TODO: There should actually be EIGHT function signatures!!
+    // EXECUTE ST_Graph(input_table[, tolerance, orient_by_slope, 'output_table_prefix']);
     @Override
     public FunctionSignature[] getFunctionSignatures() {
         return new FunctionSignature[]{
-                    // First possible signature.
+                    // First possible signature: (TABLE input_table).
                     new ExecutorFunctionSignature(
                     new TableArgument(TableDefinition.GEOMETRY)),
-                    // Second possible signature.
+                    // Second possible signature: (TABLE input_table, DOUBLE tolerance)
                     new ExecutorFunctionSignature(
                     new TableArgument(TableDefinition.GEOMETRY),
                     ScalarArgument.DOUBLE),
-                    // Third possible signature.
+                    // Third possible signature: (TABLE input_table, DOUBLE tolerance, BOOLEAN orient_by_slope)
                     new ExecutorFunctionSignature(
                     new TableArgument(TableDefinition.GEOMETRY),
                     ScalarArgument.DOUBLE,
                     ScalarArgument.BOOLEAN),
-                    // Fourth possible signature.
+                    // Fourth possible signature: (TABLE input_table, DOUBLE tolerance, BOOLEAN orient_by_slope, STRING output_table_prefix).
                     new ExecutorFunctionSignature(
                     new TableArgument(TableDefinition.GEOMETRY),
                     ScalarArgument.DOUBLE,
