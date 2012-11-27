@@ -40,6 +40,7 @@ import org.gdms.driver.DriverException;
 import org.gdms.gdmstopology.model.GraphException;
 import org.gdms.gdmstopology.process.GraphPath;
 import org.gdms.gdmstopology.process.GraphUtilities;
+import org.gdms.gdmstopology.utils.GraphWriter;
 import org.gdms.gdmstopology.utils.RandomGraphCreator;
 import org.jgrapht.Graph;
 import org.jgrapht.alg.DijkstraShortestPath;
@@ -53,8 +54,8 @@ import org.orbisgis.progress.NullProgressMonitor;
 public class DemoGraph {
 
         private static DataSourceFactory dsf;
-        public static String path_edges = "/tmp/graph_edges.shp";
-        public static String path_nodes = "/tmp/graph_nodes.shp";
+        public static String path_edges = "/tmp/graph_edges.gdms";
+        public static String path_nodes = "/tmp/graph_nodes.gdms";
 
         /**
          * @param args the command line arguments
@@ -62,8 +63,9 @@ public class DemoGraph {
         public static void main(String[] args) throws Exception {
                 dsf = new DataSourceFactory("/tmp/orbis", "/tmp/orbis");
                 //GDMSGraphPath(path_edges);
-                GDMSGraphStatistic(path_edges);
+                //GDMSGraphStatistic(path_edges);
                 //GDMSGraphDistance(path_edges);
+                GDMSGraphWriter(path_nodes, path_edges, 100000,500000);
 
         }
 
@@ -112,5 +114,10 @@ public class DemoGraph {
                 dsEdges.close();
                 long end = System.currentTimeMillis();
                 System.out.println("Duration " + (end - start));
+        }
+
+        private static void GDMSGraphWriter(String path_nodes, String path_edges, int nbNodes, int nbEdges) throws DriverException {
+                Graph<Integer, DefaultEdge> graph = RandomGraphCreator.createRandomWeightedMultigraph(nbNodes, nbEdges);
+                GraphWriter.saveAsGDMSFile(graph, path_nodes, path_edges);
         }
 }
