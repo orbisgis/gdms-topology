@@ -32,17 +32,16 @@
  */
 package org.gdms.gdmstopology.function;
 
-import org.gdms.driver.memory.MemoryDataSetDriver;
 import org.gdms.data.types.Type;
 import org.gdms.data.types.TypeFactory;
 import org.gdms.data.values.Value;
 import org.gdms.data.values.ValueFactory;
 import org.gdms.driver.DataSet;
+import org.gdms.driver.memory.MemoryDataSetDriver;
 import org.gdms.gdmstopology.TopologySetUpTest;
+import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 import org.orbisgis.progress.NullProgressMonitor;
-
-import static org.junit.Assert.*;
 
 /**
  *
