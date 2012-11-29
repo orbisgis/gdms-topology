@@ -26,11 +26,6 @@
                         <scope>provided</scope>
                 </dependency>
                 <dependency>
-                        <groupId>org.jgrapht</groupId>
-                        <artifactId>jgrapht</artifactId>
-                        <version>0.8.3</version>
-                </dependency>
-                <dependency>
                         <groupId>dk.aaue.sna</groupId>
                         <artifactId>jgrapht-sna</artifactId>
                         <version>1.2</version>
@@ -42,6 +37,16 @@
                         <version>5.0.0</version>
                         <scope>provided</scope>
                 </dependency>
+                <dependency>
+                        <groupId>graphlayout</groupId>
+                        <artifactId>graphlayout</artifactId>
+                        <version>1.2.1</version>
+                </dependency>
+		<dependency>
+			<groupId>jgraph</groupId>
+			<artifactId>jgraph</artifactId>
+			<version>5.13.0.0</version>
+		</dependency>
         </dependencies>
         <repositories>
                 <repository>
@@ -70,6 +75,10 @@
                                 <extensions>true</extensions>
                                 <configuration>
                                         <instructions>
+                                                <!--Embed-Dependency not a good choice,
+                                                jgrapht-sna should be passed as OSGi bundle-->
+                                                <Embed-Dependency>jgraph;jgrapht-sna;fuzzy4j;graphlayout;jgrapht;commons-math</Embed-Dependency>
+                                                <Embed-Transitive>true</Embed-Transitive>
                                                 <Private-Package>org.gdms.gdmstopology.*</Private-Package>
                                                 <Bundle-Activator>org.gdms.gdmstopology.Activator</Bundle-Activator>
                                                 <Bundle-Vendor>IRSTV - FR CNRS 2488</Bundle-Vendor>
