@@ -28,6 +28,8 @@
  */
 package org.gdms.gdmstopology;
 
+import java.util.Dictionary;
+import java.util.Hashtable;
 import org.gdms.gdmstopology.function.ST_BlockIdentity;
 import org.gdms.gdmstopology.function.ST_ClosenessCentrality;
 import org.gdms.gdmstopology.function.ST_ConnectedComponents;
@@ -69,10 +71,14 @@ public class Activator implements BundleActivator {
         reg(new ST_ClosenessCentrality());
         reg(new ST_ConnectedComponents());
     }
-    private void reg(Function gdmsFunc) {            
+    private void reg(Function gdmsFunc) {
+        // Dict for visual hint for service list 
+        // inspect service capability #id
+        Dictionary<String,String> prop = new Hashtable<String, String>();
+        prop.put("name",gdmsFunc.getName()); 
         context.registerService(Function.class,
                 gdmsFunc,
-                null);
+                prop);
     }
     @Override
     public void stop(BundleContext context) throws Exception {
