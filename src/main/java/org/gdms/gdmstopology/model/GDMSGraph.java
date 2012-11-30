@@ -63,7 +63,9 @@ import org.orbisgis.progress.ProgressMonitor;
  *
  * @author Erwan Bocher
  */
-public final class GDMSGraph extends AbstractGraph<Integer, GraphEdge> implements GDMSValueGraph<Integer, GraphEdge> {
+public final class GDMSGraph
+        extends AbstractGraph<Integer, GraphEdge>
+        implements GDMSValueGraph<Integer, GraphEdge> {
 
     // PARAMETERS
     /**
@@ -117,7 +119,11 @@ public final class GDMSGraph extends AbstractGraph<Integer, GraphEdge> implement
      * initialization.
      * @throws DriverException
      */
-    public GDMSGraph(DataSourceFactory dsf, DataSet dataSet, ProgressMonitor pm) throws DriverException {
+    public GDMSGraph(
+            DataSourceFactory dsf,
+            DataSet dataSet,
+            ProgressMonitor pm)
+            throws DriverException {
         this.dataSet = dataSet;
         this.dsf = dsf;
         this.pm = pm;
@@ -140,10 +146,16 @@ public final class GDMSGraph extends AbstractGraph<Integer, GraphEdge> implement
                 // then build one.
                 if (!dsf.getIndexManager().isIndexed(
                         dataSet,
-                        new String[]{GraphSchema.START_NODE, GraphSchema.END_NODE})) {
+                        new String[]{
+                            GraphSchema.START_NODE,
+                            GraphSchema.END_NODE
+                        })) {
                     dsf.getIndexManager().buildIndex(
                             dataSet,
-                            new String[]{GraphSchema.START_NODE, GraphSchema.END_NODE},
+                            new String[]{
+                                GraphSchema.START_NODE,
+                                GraphSchema.END_NODE
+                            },
                             pm);
                 }
                 // If there is no index on the start node, then build one.
@@ -185,16 +197,21 @@ public final class GDMSGraph extends AbstractGraph<Integer, GraphEdge> implement
 
         // Recover the indices for the the_geom, start_node, and 
         // end_node fields.
-        GEOMETRY_FIELD_INDEX = MetadataUtilities.getSpatialFieldIndex(edgesMetadata);
-        START_NODE_FIELD_INDEX = edgesMetadata.getFieldIndex(GraphSchema.START_NODE);
-        END_NODE_FIELD_INDEX = edgesMetadata.getFieldIndex(GraphSchema.END_NODE);
+        GEOMETRY_FIELD_INDEX =
+                MetadataUtilities.getSpatialFieldIndex(edgesMetadata);
+        START_NODE_FIELD_INDEX =
+                edgesMetadata.getFieldIndex(GraphSchema.START_NODE);
+        END_NODE_FIELD_INDEX =
+                edgesMetadata.getFieldIndex(GraphSchema.END_NODE);
 
         // Make sure the start_node and end_node fields were found.
         if (START_NODE_FIELD_INDEX == -1) {
-            throw new IllegalArgumentException("The table must contain a field named start_node");
+            throw new IllegalArgumentException(
+                    "The table must contain a field named start_node");
         }
         if (END_NODE_FIELD_INDEX == -1) {
-            throw new IllegalArgumentException("The table must contain a field named end_node");
+            throw new IllegalArgumentException(
+                    "The table must contain a field named end_node");
         }
 
         // Everything seems okay: Exit!
@@ -204,21 +221,23 @@ public final class GDMSGraph extends AbstractGraph<Integer, GraphEdge> implement
     /**
      * Sets the name of the field that contains the weight value in order to
      * perform shortest path calculations.
-     * 
-     * <p> The column containing the weights must be specified manually to 
-     * allow for arbitrary weights in shortest path calculations.
+     *
+     * <p> The column containing the weights must be specified manually to allow
+     * for arbitrary weights in shortest path calculations.
      *
      * @param fieldName The name of the field that contains the weight value.
      * @throws DriverException
      */
     // TODO: Explain why this is separate from the other fields.
     // There exists a GraphSchema.WEIGHT String.
-    public void setWeightFieldIndex(String fieldName) throws DriverException {
+    public void setWeightFieldIndex(String fieldName)
+            throws DriverException {
         int fieldIndex = edgesMetadata.getFieldIndex(fieldName);
         // Note: getFieldIndex(String fieldName) returns -1 if fieldName 
         // is not found.
         if (fieldIndex == -1) {
-            throw new IllegalArgumentException("The table must contains a field named " + fieldName);
+            throw new IllegalArgumentException(
+                    "The table must contains a field named " + fieldName);
         }
         this.WEIGHT_FIELD_INDEX = fieldIndex;
     }
@@ -233,12 +252,13 @@ public final class GDMSGraph extends AbstractGraph<Integer, GraphEdge> implement
     }
 
     /**
-     * @see org.gdms.driver.DataSet#getGeometry(long, int)
+     * Prints out all indices.
      */
-    // Javadoc will be copied from the GDMSValueGraph interface.
-    @Override
-    public Geometry getGeometry(GraphEdge graphEdge) throws DriverException {
-        return dataSet.getGeometry(graphEdge.getRowId(), GEOMETRY_FIELD_INDEX);
+    public void printIndices() {
+        System.out.println("GEOMETRY_FIELD_INDEX = " + GEOMETRY_FIELD_INDEX);
+        System.out.println("START_NODE_FIELD_INDEX = " + START_NODE_FIELD_INDEX);
+        System.out.println("END_NODE_FIELD_INDEX = " + END_NODE_FIELD_INDEX);
+        System.out.println("WEIGHT_FIELD_INDEX = " + WEIGHT_FIELD_INDEX);
     }
 
     /**
@@ -246,8 +266,23 @@ public final class GDMSGraph extends AbstractGraph<Integer, GraphEdge> implement
      */
     // Javadoc will be copied from the GDMSValueGraph interface.
     @Override
-    public Geometry getGeometry(int rowid) throws DriverException {
-        return dataSet.getGeometry(rowid, GEOMETRY_FIELD_INDEX);
+    public Geometry getGeometry(GraphEdge graphEdge)
+            throws DriverException {
+        return dataSet.getGeometry(
+                graphEdge.getRowId(),
+                GEOMETRY_FIELD_INDEX);
+    }
+
+    /**
+     * @see org.gdms.driver.DataSet#getGeometry(long, int)
+     */
+    // Javadoc will be copied from the GDMSValueGraph interface.
+    @Override
+    public Geometry getGeometry(int rowid)
+            throws DriverException {
+        return dataSet.getGeometry(
+                rowid,
+                GEOMETRY_FIELD_INDEX);
     }
 
     /**
@@ -262,16 +297,24 @@ public final class GDMSGraph extends AbstractGraph<Integer, GraphEdge> implement
      * vertex or {@link java.util.Collections.EMPTY_SET} if no such edges exist.
      */
     @Override
-    public Set<GraphEdge> getAllEdges(Integer startVertex, Integer endVertex) {
+    public Set<GraphEdge> getAllEdges(
+            Integer startVertex,
+            Integer endVertex) {
         try {
             // Obtain an Iterator.
-            Iterator<Integer> queryResult = getMultiIndexIterator(startVertex, endVertex);
+            Iterator<Integer> queryResult =
+                    getMultiIndexIterator(startVertex, endVertex);
             // Initialize a set to hold the edges.
             HashSet<GraphEdge> edges = new HashSet<GraphEdge>();
             // Add new GraphEdges to the set.
             while (queryResult.hasNext()) {
                 Integer rowId = queryResult.next();
-                edges.add(new GraphEdge(startVertex, endVertex, getWeightVertex(rowId), rowId));
+                edges.add(
+                        new GraphEdge(
+                        startVertex,
+                        endVertex,
+                        getWeightVertex(rowId),
+                        rowId));
             }
             // Return the set.
             return edges;
@@ -294,10 +337,14 @@ public final class GDMSGraph extends AbstractGraph<Integer, GraphEdge> implement
     @Override
     public GraphEdge getEdge(Integer startVertex, Integer endVertex) {
         try {
-            Iterator<Integer> queryResult = getMultiIndexIterator(startVertex, endVertex);
+            Iterator<Integer> queryResult =
+                    getMultiIndexIterator(startVertex, endVertex);
             Integer rowId = queryResult.next();
-            return new GraphEdge(startVertex, endVertex,
-                    getWeightVertex(rowId), rowId);
+            return new GraphEdge(
+                    startVertex,
+                    endVertex,
+                    getWeightVertex(rowId),
+                    rowId);
         } catch (DriverException ex) {
         }
         return null;
@@ -368,7 +415,8 @@ public final class GDMSGraph extends AbstractGraph<Integer, GraphEdge> implement
     @Override
     public boolean containsEdge(Integer startVertex, Integer endVertex) {
         try {
-            Iterator<Integer> queryResult = getMultiIndexIterator(startVertex, endVertex);
+            Iterator<Integer> queryResult =
+                    getMultiIndexIterator(startVertex, endVertex);
             return queryResult.hasNext();
         } catch (DriverException ex) {
         }
@@ -384,7 +432,9 @@ public final class GDMSGraph extends AbstractGraph<Integer, GraphEdge> implement
      */
     @Override
     public boolean containsEdge(GraphEdge graphEdge) {
-        return containsEdge(graphEdge.getSource(), graphEdge.getTarget());
+        return containsEdge(
+                graphEdge.getSource(),
+                graphEdge.getTarget());
     }
 
     /**
@@ -398,12 +448,16 @@ public final class GDMSGraph extends AbstractGraph<Integer, GraphEdge> implement
     public boolean containsVertex(Integer vertex) {
         try {
             // Check in the start node column.
-            Iterator<Integer> queryResult = getIndexIterator(GraphSchema.START_NODE, vertex);
+            Iterator<Integer> queryResult = getIndexIterator(
+                    GraphSchema.START_NODE,
+                    vertex);
             if (queryResult.hasNext()) {
                 return true;
             } else {
                 // Check in the end node column.
-                queryResult = getIndexIterator(GraphSchema.END_NODE, vertex);
+                queryResult = getIndexIterator(
+                        GraphSchema.END_NODE,
+                        vertex);
                 if (queryResult.hasNext()) {
                     return true;
                 } else {
@@ -420,6 +474,7 @@ public final class GDMSGraph extends AbstractGraph<Integer, GraphEdge> implement
      *
      * @return The set of edges of the graph.
      */
+    // TODO: Seems to be returning an empty set!!
     @Override
     public Set<GraphEdge> edgeSet() {
         return new GraphEdgeSet(this);
@@ -439,19 +494,33 @@ public final class GDMSGraph extends AbstractGraph<Integer, GraphEdge> implement
         HashSet<GraphEdge> edgesOf = new HashSet<GraphEdge>();
         try {
             // Recover the edges that start at the given vertex.
-            Iterator<Integer> queryResult = getIndexIterator(GraphSchema.START_NODE, vertex);
+            Iterator<Integer> queryResult = getIndexIterator(
+                    GraphSchema.START_NODE,
+                    vertex);
             while (queryResult.hasNext()) {
                 Integer rowId = queryResult.next();
                 Integer dest = getTargetVertex(rowId);
-                edgesOf.add(new GraphEdge(vertex, dest, getWeightVertex(rowId), rowId));
+                edgesOf.add(
+                        new GraphEdge(
+                        vertex,
+                        dest,
+                        getWeightVertex(rowId),
+                        rowId));
             }
 
             // Recover the edges that end at the given vertex.
-            queryResult = getIndexIterator(GraphSchema.END_NODE, vertex);
+            queryResult = getIndexIterator(
+                    GraphSchema.END_NODE,
+                    vertex);
             while (queryResult.hasNext()) {
                 Integer rowId = queryResult.next();
                 Integer source = getSourceVertex(rowId);
-                edgesOf.add(new GraphEdge(source, vertex, getWeightVertex(rowId), rowId));
+                edgesOf.add(
+                        new GraphEdge(
+                        source,
+                        vertex,
+                        getWeightVertex(rowId),
+                        rowId));
             }
 
             // Return the set of edges touching the given vertex.
@@ -472,7 +541,9 @@ public final class GDMSGraph extends AbstractGraph<Integer, GraphEdge> implement
      */
     // TODO: Implement this.
     @Override
-    public GraphEdge removeEdge(Integer startVertex, Integer endVertex) {
+    public GraphEdge removeEdge(
+            Integer startVertex,
+            Integer endVertex) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -585,7 +656,9 @@ public final class GDMSGraph extends AbstractGraph<Integer, GraphEdge> implement
         try {
             // Get an index iterator on the edges that end at
             // the given vertex.
-            Iterator<Integer> queryResult = getIndexIterator(GraphSchema.END_NODE, vertex);
+            Iterator<Integer> queryResult = getIndexIterator(
+                    GraphSchema.END_NODE,
+                    vertex);
             if (queryResult.hasNext()) {
                 // Initialize the set of incoming edges.
                 HashSet<GraphEdge> incomingEdges = new HashSet<GraphEdge>();
@@ -597,7 +670,12 @@ public final class GDMSGraph extends AbstractGraph<Integer, GraphEdge> implement
                     Integer sourceVertex = getSourceVertex(rowId);
                     // Add a new GraphEdge object corresponding to
                     // this edge to the set of incoming edges.
-                    incomingEdges.add(new GraphEdge(sourceVertex, vertex, getWeightVertex(rowId), rowId));
+                    incomingEdges.add(
+                            new GraphEdge(
+                            sourceVertex,
+                            vertex,
+                            getWeightVertex(rowId),
+                            rowId));
                 }
                 // Return the set of incoming edges.
                 return incomingEdges;
@@ -618,7 +696,9 @@ public final class GDMSGraph extends AbstractGraph<Integer, GraphEdge> implement
         try {
             // Get an index iterator on the edges that start at
             // the given vertex.
-            Iterator<Integer> queryResult = getIndexIterator(GraphSchema.START_NODE, vertex);
+            Iterator<Integer> queryResult = getIndexIterator(
+                    GraphSchema.START_NODE,
+                    vertex);
             if (queryResult.hasNext()) {
                 // Initialize the set of outgoing edges.
                 HashSet<GraphEdge> outgoingEdges = new HashSet<GraphEdge>();
@@ -630,7 +710,11 @@ public final class GDMSGraph extends AbstractGraph<Integer, GraphEdge> implement
                     Integer targetVertex = getTargetVertex(rowId);
                     // Add a new GraphEdge object corresponding to
                     // this edge to the set of outgoing edges.
-                    outgoingEdges.add(new GraphEdge(vertex, targetVertex, getWeightVertex(rowId), rowId));
+                    outgoingEdges.add(
+                            new GraphEdge(vertex,
+                            targetVertex,
+                            getWeightVertex(rowId),
+                            rowId));
                 }
                 // Return the set of outgoing edges.
                 return outgoingEdges;
@@ -650,9 +734,13 @@ public final class GDMSGraph extends AbstractGraph<Integer, GraphEdge> implement
      * @return An iterator on the indices.
      * @throws DriverException
      */
-    public Iterator<Integer> getIndexIterator(String fieldToQuery, Integer valueToQuery) throws DriverException {
+    public Iterator<Integer> getIndexIterator(
+            String fieldToQuery,
+            Integer valueToQuery)
+            throws DriverException {
         DefaultAlphaQuery defaultAlphaQuery = new DefaultAlphaQuery(
-                fieldToQuery, ValueFactory.createValue(valueToQuery));
+                fieldToQuery,
+                ValueFactory.createValue(valueToQuery));
         return dataSet.queryIndex(dsf, defaultAlphaQuery);
     }
 
@@ -665,14 +753,22 @@ public final class GDMSGraph extends AbstractGraph<Integer, GraphEdge> implement
      * @return An iterator on the indices.
      * @throws DriverException
      */
-    public Iterator<Integer> getMultiIndexIterator(Integer startNode, Integer endNode) throws DriverException {
+    public Iterator<Integer> getMultiIndexIterator(
+            Integer startNode,
+            Integer endNode)
+            throws DriverException {
         DefaultAlphaQuery defaultAlphaQuery = new DefaultAlphaQuery(
-                new String[]{GraphSchema.START_NODE, GraphSchema.END_NODE},
+                new String[]{
+                    GraphSchema.START_NODE,
+                    GraphSchema.END_NODE
+                },
                 ValueFactory.createValue(new Value[]{
                     ValueFactory.createValue(startNode),
                     ValueFactory.createValue(endNode)
                 }));
-        return dataSet.queryIndex(dsf, defaultAlphaQuery);
+        return dataSet.queryIndex(
+                dsf,
+                defaultAlphaQuery);
     }
 
     /**
@@ -683,8 +779,11 @@ public final class GDMSGraph extends AbstractGraph<Integer, GraphEdge> implement
      * @return The source vertex of the given edge.
      * @throws DriverException
      */
-    private int getSourceVertex(long rowId) throws DriverException {
-        return dataSet.getInt(rowId, START_NODE_FIELD_INDEX);
+    private int getSourceVertex(long rowId)
+            throws DriverException {
+        return dataSet.getInt(
+                rowId,
+                START_NODE_FIELD_INDEX);
     }
 
     /**
@@ -695,8 +794,11 @@ public final class GDMSGraph extends AbstractGraph<Integer, GraphEdge> implement
      * @return The target vertex of the given edge.
      * @throws DriverException
      */
-    private int getTargetVertex(long rowId) throws DriverException {
-        return dataSet.getInt(rowId, END_NODE_FIELD_INDEX);
+    private int getTargetVertex(long rowId)
+            throws DriverException {
+        return dataSet.getInt(
+                rowId,
+                END_NODE_FIELD_INDEX);
     }
 
     /**
@@ -707,7 +809,9 @@ public final class GDMSGraph extends AbstractGraph<Integer, GraphEdge> implement
      * @throws DriverException
      */
     private double getWeightVertex(long rowId) throws DriverException {
-        return dataSet.getDouble(rowId, WEIGHT_FIELD_INDEX);
+        return dataSet.getDouble(
+                rowId,
+                WEIGHT_FIELD_INDEX);
     }
 
     /**
@@ -719,7 +823,9 @@ public final class GDMSGraph extends AbstractGraph<Integer, GraphEdge> implement
      */
     public int inDegreeOf(Integer vertex) {
         try {
-            Iterator<Integer> queryResult = getIndexIterator(GraphSchema.END_NODE, vertex);
+            Iterator<Integer> queryResult = getIndexIterator(
+                    GraphSchema.END_NODE,
+                    vertex);
             int counter = 0;
             while (queryResult.hasNext()) {
                 queryResult.next();
@@ -740,7 +846,9 @@ public final class GDMSGraph extends AbstractGraph<Integer, GraphEdge> implement
      */
     public int outDegreeOf(Integer vertex) {
         try {
-            Iterator<Integer> queryResult = getIndexIterator(GraphSchema.START_NODE, vertex);
+            Iterator<Integer> queryResult = getIndexIterator(
+                    GraphSchema.START_NODE,
+                    vertex);
             int counter = 0;
             while (queryResult.hasNext()) {
                 queryResult.next();
