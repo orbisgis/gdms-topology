@@ -37,6 +37,7 @@ import org.gdms.driver.DataSet;
 import org.gdms.driver.DiskBufferDriver;
 import org.gdms.driver.DriverException;
 import org.gdms.gdmstopology.TopologySetUpTest;
+import org.gdms.gdmstopology.model.GraphSchema;
 import org.gdms.gdmstopology.model.WMultigraphDataSource;
 import org.gdms.gdmstopology.process.GraphCentralityUtilities;
 import static org.junit.Assert.*;
@@ -93,21 +94,21 @@ public class CentralityTest extends TopologySetUpTest {
         // TODO: The numbering of the most central node in OrbisGIS is 4, 
         // but in this test, it is 6.
 //        assertTrue(closenessCentralityDriver.getFieldValue(0, 0).getAsInt() == 4);
-        assertTrue(
-                closenessCentralityDriver.
-                getFieldValue(0, 1).
-                getAsDouble() == 0.0055753940798198886);
+
+        assertEquals(closenessCentralityDriver.getFieldValue(0, 1).getAsDouble(),
+                0.625,
+                0.0000001);
 
         // Print out the result.
-        printResult(closenessCentralityDriver, testNumber);
+        // printResult(closenessCentralityDriver, testNumber);
         dataSource.close();
     }
 
     private void printResult(DataSet result, int testNumber) throws DriverException {
         System.out.println("TEST " + testNumber + " - Closeness centrality indices: ");
         for (int i = 0; i < result.getRowCount(); i++) {
-            System.out.println("(" + result.getFieldValue(i, 0)
-                    + "," + result.getFieldValue(i, 1) + "), ");
+            System.out.println("(" + result.getDouble(i, GraphSchema.ID)
+                    + "," + result.getDouble(i, GraphSchema.CLOSENESS_CENTRALITY) + "), ");
         }
     }
 }
