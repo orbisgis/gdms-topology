@@ -32,9 +32,13 @@
  */
 package org.gdms.gdmstopology.process;
 
-import dk.aaue.sna.alg.centrality.CentralityResult;
-import dk.aaue.sna.alg.centrality.FreemanClosenessCentrality;
-import java.util.Map;
+import com.graphhopper.storage.Graph;
+import com.graphhopper.storage.GraphStorage;
+import com.graphhopper.storage.RAMDirectory;
+import com.graphhoppersna.centrality.UndirectedGraphAnalyzer;
+import gnu.trove.iterator.TIntDoubleIterator;
+import gnu.trove.map.hash.TIntDoubleHashMap;
+import java.util.Iterator;
 import org.gdms.data.DataSourceFactory;
 import org.gdms.data.schema.DefaultMetadata;
 import org.gdms.data.schema.Metadata;
@@ -45,13 +49,8 @@ import org.gdms.data.values.ValueFactory;
 import org.gdms.driver.DataSet;
 import org.gdms.driver.DiskBufferDriver;
 import org.gdms.driver.DriverException;
-import org.gdms.gdmstopology.model.DWMultigraphDataSource;
-import org.gdms.gdmstopology.model.EdgeReversedGraphDataSource;
-import org.gdms.gdmstopology.model.GDMSValueGraph;
-import org.gdms.gdmstopology.model.GraphEdge;
 import org.gdms.gdmstopology.model.GraphException;
 import org.gdms.gdmstopology.model.GraphSchema;
-import org.gdms.gdmstopology.model.WMultigraphDataSource;
 import org.orbisgis.progress.ProgressMonitor;
 
 /**
@@ -86,24 +85,47 @@ public class GraphCentralityUtilities extends GraphAnalysis {
             int graphType,
             ProgressMonitor pm)
             throws GraphException, DriverException {
-        // Calculate and record the centrality indices according
-        // to the given graph type.
+        // Create an undirected GraphHopper graph from the data set.
+        // For now, we assume that we only store the graph in memory
+        // and have no option to save it to disk for future use.
+
+        // Initialize the graph.
+        Graph graph = new GraphStorage(new RAMDirectory());
+        // INSERT THE DATA INTO THE GRAPH.
+        // Recover the edge Metadata.
+        // TODO: Add a check to make sure the metadata was loaded correctly.
+        Metadata edgeMetadata = dataSet.getMetadata();
+        // Recover the indices of the start node, end node, and weight.
+        int startNodeIndex = edgeMetadata.getFieldIndex(GraphSchema.START_NODE);
+        int endNodeIndex = edgeMetadata.getFieldIndex(GraphSchema.END_NODE);
+        int weightFieldIndex = edgeMetadata.getFieldIndex(weightColumnName);
+        // Get an iterator on the data set.
+        Iterator<Value[]> iterator = dataSet.iterator();
+        // Add the edges according to the given graph type.
         if (graphType == GraphSchema.DIRECT) {
-            DWMultigraphDataSource dWMultigraphDataSource = new DWMultigraphDataSource(dsf, dataSet, pm);
-            dWMultigraphDataSource.setWeightFieldIndex(weightColumnName);
-            DiskBufferDriver closenessCentralityDriver = calculateClosenessCentralityIndices(dsf, dWMultigraphDataSource, pm);
-            writeToTable(dsf, closenessCentralityDriver, outputTablePrefix);
+            while (iterator.hasNext()) {
+                Value[] row = iterator.next();
+                graph.edge(row[startNodeIndex].getAsInt(),
+                        row[endNodeIndex].getAsInt(),
+                        row[weightFieldIndex].getAsDouble(),
+                        false);
+            }
         } else if (graphType == GraphSchema.DIRECT_REVERSED) {
-            DWMultigraphDataSource dWMultigraphDataSource = new DWMultigraphDataSource(dsf, dataSet, pm);
-            dWMultigraphDataSource.setWeightFieldIndex(weightColumnName);
-            EdgeReversedGraphDataSource edgeReversedGraphDataSource = new EdgeReversedGraphDataSource(dWMultigraphDataSource);
-            DiskBufferDriver closenessCentralityDriver = calculateClosenessCentralityIndices(dsf, edgeReversedGraphDataSource, pm);
-            writeToTable(dsf, closenessCentralityDriver, outputTablePrefix);
+            while (iterator.hasNext()) {
+                Value[] row = iterator.next();
+                graph.edge(row[endNodeIndex].getAsInt(),
+                        row[startNodeIndex].getAsInt(),
+                        row[weightFieldIndex].getAsDouble(),
+                        false);
+            }
         } else if (graphType == GraphSchema.UNDIRECT) {
-            WMultigraphDataSource wMultigraphDataSource = new WMultigraphDataSource(dsf, dataSet, pm);
-            wMultigraphDataSource.setWeightFieldIndex(weightColumnName);
-            DiskBufferDriver closenessCentralityDriver = calculateClosenessCentralityIndices(dsf, wMultigraphDataSource, pm);
-            writeToTable(dsf, closenessCentralityDriver, outputTablePrefix);
+            while (iterator.hasNext()) {
+                Value[] row = iterator.next();
+                graph.edge(row[startNodeIndex].getAsInt(),
+                        row[endNodeIndex].getAsInt(),
+                        row[weightFieldIndex].getAsDouble(),
+                        true);
+            }
         } else {
             throw new GraphException("Only three types of graphs "
                     + "are allowed: enter 1 if the graph is "
@@ -112,6 +134,12 @@ public class GraphCentralityUtilities extends GraphAnalysis {
                     + "If no orientation is specified, the graph is assumed "
                     + "to be directed.");
         }
+        // CALCULATE THE CLOSENESS CENTRALITY.
+        DiskBufferDriver closenessCentralityDriver =
+                calculateClosenessCentralityIndices(dsf, graph, pm);
+        // Write the results to a new table.
+        // TODO: Also write the geometries.
+        writeToTable(dsf, closenessCentralityDriver, outputTablePrefix);
     }
 
     /**
@@ -131,91 +159,59 @@ public class GraphCentralityUtilities extends GraphAnalysis {
      */
     public static DiskBufferDriver calculateClosenessCentralityIndices(
             DataSourceFactory dsf,
-            GDMSValueGraph<Integer, GraphEdge> graph,
-            ProgressMonitor pm)
-            throws GraphException, DriverException {
-
-        // PRELIMINARIES
-
-        // Make a new FreemanClosenessCentrality from the given graph.
-        FreemanClosenessCentrality<Integer, GraphEdge> alg = new FreemanClosenessCentrality<Integer, GraphEdge>(graph);
+            Graph graph,
+            ProgressMonitor pm) throws DriverException {
 
         // CALCULATION
+        // Initialize an undirected graph analyzer.
+        // TODO: Adapt this to directed graphs later.
+        UndirectedGraphAnalyzer analyzer = new UndirectedGraphAnalyzer(graph);
+        // Calculate the closeness centrality.
+        // TODO: Would a list be a more efficient data structure?
+        TIntDoubleHashMap closenessCentrality = analyzer.computeAll();
 
-        // Calculate the centrality indices.
-        CentralityResult<Integer> result = alg.calculate();
-//        // Recover them in a list.
-        java.util.List<Map.Entry<Integer, Double>> sortedCentralityIndicesList = result.getSorted();
-//        // Get an iterator to go through the list
-        java.util.ListIterator<Map.Entry<Integer, Double>> sortedCentralityIndicesListIterator = sortedCentralityIndicesList.listIterator();
 
-        // WRITING
-
-//        // Get an iterator on the DataSet.
-//        Iterator<Value[]> iterator = dataSet.iterator();
-//        // Obtain the original metadata from the input table to which we will append the metadata for the edges.
-//        DefaultMetadata originalMetadata = new DefaultMetadata(dataSet.getMetadata());
-//        // Count the number of fields in the input table.
-//        int sourceFieldsCount = originalMetadata.getFieldCount();
-
-//        // Set a counter for checking if the task has been cancelled.
-//        int count = 0;
-//        // Go through the DataSet
-//        while (iterator.hasNext()) {
-//            // Obtain a row.
-//            Value[] values = iterator.next();
-//            // See if the task has been cancelled.
-//            if (count >= 100 && count % 100 == 0) {
-//                if (pm.isCancelled()) {
-//                    break;
-//                }
-//            }
-//            // Prepare the new row which will be the old row with new values appended.
-//            final Value[] newValues = new Value[fieldsCount];
-//
-//            count++;
-//        }
-
+        // TRANSFER THE RESULTS FROM GRAPHHOPPER TO A DISKBUFFERDRIVER.
         // Create the metadata for the new table that will hold the 
         // closeness centrality indices.
-        Metadata md = new DefaultMetadata(
+        Metadata closenessMetadata = new DefaultMetadata(
                 new Type[]{
                     TypeFactory.createType(Type.INT),
                     TypeFactory.createType(Type.DOUBLE)},
                 new String[]{
                     GraphSchema.ID,
                     GraphSchema.CLOSENESS_CENTRALITY});
-
         // Create a DiskBufferDriver to store the centrality indices.
-        DiskBufferDriver diskBufferDriver = new DiskBufferDriver(dsf, md);
-
+        DiskBufferDriver closenessBufferDriver = new DiskBufferDriver(dsf, closenessMetadata);
+        // Get an iterator on the closeness centrality hash map.
+        TIntDoubleIterator centralityIt = closenessCentrality.iterator();
         // Record the centrality indices in the DiskBufferDriver.
-        while (sortedCentralityIndicesListIterator.hasNext()) {
-            Map.Entry<Integer, Double> nextEntry = sortedCentralityIndicesListIterator.next();
-            diskBufferDriver.addValues(
+        // TODO: Are the results sorted?
+        while (centralityIt.hasNext()) {
+            centralityIt.advance();
+            closenessBufferDriver.addValues(
                     new Value[]{
                         // Node ID
-                        ValueFactory.createValue(nextEntry.getKey()),
+                        ValueFactory.createValue(centralityIt.key()),
                         // Centrality index
-                        ValueFactory.createValue(nextEntry.getValue())
+                        ValueFactory.createValue(centralityIt.value())
                     });
         }
 
         // CLEAN UP
-
         // We are done writing.
-        diskBufferDriver.writingFinished();
+        closenessBufferDriver.writingFinished();
         // The task is done.
         pm.endTask();
         // So close the DiskBufferDriver.
-        diskBufferDriver.close();
+        closenessBufferDriver.close();
         // And return it.
-        return diskBufferDriver;
+        return closenessBufferDriver;
     }
 
     /**
-     * Writes the results of the closeness centrality calculation to a new
-     * table.
+     * Writes the results of the closeness centrality calculation to a new table
+     * in OrbisGIS.
      *
      * @param dsf The {@link DataSourceFactory} used to parse the data set.
      * @param closenessCentralityDriver
