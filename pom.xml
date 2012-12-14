@@ -46,6 +46,24 @@
 			<artifactId>jgraph</artifactId>
 			<version>5.13.0.0</version>
 		</dependency>
+                <dependency>
+                        <groupId>com.graphhopper</groupId>
+                        <artifactId>graphhopper</artifactId>
+                        <version>0.1-SNAPSHOT</version>
+                        <type>jar</type>
+                </dependency>
+                <dependency>
+                        <groupId>com.graphhopper-sna</groupId>
+                        <artifactId>graphhopper-sna</artifactId>
+                        <version>1.0-SNAPSHOT</version>
+                        <type>jar</type>
+                </dependency>
+                <dependency>
+                        <groupId>net.sf.trove4j</groupId>
+                        <artifactId>trove4j</artifactId>
+                        <version>3.0.3</version>
+                        <type>jar</type>
+                </dependency>
         </dependencies>
         <repositories>
                 <repository>
