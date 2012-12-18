@@ -32,15 +32,10 @@
  */
 package org.gdms.gdmstopology.function;
 
+import java.util.Arrays;
 import org.gdms.data.DataSourceFactory;
-import org.gdms.data.schema.Metadata;
 import org.gdms.data.values.Value;
 import org.gdms.driver.DataSet;
-import org.gdms.driver.DiskBufferDriver;
-import org.gdms.driver.DriverException;
-import org.gdms.gdmstopology.model.GraphMetadataFactory;
-import org.gdms.gdmstopology.model.GraphSchema;
-import org.gdms.gdmstopology.process.GraphCentralityUtilities;
 import org.gdms.sql.function.FunctionException;
 import org.gdms.sql.function.FunctionSignature;
 import org.gdms.sql.function.ScalarArgument;
@@ -48,8 +43,12 @@ import org.gdms.sql.function.executor.AbstractExecutorFunction;
 import org.gdms.sql.function.executor.ExecutorFunctionSignature;
 import org.gdms.sql.function.table.TableArgument;
 import org.gdms.sql.function.table.TableDefinition;
-import org.gdms.sql.function.table.TableFunctionSignature;
 import org.orbisgis.progress.ProgressMonitor;
+import org.gdms.data.types.Type;
+import org.gdms.driver.DriverException;
+import org.gdms.gdmstopology.model.GraphException;
+import org.gdms.gdmstopology.model.GraphSchema;
+import org.gdms.gdmstopology.process.GraphCentralityUtilities;
 
 /**
  * Calculates the closeness centrality indices of all nodes of a given graph.
@@ -65,6 +64,10 @@ import org.orbisgis.progress.ProgressMonitor;
  * <p> Example usage: <center> {@code SELECT * FROM ST_ClosenessCentrality(
  * input_table,
  * 'weights_column'
+ * [,'output_table_prefix',
+ * orientation]);} </center> or: <center> {@code SELECT * FROM ST_ClosenessCentrality(
+ * input_table,
+ * 1
  * [,'output_table_prefix',
  * orientation]);} </center>
  *
@@ -86,16 +89,36 @@ import org.orbisgis.progress.ProgressMonitor;
  */
 public class ST_ClosenessCentrality extends AbstractExecutorFunction {
 
+    // OPTIONAL ARGUMENTS
+    /**
+     * Specifies the orientation of the graph.
+     */
+    private int orientation = -1;
+    /**
+     * Specifies the prefix of the output table name.
+     */
+    private String outputTablePrefix;
+    /**
+     *
+     */
+    private String weightsColumn;
+    /**
+     * Default output table prefix;
+     */
+    private static final String DEFAULT_OUTPUT_TABLE_PREFIX = "output";
+
     /**
      * Evaluates the function to calculate the centrality indices.
      *
-     * @param dsf The {@link DataSourceFactory} used to parse the data set.
+     * @param dsf    The {@link DataSourceFactory} used to parse the data set.
      * @param tables The input table. (This {@link DataSet} array will contain
-     * only one element since there is only one input table.)
+     *               only one element since there is only one input table.)
      * @param values Array containing the other arguments.
-     * @param pm The progress monitor used to track the progress of the shortest
-     * path calculation.
+     * @param pm     The progress monitor used to track the progress of the
+     *               shortest path calculation.
+     *
      * @return The {@link DataSet} containing the shortest path.
+     *
      * @throws FunctionException
      */
     @Override
@@ -106,40 +129,161 @@ public class ST_ClosenessCentrality extends AbstractExecutorFunction {
             ProgressMonitor pm)
             throws FunctionException {
         try {
-            // Recover the DataSet.
+            // REQUIRED PARAMETERS
+
+            // FIRST PARAMETER: Recover the DataSet. There is only one table.
             final DataSet dataSet = tables[0];
-            // Set the weights column name.
-            String weightsColumn = values[0].getAsString();
-            // Set the output table prefix.
-            String outputTablePrefix = values[1].getAsString();
-            // Calculate and return the closeness centrality indices.
-            if (values.length == 3) {
-                // If the orientation is specified, we take it into account.
-                int orientation = values[2].getAsInt();
-                GraphCentralityUtilities.
-                        registerClosenessCentralityIndices(
-                        dsf,
-                        dataSet,
-                        weightsColumn,
-                        outputTablePrefix,
-                        orientation,
-                        pm);
-            } else {
-                // The orientation is not specified, so we assume the graph
-                // is directed.
-                GraphCentralityUtilities.
-                        registerClosenessCentralityIndices(
-                        dsf,
-                        dataSet,
-                        weightsColumn,
-                        outputTablePrefix,
-                        GraphSchema.DIRECT,
-                        pm);
-            }
+
+            // SECOND PARAMETER: Either 1 or weight column name.
+            parseRequiredArgument(values);
+
+            // OPTIONAL PARAMETERS
+            parseOptionalArguments(values);
+
+            // Take all user-entered values into account when calculating
+            // closeness centrality.
+            registerClosenessAccordingToUserInput(dsf, dataSet, pm);
+
         } catch (Exception ex) {
             System.out.println(ex);
             throw new FunctionException(
                     "Cannot compute the closeness centrality indices.", ex);
+        }
+    }
+
+    private void registerClosenessAccordingToUserInput(
+            DataSourceFactory dsf,
+            DataSet dataSet,
+            ProgressMonitor pm) throws GraphException, DriverException {
+        System.out.print("\n Orientation: ");
+        if (weightsColumn == null) {
+            if (orientation == -1) {
+                System.out.println("not specified.");
+                // We assume the graph is directed if no orientation
+                // is specified.
+                System.out.print("Output table prefix: ");
+                if (outputTablePrefix == null) {
+                    System.out.println("not specified. \n");
+                    // Use the default output table prefix if no prefix
+                    // is specified.
+                    GraphCentralityUtilities.
+                            registerClosenessCentralityIndicesAllWeightsOne(
+                            dsf,
+                            dataSet,
+                            DEFAULT_OUTPUT_TABLE_PREFIX,
+                            GraphSchema.DIRECT,
+                            pm);
+                } else {
+                    System.out.println(outputTablePrefix + ". \n");
+                    // Use the user-defined output table prefix.
+                    GraphCentralityUtilities.
+                            registerClosenessCentralityIndicesAllWeightsOne(
+                            dsf,
+                            dataSet,
+                            outputTablePrefix,
+                            GraphSchema.DIRECT,
+                            pm);
+                }
+            } else {
+                System.out.println(orientation + ".");
+                System.out.print("Output table prefix: ");
+                // Use the user-defined orientation.
+                if (outputTablePrefix == null) {
+                    System.out.println("not specified. \n");
+                    // Use the default output table prefix if no prefix
+                    // is specified.
+                    GraphCentralityUtilities.
+                            registerClosenessCentralityIndicesAllWeightsOne(
+                            dsf,
+                            dataSet,
+                            DEFAULT_OUTPUT_TABLE_PREFIX,
+                            orientation,
+                            pm);
+                } else {
+                    System.out.println(outputTablePrefix + ". \n");
+                    // Use the user-defined output table prefix.
+                    GraphCentralityUtilities.
+                            registerClosenessCentralityIndicesAllWeightsOne(
+                            dsf,
+                            dataSet,
+                            outputTablePrefix,
+                            orientation,
+                            pm);
+                }
+            }
+        } else {
+            throw new UnsupportedOperationException("For now, "
+                    + "closeness centrality may only be calculated "
+                    + "for all weights equal to 1.");
+        }
+    }
+
+    private boolean orientationIsValid() {
+        final Integer[] possibleOrientations = new Integer[]{1, 2, 3};
+        if (Arrays.asList(possibleOrientations).
+                contains(orientation)) {
+            return true;
+        }
+        return false;
+    }
+
+    private void parseRequiredArgument(Value[] values) throws FunctionException {
+        final int secondSlotType = values[0].getType();
+        if (secondSlotType == Type.INT) {
+            final int allWeightsOneInt = values[0].getAsInt();
+            if (allWeightsOneInt == 1) {
+                System.out.println("Setting all weights equal to 1.");
+            } else { // We only accept 1 or a string.
+                throw new FunctionException(
+                        "Either enter 1 to set all weights equal to 1 "
+                        + "or specify the name of the weight column.");
+            }
+        } else if (secondSlotType == Type.STRING) {
+            // Set the weights column name.
+            weightsColumn = values[0].getAsString();
+            System.out.println("Setting the weight column name "
+                    + "to be \'" + weightsColumn
+                    + "\'.");
+        } else {
+            throw new FunctionException(
+                    "Either enter 1 to set all weights equal to 1 "
+                    + "or specify the name of the weight column.");
+        }
+    }
+
+    private void parseOptionalArgument(Value[] values, int index) throws
+            FunctionException {
+        final int slotType = values[index].getType();
+        if (slotType == Type.INT) {
+            orientation = values[index].getAsInt();
+            System.out.println("Setting the orientation "
+                    + "to be " + orientation + ".");
+            if (!orientationIsValid()) {
+                throw new FunctionException(
+                        "Please enter a valid orientation.");
+            }
+        } else if (slotType == Type.STRING) {
+            // Set the output table prefix.
+            outputTablePrefix = values[index].getAsString();
+            System.out.println("Setting the output table prefix "
+                    + "to be \'" + outputTablePrefix
+                    + "\'.");
+        } else {
+            throw new FunctionException(
+                    "Enter a valid orientation and/or output "
+                    + "table prefix.");
+        }
+    }
+
+    private void parseOptionalArguments(Value[] values) throws FunctionException {
+        // If there is at least one optional parameter, then get
+        // the first one.
+        if (values.length > 1) {
+            parseOptionalArgument(values, 1);
+            // If there are two optional parameters, then get the second one.
+            if (values.length > 2) {
+                parseOptionalArgument(values, 2);
+            }
         }
     }
 

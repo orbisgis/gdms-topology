@@ -32,15 +32,22 @@
  */
 package org.gdms.gdmstopology.function;
 
+import com.graphhopper.storage.Graph;
+import com.graphhoppersna.centrality.UndirectedGraphAnalyzer;
+import gnu.trove.iterator.TIntDoubleIterator;
+import gnu.trove.map.hash.TIntDoubleHashMap;
 import org.gdms.data.DataSource;
+import org.gdms.data.DataSourceCreationException;
+import org.gdms.data.NoSuchTableException;
+import org.gdms.data.values.Value;
+import org.gdms.data.values.ValueFactory;
 import org.gdms.driver.DataSet;
-import org.gdms.driver.DiskBufferDriver;
 import org.gdms.driver.DriverException;
 import org.gdms.gdmstopology.TopologySetUpTest;
+import org.gdms.gdmstopology.model.GraphException;
 import org.gdms.gdmstopology.model.GraphSchema;
-import org.gdms.gdmstopology.model.WMultigraphDataSource;
 import org.gdms.gdmstopology.process.GraphCentralityUtilities;
-import static org.junit.Assert.*;
+import org.gdms.sql.function.FunctionException;
 import org.junit.Test;
 import org.orbisgis.progress.NullProgressMonitor;
 import org.orbisgis.progress.ProgressMonitor;
@@ -53,62 +60,160 @@ import org.orbisgis.progress.ProgressMonitor;
 public class CentralityTest extends TopologySetUpTest {
 
     /**
-     * Test the closeness centrality calculation on a 2D graph considered as an
-     * undirected graph with all weights equal to one.
+     * Tests the closeness centrality calculation on a 2D graph considered as an
+     * undirected graph with all edge weights equal to one.
      *
-     * @throws Exception
+     * @throws NoSuchTableException
+     * @throws DataSourceCreationException
+     * @throws DriverException
+     * @throws FunctionException
      */
     @Test
-    public void testClosenessCentrality2DUndirected() throws Exception {
-        // Graph type: Undirected.
-
-        // Setup.
-        int testNumber = 1;
-        String weightColumnName = "length";
-        DataSource dataSource = dsf.getDataSource(GRAPH2D_EDGES);
-        dataSource.open();
-        DataSet[] tables = new DataSet[]{dataSource};
-        ProgressMonitor pm = new NullProgressMonitor();
-        WMultigraphDataSource wMultigraphDataSource =
-                new WMultigraphDataSource(
+    public void testClosenessGraph2DUndirectedAllWeightsOne() throws
+            NoSuchTableException,
+            DataSourceCreationException,
+            DriverException,
+            FunctionException {
+        ST_ClosenessCentrality sT_ClosenessCentrality = new ST_ClosenessCentrality();
+        DataSource ds = dsf.getDataSource(GRAPH2D_EDGES);
+        ds.open();
+        DataSet[] tables = new DataSet[]{ds};
+        System.out.
+                println("\ntestClosenessGraph2DUndirectedAllWeightsOne() \n");
+        sT_ClosenessCentrality.evaluate(
                 dsf,
-                tables[0],
-                pm);
-        wMultigraphDataSource.setWeightFieldIndex(weightColumnName);
-
-        // Calculate the closeness centrality indices.
-        DiskBufferDriver closenessCentralityDriver =
-                GraphCentralityUtilities.
-                calculateClosenessCentralityIndices(
-                dsf,
-                wMultigraphDataSource,
-                pm);
-        closenessCentralityDriver.open();
-
-        // We should have a centrality index for all 6 vertices.
-        assertTrue(closenessCentralityDriver.getRowCount() == 6);
-        // Note that we recover the geometries in an SQL request, so we cannot 
-        // check them here in a unit test.
-
-        // Check the most central node.
-        // TODO: The numbering of the most central node in OrbisGIS is 4, 
-        // but in this test, it is 6.
-//        assertTrue(closenessCentralityDriver.getFieldValue(0, 0).getAsInt() == 4);
-
-        assertEquals(closenessCentralityDriver.getFieldValue(0, 1).getAsDouble(),
-                0.625,
-                0.0000001);
-
-        // Print out the result.
-        // printResult(closenessCentralityDriver, testNumber);
-        dataSource.close();
+                tables,
+                new Value[]{
+                    ValueFactory.createValue(1),
+                    ValueFactory.createValue(GraphSchema.UNDIRECT),},
+                new NullProgressMonitor());
+        ds.close();
     }
-
-    private void printResult(DataSet result, int testNumber) throws DriverException {
-        System.out.println("TEST " + testNumber + " - Closeness centrality indices: ");
-        for (int i = 0; i < result.getRowCount(); i++) {
-            System.out.println("(" + result.getDouble(i, GraphSchema.ID)
-                    + "," + result.getDouble(i, GraphSchema.CLOSENESS_CENTRALITY) + "), ");
-        }
-    }
+//    @Test
+//    public void testPossibleArguments() throws NoSuchTableException,
+//            DataSourceCreationException, DriverException, FunctionException {
+//        ST_ClosenessCentrality sT_ClosenessCentrality = new ST_ClosenessCentrality();
+//        DataSource ds = dsf.getDataSource(GRAPH2D_EDGES);
+//        ds.open();
+//        DataSet[] tables = new DataSet[]{ds};
+//
+//        // ONLY REQUIRED PARAMETERS
+//
+//        System.out.println("\nRequired Argument TEST 1: (1).\n");
+//        sT_ClosenessCentrality.evaluate(
+//                dsf,
+//                tables,
+//                new Value[]{
+//                    ValueFactory.createValue(1)
+//                },
+//                new NullProgressMonitor());
+//
+////        System.out.println("\nRequired Argument TEST 2: ('length').\n");
+////        sT_ClosenessCentrality = new ST_ClosenessCentrality();
+////        sT_ClosenessCentrality.evaluate(
+////                dsf,
+////                tables,
+////                new Value[]{
+////                    ValueFactory.createValue("length")
+////                },
+////                new NullProgressMonitor());
+//
+//        // WITH ONE OPTIONAL PARAMETER.
+//
+//        System.out.println("\n1 Optional Argument TEST 1: 1 (2).\n");
+//        sT_ClosenessCentrality = new ST_ClosenessCentrality();
+//        sT_ClosenessCentrality.evaluate(
+//                dsf,
+//                tables,
+//                new Value[]{
+//                    ValueFactory.createValue(1),
+//                    ValueFactory.createValue(GraphSchema.DIRECT_REVERSED)
+//                },
+//                new NullProgressMonitor());
+//
+//        System.out.println("\n1 Optional Argument TEST 2: 1 ('output').\n");
+//        sT_ClosenessCentrality = new ST_ClosenessCentrality();
+//        sT_ClosenessCentrality.evaluate(
+//                dsf,
+//                tables,
+//                new Value[]{
+//                    ValueFactory.createValue(1),
+//                    ValueFactory.createValue("output")
+//                },
+//                new NullProgressMonitor());
+//
+////        System.out.println("\n1 Optional Argument TEST 3: 'length' (2).\n");
+////        sT_ClosenessCentrality = new ST_ClosenessCentrality();
+////        sT_ClosenessCentrality.evaluate(
+////                dsf,
+////                tables,
+////                new Value[]{
+////                    ValueFactory.createValue("length"),
+////                    ValueFactory.createValue(GraphSchema.DIRECT_REVERSED)
+////                },
+////                new NullProgressMonitor());
+//
+////        System.out.println("\n1 Optional Argument TEST 6: 'length' ('output').\n");
+////        sT_ClosenessCentrality = new ST_ClosenessCentrality();
+////        sT_ClosenessCentrality.evaluate(
+////                dsf,
+////                tables,
+////                new Value[]{
+////                    ValueFactory.createValue("length"),
+////                    ValueFactory.createValue("output")
+////                },
+////                new NullProgressMonitor());
+//
+//        // WITH TWO OPTIONAL PARAMETERS.
+//
+//        System.out.println("\n2 Optional Arguments TEST 1: 1 (2, 'output').\n");
+//        sT_ClosenessCentrality = new ST_ClosenessCentrality();
+//        sT_ClosenessCentrality.evaluate(
+//                dsf,
+//                tables,
+//                new Value[]{
+//                    ValueFactory.createValue(1),
+//                    ValueFactory.createValue(GraphSchema.DIRECT_REVERSED),
+//                    ValueFactory.createValue("output")
+//                },
+//                new NullProgressMonitor());
+//
+//        System.out.println("\n2 Optional Arguments TEST 2: 1 ('output', 3).\n");
+//        sT_ClosenessCentrality = new ST_ClosenessCentrality();
+//        sT_ClosenessCentrality.evaluate(
+//                dsf,
+//                tables,
+//                new Value[]{
+//                    ValueFactory.createValue(1),
+//                    ValueFactory.createValue("output"),
+//                    ValueFactory.createValue(GraphSchema.UNDIRECT)
+//                },
+//                new NullProgressMonitor());
+//
+////        System.out.println("\n2 Optional Arguments TEST 3: 'length' (3, 'output').\n");
+////        sT_ClosenessCentrality = new ST_ClosenessCentrality();
+////        sT_ClosenessCentrality.evaluate(
+////                dsf,
+////                tables,
+////                new Value[]{
+////                    ValueFactory.createValue("length"),
+////                    ValueFactory.createValue(GraphSchema.UNDIRECT),
+////                    ValueFactory.createValue("output")
+////                },
+////                new NullProgressMonitor());
+//
+////        System.out.println("\n2 Optional Arguments TEST 4: 'length' ('output', 3).\n");
+////        sT_ClosenessCentrality = new ST_ClosenessCentrality();
+////        sT_ClosenessCentrality.evaluate(
+////                dsf,
+////                tables,
+////                new Value[]{
+////                    ValueFactory.createValue("length"),
+////                    ValueFactory.createValue("output"),
+////                    ValueFactory.createValue(GraphSchema.UNDIRECT)
+////                },
+////                new NullProgressMonitor());
+//
+//        ds.close();
+//    }
 }

@@ -63,115 +63,114 @@ public class GraphCentralityUtilities extends GraphAnalysis {
 
     /**
      * Registers the closeness centrality indices of the nodes of the given
-     * graph.
+     * graph with all weights equal to 1.
      *
-     * @param dsf The {@link DataSourceFactory} used to parse the data set.
-     * @param dataSet The graph data set.
-     * @param weightColumnName The string specifying the name of the weight
-     * column specifying the weight of each edge.
+     * @param dsf       The {@link DataSourceFactory} used to parse the data
+     *                  set.
+     * @param dataSet   The graph data set.
      * @param graphType An integer specifying the type of graph: 1 if directed,
-     * 2 if directed and we wish to reverse the direction of the edges, 3 if
-     * undirected.
-     * @param pm Used to track the progress of the calculation.
+     *                  2 if directed and we wish to reverse the direction of the
+     *                  edges, 3 if undirected.
+     * @param pm        Used to track the progress of the calculation.
      *
      * @throws GraphException
      * @throws DriverException
      */
-    public static void registerClosenessCentralityIndices(
+    public static void registerClosenessCentralityIndicesAllWeightsOne(
             DataSourceFactory dsf,
             DataSet dataSet,
-            String weightColumnName,
             String outputTablePrefix,
             int graphType,
             ProgressMonitor pm)
             throws GraphException, DriverException {
-        // Create an undirected GraphHopper graph from the data set.
-        // For now, we assume that we only store the graph in memory
-        // and have no option to save it to disk for future use.
 
-        // Initialize the graph.
-        Graph graph = new GraphStorage(new RAMDirectory());
-        // INSERT THE DATA INTO THE GRAPH.
-        // Recover the edge Metadata.
-        // TODO: Add a check to make sure the metadata was loaded correctly.
-        Metadata edgeMetadata = dataSet.getMetadata();
-        // Recover the indices of the start node, end node, and weight.
-        int startNodeIndex = edgeMetadata.getFieldIndex(GraphSchema.START_NODE);
-        int endNodeIndex = edgeMetadata.getFieldIndex(GraphSchema.END_NODE);
-        int weightFieldIndex = edgeMetadata.getFieldIndex(weightColumnName);
-        // Get an iterator on the data set.
-        Iterator<Value[]> iterator = dataSet.iterator();
-        // Add the edges according to the given graph type.
-        if (graphType == GraphSchema.DIRECT) {
-            while (iterator.hasNext()) {
-                Value[] row = iterator.next();
-                graph.edge(row[startNodeIndex].getAsInt(),
-                        row[endNodeIndex].getAsInt(),
-                        row[weightFieldIndex].getAsDouble(),
-                        false);
-            }
-        } else if (graphType == GraphSchema.DIRECT_REVERSED) {
-            while (iterator.hasNext()) {
-                Value[] row = iterator.next();
-                graph.edge(row[endNodeIndex].getAsInt(),
-                        row[startNodeIndex].getAsInt(),
-                        row[weightFieldIndex].getAsDouble(),
-                        false);
-            }
-        } else if (graphType == GraphSchema.UNDIRECT) {
-            while (iterator.hasNext()) {
-                Value[] row = iterator.next();
-                graph.edge(row[startNodeIndex].getAsInt(),
-                        row[endNodeIndex].getAsInt(),
-                        row[weightFieldIndex].getAsDouble(),
-                        true);
-            }
-        } else {
-            throw new GraphException("Only three types of graphs "
-                    + "are allowed: enter 1 if the graph is "
-                    + "directed, 2 if it is directed and you wish to reverse the "
-                    + "orientation of the edges, and 3 if the graph is undirected. "
-                    + "If no orientation is specified, the graph is assumed "
-                    + "to be directed.");
-        }
-        // CALCULATE THE CLOSENESS CENTRALITY.
+        // Create the graph from the data set.
+        Graph graph = GraphLoaderUtilities.
+                loadGraphFromDataSetAllWeightsOne(
+                dataSet,
+                graphType);
+
+        // Calculate the closeness centrality.
         DiskBufferDriver closenessCentralityDriver =
-                calculateClosenessCentralityIndices(dsf, graph, pm);
+                calculateClosenessCentralityIndicesAllWeightsOne(dsf, graph, pm);
+
         // Write the results to a new table.
-        // TODO: Also write the geometries.
         writeToTable(dsf, closenessCentralityDriver, outputTablePrefix);
     }
+//    /**
+//     * Registers the closeness centrality indices of the nodes of the given
+//     * graph.
+//     *
+//     * @param dsf              The {@link DataSourceFactory} used to parse the
+//     *                         data set.
+//     * @param dataSet          The graph data set.
+//     * @param weightColumnName The string specifying the name of the weight
+//     *                         column giving the weight of each edge.
+//     * @param graphType        An integer specifying the type of graph: 1 if
+//     *                         directed, 2 if directed and we wish to reverse the
+//     *                         direction of the edges, 3 if undirected.
+//     * @param pm               Used to track the progress of the calculation.
+//     *
+//     * @throws GraphException
+//     * @throws DriverException
+//     */
+//    public static void registerClosenessCentralityIndices(
+//            DataSourceFactory dsf,
+//            DataSet dataSet,
+//            String weightColumnName,
+//            String outputTablePrefix,
+//            int graphType,
+//            ProgressMonitor pm)
+//            throws GraphException, DriverException {
+//
+//        // Create the graph from the data set.
+//        Graph graph = GraphLoaderUtilities.
+//                loadGraphFromDataSet(
+//                dataSet,
+//                weightColumnName,
+//                graphType);
+//
+//        // Calculate the closeness centrality.
+//        DiskBufferDriver closenessCentralityDriver =
+//                calculateClosenessCentralityIndices(dsf, graph, pm);
+//
+//        // Write the results to a new table.
+//        writeToTable(dsf, closenessCentralityDriver, outputTablePrefix);
+//    }
 
     /**
      * Calculates the closeness centrality indices of all nodes of the given
      * graph.
      *
-     * @param dsf The {@link DataSourceFactory} used to parse the data set.
+     * @param dsf   The {@link DataSourceFactory} used to parse the data set.
      * @param graph The graph on which we will calculate the closeness
-     * centrality indices.
-     * @param pm Used to track the progress of the calculation.
+     *              centrality indices.
+     * @param pm    Used to track the progress of the calculation.
      *
      * @return A new {@link DiskBufferDriver} containing a list of all nodes and
-     * their closeness centrality indices.
+     *         their closeness centrality indices.
      *
      * @throws GraphException
      * @throws DriverException
      */
-    public static DiskBufferDriver calculateClosenessCentralityIndices(
+    public static DiskBufferDriver calculateClosenessCentralityIndicesAllWeightsOne(
             DataSourceFactory dsf,
             Graph graph,
             ProgressMonitor pm) throws DriverException {
 
         // CALCULATION
+
         // Initialize an undirected graph analyzer.
         // TODO: Adapt this to directed graphs later.
         UndirectedGraphAnalyzer analyzer = new UndirectedGraphAnalyzer(graph);
+
         // Calculate the closeness centrality.
         // TODO: Would a list be a more efficient data structure?
-        TIntDoubleHashMap closenessCentrality = analyzer.computeAll();
+        TIntDoubleHashMap closenessCentrality = analyzer.
+                computeClosenessAllWeightsOne();
 
+        // TRANSFER THE RESULTS FROM GRAPHHOPPER TO A DISKBUFFERDRIVER
 
-        // TRANSFER THE RESULTS FROM GRAPHHOPPER TO A DISKBUFFERDRIVER.
         // Create the metadata for the new table that will hold the 
         // closeness centrality indices.
         Metadata closenessMetadata = new DefaultMetadata(
@@ -181,10 +180,14 @@ public class GraphCentralityUtilities extends GraphAnalysis {
                 new String[]{
                     GraphSchema.ID,
                     GraphSchema.CLOSENESS_CENTRALITY});
+
         // Create a DiskBufferDriver to store the centrality indices.
-        DiskBufferDriver closenessBufferDriver = new DiskBufferDriver(dsf, closenessMetadata);
+        DiskBufferDriver closenessBufferDriver = new DiskBufferDriver(dsf,
+                closenessMetadata);
+
         // Get an iterator on the closeness centrality hash map.
         TIntDoubleIterator centralityIt = closenessCentrality.iterator();
+
         // Record the centrality indices in the DiskBufferDriver.
         // TODO: Are the results sorted?
         while (centralityIt.hasNext()) {
@@ -199,6 +202,7 @@ public class GraphCentralityUtilities extends GraphAnalysis {
         }
 
         // CLEAN UP
+
         // We are done writing.
         closenessBufferDriver.writingFinished();
         // The task is done.
@@ -213,11 +217,14 @@ public class GraphCentralityUtilities extends GraphAnalysis {
      * Writes the results of the closeness centrality calculation to a new table
      * in OrbisGIS.
      *
-     * @param dsf The {@link DataSourceFactory} used to parse the data set.
+     * @param dsf                       The {@link DataSourceFactory} used to
+     *                                  parse the data set.
      * @param closenessCentralityDriver
      * @param outputTablePrefix
+     *
      * @throws DriverException
      */
+    // TODO: Also write the geometries.
     private static void writeToTable(
             DataSourceFactory dsf,
             DiskBufferDriver closenessCentralityDriver,
