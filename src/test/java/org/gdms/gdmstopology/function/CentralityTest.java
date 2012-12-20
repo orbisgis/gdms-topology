@@ -32,10 +32,6 @@
  */
 package org.gdms.gdmstopology.function;
 
-import com.graphhopper.storage.Graph;
-import com.graphhoppersna.centrality.UndirectedGraphAnalyzer;
-import gnu.trove.iterator.TIntDoubleIterator;
-import gnu.trove.map.hash.TIntDoubleHashMap;
 import org.gdms.data.DataSource;
 import org.gdms.data.DataSourceCreationException;
 import org.gdms.data.NoSuchTableException;
@@ -44,13 +40,10 @@ import org.gdms.data.values.ValueFactory;
 import org.gdms.driver.DataSet;
 import org.gdms.driver.DriverException;
 import org.gdms.gdmstopology.TopologySetUpTest;
-import org.gdms.gdmstopology.model.GraphException;
 import org.gdms.gdmstopology.model.GraphSchema;
-import org.gdms.gdmstopology.process.GraphCentralityUtilities;
 import org.gdms.sql.function.FunctionException;
 import org.junit.Test;
 import org.orbisgis.progress.NullProgressMonitor;
-import org.orbisgis.progress.ProgressMonitor;
 
 /**
  * Several tests of centrality metrics.
@@ -58,6 +51,38 @@ import org.orbisgis.progress.ProgressMonitor;
  * @author Adam Gouge
  */
 public class CentralityTest extends TopologySetUpTest {
+
+    /**
+     * Tests the closeness centrality calculation on a 2D graph with the given
+     * orientation and with all edge weights equal to one.
+     */
+    public void testClosenessGraph2DAllWeightsOne(int graphType) throws
+            NoSuchTableException,
+            DataSourceCreationException,
+            DriverException,
+            FunctionException {
+        ST_ClosenessCentrality sT_ClosenessCentrality = new ST_ClosenessCentrality();
+        DataSource ds = dsf.getDataSource(GRAPH2D_EDGES);
+        ds.open();
+        DataSet[] tables = new DataSet[]{ds};
+        String testName = "GRAPH2D ALL WEIGHTS ONE - Orientation: ";
+        testName += (graphType == GraphSchema.UNDIRECT) ? 
+                " Undirected." 
+                : (graphType == GraphSchema.DIRECT) ? 
+                " Directed." 
+                : (graphType == GraphSchema.DIRECT_REVERSED) ? 
+                " Reversed." 
+                : " Invalid";
+        System.out.println("\n" + testName);
+        sT_ClosenessCentrality.evaluate(
+                dsf,
+                tables,
+                new Value[]{
+                    ValueFactory.createValue(1),
+                    ValueFactory.createValue(graphType),},
+                new NullProgressMonitor());
+        ds.close();
+    }
 
     /**
      * Tests the closeness centrality calculation on a 2D graph considered as an
@@ -74,21 +99,96 @@ public class CentralityTest extends TopologySetUpTest {
             DataSourceCreationException,
             DriverException,
             FunctionException {
-        ST_ClosenessCentrality sT_ClosenessCentrality = new ST_ClosenessCentrality();
-        DataSource ds = dsf.getDataSource(GRAPH2D_EDGES);
-        ds.open();
-        DataSet[] tables = new DataSet[]{ds};
-        System.out.
-                println("\ntestClosenessGraph2DUndirectedAllWeightsOne() \n");
-        sT_ClosenessCentrality.evaluate(
-                dsf,
-                tables,
-                new Value[]{
-                    ValueFactory.createValue(1),
-                    ValueFactory.createValue(GraphSchema.UNDIRECT),},
-                new NullProgressMonitor());
-        ds.close();
+        testClosenessGraph2DAllWeightsOne(GraphSchema.UNDIRECT);
     }
+    
+    /**
+     * Tests the closeness centrality calculation on a 2D graph considered as a
+     * directed graph with all edge weights equal to one.
+     *
+     * @throws NoSuchTableException
+     * @throws DataSourceCreationException
+     * @throws DriverException
+     * @throws FunctionException
+     */
+    @Test
+    public void testClosenessGraph2DDirectedAllWeightsOne() throws
+            NoSuchTableException,
+            DataSourceCreationException,
+            DriverException,
+            FunctionException {
+        testClosenessGraph2DAllWeightsOne(GraphSchema.DIRECT);
+    }
+    
+    /**
+     * Tests the closeness centrality calculation on a 2D graph considered as a
+     * directed graph with all edge weights equal to one and all edge orientations reversed.
+     *
+     * @throws NoSuchTableException
+     * @throws DataSourceCreationException
+     * @throws DriverException
+     * @throws FunctionException
+     */
+    @Test
+    public void testClosenessGraph2DReversedAllWeightsOne() throws
+            NoSuchTableException,
+            DataSourceCreationException,
+            DriverException,
+            FunctionException {
+        testClosenessGraph2DAllWeightsOne(GraphSchema.DIRECT_REVERSED);
+    }
+    
+//    /**
+//     * Tests the closeness centrality calculation on a Nantes with the given
+//     * orientation and with all edge weights equal to one.
+//     */
+//    public void testClosenessNantesAllWeightsOne(int graphType) throws
+//            NoSuchTableException,
+//            DataSourceCreationException,
+//            DriverException,
+//            FunctionException {
+//        ST_ClosenessCentrality sT_ClosenessCentrality = new ST_ClosenessCentrality();
+//        dsf.getSourceManager().register("nantes", new File(internalData + "nantes_1.edges.shp"));
+//        DataSource ds = dsf.getDataSource("nantes");
+//        ds.open();
+//        DataSet[] tables = new DataSet[]{ds};
+//        String testName = "NANTES ALL WEIGHTS ONE - Orientation: ";
+//        testName += (graphType == GraphSchema.UNDIRECT) ? 
+//                " Undirected." 
+//                : (graphType == GraphSchema.DIRECT) ? 
+//                " Directed." 
+//                : (graphType == GraphSchema.DIRECT_REVERSED) ? 
+//                " Reversed." 
+//                : " Invalid";
+//        System.out.println("\n" + testName);
+//        sT_ClosenessCentrality.evaluate(
+//                dsf,
+//                tables,
+//                new Value[]{
+//                    ValueFactory.createValue(1),
+//                    ValueFactory.createValue(graphType),},
+//                new NullProgressMonitor());
+//        ds.close();
+//    }
+//    
+//    /**
+//     * Tests the closeness centrality calculation on Nantes considered as an
+//     * undirected graph with all edge weights equal to one.
+//     *
+//     * @throws NoSuchTableException
+//     * @throws DataSourceCreationException
+//     * @throws DriverException
+//     * @throws FunctionException
+//     */
+//    @Test
+//    public void testClosenessNantesUndirectedAllWeightsOne() throws
+//            NoSuchTableException,
+//            DataSourceCreationException,
+//            DriverException,
+//            FunctionException {
+//        testClosenessNantesAllWeightsOne(GraphSchema.UNDIRECT);
+//    }
+    
 //    @Test
 //    public void testPossibleArguments() throws NoSuchTableException,
 //            DataSourceCreationException, DriverException, FunctionException {
