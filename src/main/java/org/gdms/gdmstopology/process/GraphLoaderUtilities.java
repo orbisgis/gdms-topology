@@ -89,7 +89,7 @@ public class GraphLoaderUtilities {
      * @throws DriverException
      * @throws GraphException
      */
-    public static Graph loadGraphFromDataSetAllWeightsOne(
+    public static GraphStorage loadGraphFromDataSetAllWeightsOne(
             DataSet dataSet,
             int graphType) throws DriverException,
             GraphException {

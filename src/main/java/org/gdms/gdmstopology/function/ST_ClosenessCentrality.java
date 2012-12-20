@@ -45,6 +45,7 @@ import org.gdms.sql.function.table.TableArgument;
 import org.gdms.sql.function.table.TableDefinition;
 import org.orbisgis.progress.ProgressMonitor;
 import org.gdms.data.types.Type;
+import org.gdms.driver.DiskBufferDriver;
 import org.gdms.driver.DriverException;
 import org.gdms.gdmstopology.model.GraphException;
 import org.gdms.gdmstopology.model.GraphSchema;
@@ -155,7 +156,7 @@ public class ST_ClosenessCentrality extends AbstractExecutorFunction {
             DataSourceFactory dsf,
             DataSet dataSet,
             ProgressMonitor pm) throws GraphException, DriverException {
-        System.out.print("\n Orientation: ");
+        System.out.print("\nOrientation: ");
         if (weightsColumn == null) {
             if (orientation == -1) {
                 System.out.println("not specified.");

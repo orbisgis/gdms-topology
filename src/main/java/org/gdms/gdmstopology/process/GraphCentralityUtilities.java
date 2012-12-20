@@ -85,7 +85,7 @@ public class GraphCentralityUtilities extends GraphAnalysis {
             throws GraphException, DriverException {
 
         // Create the graph from the data set.
-        Graph graph = GraphLoaderUtilities.
+        GraphStorage graph = GraphLoaderUtilities.
                 loadGraphFromDataSetAllWeightsOne(
                 dataSet,
                 graphType);
