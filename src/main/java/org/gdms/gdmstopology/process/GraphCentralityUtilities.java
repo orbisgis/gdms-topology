@@ -35,7 +35,7 @@ package org.gdms.gdmstopology.process;
 import com.graphhopper.storage.Graph;
 import com.graphhopper.storage.GraphStorage;
 import com.graphhopper.storage.RAMDirectory;
-import com.graphhoppersna.centrality.UndirectedGraphAnalyzer;
+import com.graphhoppersna.centrality.UnweightedGraphAnalyzer;
 import gnu.trove.iterator.TIntDoubleIterator;
 import gnu.trove.map.hash.TIntDoubleHashMap;
 import java.util.Iterator;
@@ -160,9 +160,9 @@ public class GraphCentralityUtilities extends GraphAnalysis {
 
         // CALCULATION
 
-        // Initialize an undirected graph analyzer.
-        // TODO: Adapt this to directed graphs later.
-        UndirectedGraphAnalyzer analyzer = new UndirectedGraphAnalyzer(graph);
+        // Initialize an unweighted graph analyzer.
+        // TODO: Adapt this to weighted graphs later.
+        UnweightedGraphAnalyzer analyzer = new UnweightedGraphAnalyzer(graph);
 
         // Calculate the closeness centrality.
         // TODO: Would a list be a more efficient data structure?
