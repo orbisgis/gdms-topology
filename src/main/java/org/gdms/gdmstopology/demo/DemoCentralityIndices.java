@@ -32,13 +32,7 @@
  */
 package org.gdms.gdmstopology.demo;
 
-import dk.aaue.sna.alg.FloydWarshallAllShortestPaths;
-import dk.aaue.sna.alg.centrality.BrandesBetweennessCentrality;
-import dk.aaue.sna.alg.centrality.CentralityResult;
-import dk.aaue.sna.alg.centrality.FreemanClosenessCentrality;
-import org.gdms.gdmstopology.utils.RandomGraphCreator;
 import org.jgrapht.Graph;
-import org.jgrapht.alg.FloydWarshallShortestPaths;
 import org.jgrapht.graph.DefaultEdge;
 
 /**
@@ -49,25 +43,25 @@ import org.jgrapht.graph.DefaultEdge;
  */
 public class DemoCentralityIndices {
 
-    /**
-     * The main method.
-     * 
-     * @param args The command line arguments
-     */
-    public static void main(String[] args) {
-
-        int nodesExponent = 1;
-        int edgesExponent = 1;
-
-        // Generate a CONNECTED random graph.
-        Graph<Integer, DefaultEdge> graph = RandomGraphCreator.createRandomConnectedWeightedMultigraphByExponents(nodesExponent, edgesExponent);
-//        printGraph(graph);
-
-        testBetweennessCentrality(graph);
-        testClosenessCentrality(graph);
-
-        compareFloydWarshallAlgorithms(graph);
-    }
+//    /**
+//     * The main method.
+//     * 
+//     * @param args The command line arguments
+//     */
+//    public static void main(String[] args) {
+//
+//        int nodesExponent = 1;
+//        int edgesExponent = 1;
+//
+//        // Generate a CONNECTED random graph.
+//        Graph<Integer, DefaultEdge> graph = RandomGraphCreator.createRandomConnectedWeightedMultigraphByExponents(nodesExponent, edgesExponent);
+////        printGraph(graph);
+//
+//        testBetweennessCentrality(graph);
+//        testClosenessCentrality(graph);
+//
+//        compareFloydWarshallAlgorithms(graph);
+//    }
 
     /**
      * Prints the number of nodes and edges of a graph as well as a list of all
@@ -85,83 +79,83 @@ public class DemoCentralityIndices {
         }
     }
 
-    /**
-     * Prints the Freeman closeness centrality metric implemented in the
-     * jgrapht-sna library applied to the given graph.
-     *
-     * @param graph The graph on which to calculate the closeness centrality
-     * indices.
-     */
-    public static void testClosenessCentrality(Graph<Integer, DefaultEdge> graph) {
-        // Start timing.
-        long start = System.currentTimeMillis();
+//    /**
+//     * Prints the Freeman closeness centrality metric implemented in the
+//     * jgrapht-sna library applied to the given graph.
+//     *
+//     * @param graph The graph on which to calculate the closeness centrality
+//     * indices.
+//     */
+//    public static void testClosenessCentrality(Graph<Integer, DefaultEdge> graph) {
+//        // Start timing.
+//        long start = System.currentTimeMillis();
+//
+//        // Do the calculation.
+//        FreemanClosenessCentrality<Integer, DefaultEdge> alg = new FreemanClosenessCentrality<Integer, DefaultEdge>(graph);
+//        CentralityResult<Integer> result = alg.calculate();
+//
+//        // End timing.
+//        long end = System.currentTimeMillis();
+//        long time = end - start;
+//
+//        // Print out the results.
+//        System.out.println("Closeness centrality: " + result.toString());
+//        System.out.println("Nodes: " + graph.vertexSet().size() + ", Edges: " + graph.edgeSet().size());
+//        System.out.println("Time: " + time + " ms.");
+//        System.out.println();
+//    }
 
-        // Do the calculation.
-        FreemanClosenessCentrality<Integer, DefaultEdge> alg = new FreemanClosenessCentrality<Integer, DefaultEdge>(graph);
-        CentralityResult<Integer> result = alg.calculate();
+//    /**
+//     * Prints the betweenness centrality metric implemented in the jgrapht-sna
+//     * library applied to the given graph.
+//     *
+//     * @param graph The graph on which to calculate the betweenness centrality
+//     * indices.
+//     */
+//    public static void testBetweennessCentrality(Graph<Integer, DefaultEdge> graph) {
+//
+//        // Start timing.
+//        long start = System.currentTimeMillis();
+//
+//        // Do the calculation.
+//        BrandesBetweennessCentrality<Integer, DefaultEdge> alg = new BrandesBetweennessCentrality<Integer, DefaultEdge>(graph);
+//        CentralityResult<Integer> result = alg.calculate();
+//
+//        // End timing.
+//        long end = System.currentTimeMillis();
+//        long time = end - start;
+//
+//        // Print out the results.
+//        System.out.println("Betweenness centrality: " + result.toString());
+//        System.out.println("Nodes: " + graph.vertexSet().size() + ", Edges: " + graph.edgeSet().size());
+//        System.out.println("Time: " + time + " ms.");
+//        System.out.println();
+//    }
 
-        // End timing.
-        long end = System.currentTimeMillis();
-        long time = end - start;
-
-        // Print out the results.
-        System.out.println("Closeness centrality: " + result.toString());
-        System.out.println("Nodes: " + graph.vertexSet().size() + ", Edges: " + graph.edgeSet().size());
-        System.out.println("Time: " + time + " ms.");
-        System.out.println();
-    }
-
-    /**
-     * Prints the betweenness centrality metric implemented in the jgrapht-sna
-     * library applied to the given graph.
-     *
-     * @param graph The graph on which to calculate the betweenness centrality
-     * indices.
-     */
-    public static void testBetweennessCentrality(Graph<Integer, DefaultEdge> graph) {
-
-        // Start timing.
-        long start = System.currentTimeMillis();
-
-        // Do the calculation.
-        BrandesBetweennessCentrality<Integer, DefaultEdge> alg = new BrandesBetweennessCentrality<Integer, DefaultEdge>(graph);
-        CentralityResult<Integer> result = alg.calculate();
-
-        // End timing.
-        long end = System.currentTimeMillis();
-        long time = end - start;
-
-        // Print out the results.
-        System.out.println("Betweenness centrality: " + result.toString());
-        System.out.println("Nodes: " + graph.vertexSet().size() + ", Edges: " + graph.edgeSet().size());
-        System.out.println("Time: " + time + " ms.");
-        System.out.println();
-    }
-
-    /**
-     * Compares the JGraphT implementation of
-     *
-     * @param graph
-     */
-    public static void compareFloydWarshallAlgorithms(Graph<Integer, DefaultEdge> graph) {
-
-        System.out.println("Comparison of Floyd-Warshall algorithm implementations:");
-        
-        // Floyd-Warshall JGraphT -- seems to be much shorter.
-        long start = System.currentTimeMillis();
-        FloydWarshallShortestPaths<Integer, DefaultEdge> fWAlg = new FloydWarshallShortestPaths<Integer, DefaultEdge>(graph);
-        int numberOfPaths = fWAlg.getShortestPathsCount();
-        long end = System.currentTimeMillis();
-        long time = end - start;
-        System.out.println("JGraphT time: " + time + " ms, " + numberOfPaths + " paths.");
-
-        // Floyd-Warshall SNA -- seems to be much longer.
-        start = System.currentTimeMillis();
-        FloydWarshallAllShortestPaths<Integer, DefaultEdge> fWAlgSNA = new FloydWarshallAllShortestPaths<Integer, DefaultEdge>(graph);
-        numberOfPaths = fWAlgSNA.lazyCalculatePaths();
-        end = System.currentTimeMillis();
-        time = end - start;
-        System.out.println("SNA time: " + time + " ms, " + numberOfPaths + " paths.");
-
-    }
+//    /**
+//     * Compares the JGraphT implementation of
+//     *
+//     * @param graph
+//     */
+//    public static void compareFloydWarshallAlgorithms(Graph<Integer, DefaultEdge> graph) {
+//
+//        System.out.println("Comparison of Floyd-Warshall algorithm implementations:");
+//        
+//        // Floyd-Warshall JGraphT -- seems to be much shorter.
+//        long start = System.currentTimeMillis();
+//        FloydWarshallShortestPaths<Integer, DefaultEdge> fWAlg = new FloydWarshallShortestPaths<Integer, DefaultEdge>(graph);
+//        int numberOfPaths = fWAlg.getShortestPathsCount();
+//        long end = System.currentTimeMillis();
+//        long time = end - start;
+//        System.out.println("JGraphT time: " + time + " ms, " + numberOfPaths + " paths.");
+//
+//        // Floyd-Warshall SNA -- seems to be much longer.
+//        start = System.currentTimeMillis();
+//        FloydWarshallAllShortestPaths<Integer, DefaultEdge> fWAlgSNA = new FloydWarshallAllShortestPaths<Integer, DefaultEdge>(graph);
+//        numberOfPaths = fWAlgSNA.lazyCalculatePaths();
+//        end = System.currentTimeMillis();
+//        time = end - start;
+//        System.out.println("SNA time: " + time + " ms, " + numberOfPaths + " paths.");
+//
+//    }
 }
