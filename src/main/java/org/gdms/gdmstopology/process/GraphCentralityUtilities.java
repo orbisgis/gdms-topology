@@ -35,7 +35,7 @@ package org.gdms.gdmstopology.process;
 import com.graphhopper.storage.Graph;
 import com.graphhopper.storage.GraphStorage;
 import com.graphhopper.storage.RAMDirectory;
-import com.graphhoppersna.centrality.UnweightedGraphAnalyzer;
+import com.graphhopper.sna.centrality.UnweightedGraphAnalyzer;
 import gnu.trove.iterator.TIntDoubleIterator;
 import gnu.trove.map.hash.TIntDoubleHashMap;
 import java.util.Iterator;
@@ -165,9 +165,8 @@ public class GraphCentralityUtilities extends GraphAnalysis {
         UnweightedGraphAnalyzer analyzer = new UnweightedGraphAnalyzer(graph);
 
         // Calculate the closeness centrality.
-        // TODO: Would a list be a more efficient data structure?
-        TIntDoubleHashMap closenessCentrality = analyzer.
-                computeClosenessAllWeightsOne();
+        // TODO: Is there a more efficient data structure?
+        TIntDoubleHashMap closenessCentrality = analyzer.computeCloseness();
 
         // TRANSFER THE RESULTS FROM GRAPHHOPPER TO A DISKBUFFERDRIVER
 
