@@ -44,7 +44,7 @@
                 <dependency>
                         <groupId>log4j</groupId>
                         <artifactId>log4j</artifactId>
-                        <version>1.2.17</version>
+                        <version>1.2.16</version>
                         <type>jar</type>
                 </dependency>
                 <dependency>
@@ -83,7 +83,7 @@
                                         <instructions>
                                                 <!--Embed-Dependency not a good choice,
                                                 jgrapht-sna should be passed as OSGi bundle-->
-                                                <Embed-Dependency>jgraph;jgrapht-sna;fuzzy4j;graphlayout;jgrapht;commons-math;graphhopper;graphhopper-sna</Embed-Dependency>
+                                                <Embed-Dependency>jgraph;jgrapht-sna;fuzzy4j;graphlayout;jgrapht;commons-math</Embed-Dependency>
                                                 <Embed-Transitive>true</Embed-Transitive>
                                                 <Private-Package>org.gdms.gdmstopology.*</Private-Package>
                                                 <Bundle-Activator>org.gdms.gdmstopology.Activator</Bundle-Activator>
