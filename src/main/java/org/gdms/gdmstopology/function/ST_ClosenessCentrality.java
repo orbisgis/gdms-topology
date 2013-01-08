@@ -288,37 +288,6 @@ public class ST_ClosenessCentrality extends AbstractExecutorFunction {
         }
     }
 
-//    private boolean orientationIsValid() {
-//        final Integer[] possibleOrientations = new Integer[]{1, 2, 3};
-//        if (Arrays.asList(possibleOrientations).
-//                contains(orientation)) {
-//            return true;
-//        }
-//        return false;
-//    }
-//    private void parseRequiredArgument(Value[] values) throws FunctionException {
-//        final int secondSlotType = values[0].getType();
-//        if (secondSlotType == Type.INT) {
-//            final int allWeightsOneInt = values[0].getAsInt();
-//            if (allWeightsOneInt == 1) {
-//                System.out.println("Setting all weights equal to 1.");
-//            } else { // We only accept 1 or a string.
-//                throw new FunctionException(
-//                        "Either enter 1 to set all weights equal to 1 "
-//                        + "or specify the name of the weight column.");
-//            }
-//        } else if (secondSlotType == Type.STRING) {
-//            // Set the weights column name.
-//            weightsColumn = values[0].getAsString();
-//            System.out.println("Setting the weight column name "
-//                    + "to be \'" + weightsColumn
-//                    + "\'.");
-//        } else {
-//            throw new FunctionException(
-//                    "Either enter 1 to set all weights equal to 1 "
-//                    + "or specify the name of the weight column.");
-//        }
-//    }
     /**
      * Parse the optional function argument at the given index.
      *
@@ -354,6 +323,10 @@ public class ST_ClosenessCentrality extends AbstractExecutorFunction {
      * @throws FunctionException
      */
     private void parseOptionalArguments(Value[] values) throws FunctionException {
+        // Set default values.
+        outputTablePrefix = OutputFunctionParser.DEFAULT_OUTPUT_TABLE_PREFIX;
+        orientation = GraphSchema.DIRECT;
+        // Recover optional arguments.
         int index = NUMBER_OF_REQUIRED_ARGUMENTS;
         while (values.length > index) {
             parseOptionalArgument(values, index++);
@@ -475,10 +448,15 @@ public class ST_ClosenessCentrality extends AbstractExecutorFunction {
                     // Fourth possible signature: (TABLE input_table, INT 1, STRING 'output_table_prefix', INT orientation).
                     new ExecutorFunctionSignature(
                     new TableArgument(TableDefinition.GEOMETRY),
-                    ScalarArgument.STRING,
+                    ScalarArgument.INT,
                     ScalarArgument.STRING,
                     ScalarArgument.INT),
-                    // TODO: We don't allow: (TABLE input_table, INT 1, INT orientation, STRING 'output_table_prefix').
+                    // Fifth possible signature: (TABLE input_table, INT 1, INT orientation, STRING 'output_table_prefix').
+                    new ExecutorFunctionSignature(
+                    new TableArgument(TableDefinition.GEOMETRY),
+                    ScalarArgument.INT,
+                    ScalarArgument.INT,
+                    ScalarArgument.STRING),
                     // WEIGHTED
                     // First possible signature: (TABLE input_table, STRING 'weights_column').
                     new ExecutorFunctionSignature(
@@ -499,7 +477,13 @@ public class ST_ClosenessCentrality extends AbstractExecutorFunction {
                     new TableArgument(TableDefinition.GEOMETRY),
                     ScalarArgument.STRING,
                     ScalarArgument.STRING,
-                    ScalarArgument.INT) // TODO: We don't allow: (TABLE input_table, STRING 'weights_column', INT orientation, STRING 'output_table_prefix').
+                    ScalarArgument.INT),
+                    // Fifth possible signature: (TABLE input_table, STRING 'weights_column', INT orientation, STRING 'output_table_prefix').
+                    new ExecutorFunctionSignature(
+                    new TableArgument(TableDefinition.GEOMETRY),
+                    ScalarArgument.STRING,
+                    ScalarArgument.INT,
+                    ScalarArgument.STRING)
                 };
     }
 }
