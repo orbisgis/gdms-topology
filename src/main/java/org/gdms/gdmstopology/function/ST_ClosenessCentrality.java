@@ -170,121 +170,24 @@ public class ST_ClosenessCentrality extends AbstractExecutorFunction {
             DataSet dataSet,
             ProgressMonitor pm) throws GraphException,
             DriverException {
-        System.out.print("\nOrientation: ");
+        // Unweighted graph.
         if (weightsColumn == null) {
-            if (orientation == -1) {
-                System.out.println("not specified.");
-                // We assume the graph is directed if no orientation
-                // is specified.
-                System.out.print("Output table prefix: ");
-                if (outputTablePrefix == null) {
-                    System.out.println("not specified. \n");
-                    // Use the default output table prefix if no prefix
-                    // is specified.
-                    GraphCentralityUtilities.
-                            registerClosenessCentralityIndicesAllWeightsOne(
-                            dsf,
-                            dataSet,
-                            OutputFunctionParser.DEFAULT_OUTPUT_TABLE_PREFIX,
-                            GraphSchema.DIRECT,
-                            pm);
-                } else {
-                    System.out.println(outputTablePrefix + ". \n");
-                    // Use the user-defined output table prefix.
-                    GraphCentralityUtilities.
-                            registerClosenessCentralityIndicesAllWeightsOne(
-                            dsf,
-                            dataSet,
-                            outputTablePrefix,
-                            GraphSchema.DIRECT,
-                            pm);
-                }
-            } else {
-                System.out.println(orientation + ".");
-                System.out.print("Output table prefix: ");
-                // Use the user-defined orientation.
-                if (outputTablePrefix == null) {
-                    System.out.println("not specified. \n");
-                    // Use the default output table prefix if no prefix
-                    // is specified.
-                    GraphCentralityUtilities.
-                            registerClosenessCentralityIndicesAllWeightsOne(
-                            dsf,
-                            dataSet,
-                            OutputFunctionParser.DEFAULT_OUTPUT_TABLE_PREFIX,
-                            orientation,
-                            pm);
-                } else {
-                    System.out.println(outputTablePrefix + ". \n");
-                    // Use the user-defined output table prefix.
-                    GraphCentralityUtilities.
-                            registerClosenessCentralityIndicesAllWeightsOne(
-                            dsf,
-                            dataSet,
-                            outputTablePrefix,
-                            orientation,
-                            pm);
-                }
-            }
-        } else {
-            if (orientation == -1) {
-                System.out.println("not specified.");
-                // We assume the graph is directed if no orientation
-                // is specified.
-                System.out.print("Output table prefix: ");
-                if (outputTablePrefix == null) {
-                    System.out.println("not specified. \n");
-                    // Use the default output table prefix if no prefix
-                    // is specified.
-                    GraphCentralityUtilities.
-                            registerClosenessCentralityIndices(
-                            dsf,
-                            dataSet,
-                            weightsColumn,
-                            OutputFunctionParser.DEFAULT_OUTPUT_TABLE_PREFIX,
-                            GraphSchema.DIRECT,
-                            pm);
-                } else {
-                    System.out.println(outputTablePrefix + ". \n");
-                    // Use the user-defined output table prefix.
-                    GraphCentralityUtilities.
-                            registerClosenessCentralityIndices(
-                            dsf,
-                            dataSet,
-                            weightsColumn,
-                            outputTablePrefix,
-                            GraphSchema.DIRECT,
-                            pm);
-                }
-            } else {
-                System.out.println(orientation + ".");
-                System.out.print("Output table prefix: ");
-                // Use the user-defined orientation.
-                if (outputTablePrefix == null) {
-                    System.out.println("not specified. \n");
-                    // Use the default output table prefix if no prefix
-                    // is specified.
-                    GraphCentralityUtilities.
-                            registerClosenessCentralityIndices(
-                            dsf,
-                            dataSet,
-                            weightsColumn,
-                            OutputFunctionParser.DEFAULT_OUTPUT_TABLE_PREFIX,
-                            orientation,
-                            pm);
-                } else {
-                    System.out.println(outputTablePrefix + ". \n");
-                    // Use the user-defined output table prefix.
-                    GraphCentralityUtilities.
-                            registerClosenessCentralityIndices(
-                            dsf,
-                            dataSet,
-                            weightsColumn,
-                            outputTablePrefix,
-                            orientation,
-                            pm);
-                }
-            }
+            GraphCentralityUtilities.
+                    registerClosenessCentralityIndicesAllWeightsOne(
+                    dsf,
+                    dataSet,
+                    outputTablePrefix,
+                    orientation,
+                    pm);
+        } else { // Weighted graph.
+            GraphCentralityUtilities.
+                    registerClosenessCentralityIndices(
+                    dsf,
+                    dataSet,
+                    weightsColumn,
+                    outputTablePrefix,
+                    orientation,
+                    pm);
         }
     }
 
@@ -398,30 +301,9 @@ public class ST_ClosenessCentrality extends AbstractExecutorFunction {
                 + "directed. </ul> ";
     }
 
-//    /**
-//     * Returns the {@link Metadata} of the result of this function without
-//     * executing the query.
-//     *
-//     * @param tables {@link Metadata} objects of the input tables.
-//     * @return The {@link Metadata} of the result.
-//     * @throws DriverException
-//     */
-//    @Override
-//    public Metadata getMetadata(Metadata[] tables) throws DriverException {
-//        return GraphMetadataFactory.createClosenessCentralityMetadata();
-//    }
     /**
      * Returns an array of all possible signatures of this function. Multiple
      * signatures arise from some arguments being optional.
-     *
-     * <p> Possible signatures: <OL> <li>
-     * {@code (TABLE input_table, STRING 'weights_column')} <li>
-     * {@code (TABLE input_table, STRING 'weights_column', STRING 'output_table_prefix')}
-     * <li>
-     * {@code (TABLE input_table, STRING 'weights_column', INT orientation)}
-     * <li>
-     * {@code (TABLE input_table, STRING 'weights_column', STRING 'output_table_prefix', INT orientation)}
-     * </OL>
      *
      * @return An array of all possible signatures of this function.
      */
