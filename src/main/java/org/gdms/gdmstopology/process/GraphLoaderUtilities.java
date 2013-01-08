@@ -34,6 +34,7 @@ package org.gdms.gdmstopology.process;
 
 import com.graphhopper.storage.Graph;
 import com.graphhopper.storage.GraphStorage;
+import com.graphhopper.storage.LevelGraphStorage;
 import com.graphhopper.storage.RAMDirectory;
 import java.util.Iterator;
 import org.gdms.data.schema.Metadata;
@@ -170,7 +171,7 @@ public class GraphLoaderUtilities {
             GraphException {
 
         // Initialize the graph.
-        GraphStorage graph = new GraphStorage(new RAMDirectory());
+        LevelGraphStorage graph = new LevelGraphStorage(new RAMDirectory());
         graph.createNew(ALLOCATE_GRAPH_SPACE);
 
         // INSERT THE DATA INTO THE GRAPH

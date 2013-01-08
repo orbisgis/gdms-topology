@@ -155,7 +155,8 @@ public class ST_ClosenessCentrality extends AbstractExecutorFunction {
     private void registerClosenessAccordingToUserInput(
             DataSourceFactory dsf,
             DataSet dataSet,
-            ProgressMonitor pm) throws GraphException, DriverException {
+            ProgressMonitor pm) throws GraphException,
+            DriverException {
         System.out.print("\nOrientation: ");
         if (weightsColumn == null) {
             if (orientation == -1) {
@@ -213,9 +214,64 @@ public class ST_ClosenessCentrality extends AbstractExecutorFunction {
                 }
             }
         } else {
-            throw new UnsupportedOperationException("For now, "
-                    + "closeness centrality may only be calculated "
-                    + "for all weights equal to 1.");
+            if (orientation == -1) {
+                System.out.println("not specified.");
+                // We assume the graph is directed if no orientation
+                // is specified.
+                System.out.print("Output table prefix: ");
+                if (outputTablePrefix == null) {
+                    System.out.println("not specified. \n");
+                    // Use the default output table prefix if no prefix
+                    // is specified.
+                    GraphCentralityUtilities.
+                            registerClosenessCentralityIndices(
+                            dsf,
+                            dataSet,
+                            weightsColumn,
+                            DEFAULT_OUTPUT_TABLE_PREFIX,
+                            GraphSchema.DIRECT,
+                            pm);
+                } else {
+                    System.out.println(outputTablePrefix + ". \n");
+                    // Use the user-defined output table prefix.
+                    GraphCentralityUtilities.
+                            registerClosenessCentralityIndices(
+                            dsf,
+                            dataSet,
+                            weightsColumn,
+                            outputTablePrefix,
+                            GraphSchema.DIRECT,
+                            pm);
+                }
+            } else {
+                System.out.println(orientation + ".");
+                System.out.print("Output table prefix: ");
+                // Use the user-defined orientation.
+                if (outputTablePrefix == null) {
+                    System.out.println("not specified. \n");
+                    // Use the default output table prefix if no prefix
+                    // is specified.
+                    GraphCentralityUtilities.
+                            registerClosenessCentralityIndices(
+                            dsf,
+                            dataSet,
+                            weightsColumn,
+                            DEFAULT_OUTPUT_TABLE_PREFIX,
+                            orientation,
+                            pm);
+                } else {
+                    System.out.println(outputTablePrefix + ". \n");
+                    // Use the user-defined output table prefix.
+                    GraphCentralityUtilities.
+                            registerClosenessCentralityIndices(
+                            dsf,
+                            dataSet,
+                            weightsColumn,
+                            outputTablePrefix,
+                            orientation,
+                            pm);
+                }
+            }
         }
     }
 
@@ -308,8 +364,8 @@ public class ST_ClosenessCentrality extends AbstractExecutorFunction {
     public String getSqlOrder() {
         return "EXECUTE ST_ClosenessCentrality("
                 + "input_table, "
-                + "'weights_column', "
-                + "'output_table_prefix'"
+                + "'weights_column'"
+                + "[,'output_table_prefix']"
                 + "[,orientation]);";
     }
 
@@ -385,26 +441,49 @@ public class ST_ClosenessCentrality extends AbstractExecutorFunction {
     @Override
     public FunctionSignature[] getFunctionSignatures() {
         return new FunctionSignature[]{
-                    //                    // First possible signature: (TABLE input_table, STRING 'weights_column').
-                    //                    new ExecutorFunctionSignature(
-                    //                    new TableArgument(TableDefinition.GEOMETRY),
-                    //                    ScalarArgument.STRING),
+                    // ALL WEIGHTS ONE
+                    // First possible signature: (TABLE input_table, INT 1).
+                    new ExecutorFunctionSignature(
+                    new TableArgument(TableDefinition.GEOMETRY),
+                    ScalarArgument.INT),
+                    // Second possible signature: (TABLE input_table, INT 1, STRING 'output_table_prefix').
+                    new ExecutorFunctionSignature(
+                    new TableArgument(TableDefinition.GEOMETRY),
+                    ScalarArgument.INT,
+                    ScalarArgument.STRING),
+                    // Third possible signature: (TABLE input_table, INT 1, INT orientation).
+                    new ExecutorFunctionSignature(
+                    new TableArgument(TableDefinition.GEOMETRY),
+                    ScalarArgument.INT,
+                    ScalarArgument.INT),
+                    // Fourth possible signature: (TABLE input_table, INT 1, STRING 'output_table_prefix', INT orientation).
+                    new ExecutorFunctionSignature(
+                    new TableArgument(TableDefinition.GEOMETRY),
+                    ScalarArgument.STRING,
+                    ScalarArgument.STRING,
+                    ScalarArgument.INT),
+                    // TODO: We don't allow: (TABLE input_table, INT 1, INT orientation, STRING 'output_table_prefix').
+                    // WEIGHTED
+                    // First possible signature: (TABLE input_table, STRING 'weights_column').
+                    new ExecutorFunctionSignature(
+                    new TableArgument(TableDefinition.GEOMETRY),
+                    ScalarArgument.STRING),
                     // Second possible signature: (TABLE input_table, STRING 'weights_column', STRING 'output_table_prefix').
                     new ExecutorFunctionSignature(
                     new TableArgument(TableDefinition.GEOMETRY),
                     ScalarArgument.STRING,
                     ScalarArgument.STRING),
-                    //                    // Third possible signature: (TABLE input_table, STRING 'weights_column', INT orientation).
-                    //                    new ExecutorFunctionSignature(
-                    //                    new TableArgument(TableDefinition.GEOMETRY),
-                    //                    ScalarArgument.STRING,
-                    //                    ScalarArgument.INT),
+                    // Third possible signature: (TABLE input_table, STRING 'weights_column', INT orientation).
+                    new ExecutorFunctionSignature(
+                    new TableArgument(TableDefinition.GEOMETRY),
+                    ScalarArgument.STRING,
+                    ScalarArgument.INT),
                     // Fourth possible signature: (TABLE input_table, STRING 'weights_column', STRING 'output_table_prefix', INT orientation).
                     new ExecutorFunctionSignature(
                     new TableArgument(TableDefinition.GEOMETRY),
                     ScalarArgument.STRING,
                     ScalarArgument.STRING,
-                    ScalarArgument.INT)
+                    ScalarArgument.INT) // TODO: We don't allow: (TABLE input_table, STRING 'weights_column', INT orientation, STRING 'output_table_prefix').
                 };
     }
 }
