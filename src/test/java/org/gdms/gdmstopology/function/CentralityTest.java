@@ -32,6 +32,7 @@
  */
 package org.gdms.gdmstopology.function;
 
+import java.io.File;
 import org.gdms.data.DataSource;
 import org.gdms.data.DataSourceCreationException;
 import org.gdms.data.NoSuchTableException;
@@ -52,6 +53,8 @@ import org.orbisgis.progress.NullProgressMonitor;
  */
 public class CentralityTest extends TopologySetUpTest {
 
+    // private static final String GRAPH_NANTES_EDGES = "nantes_1.edges";
+
     /**
      * Tests the closeness centrality calculation on a 2D graph with the given
      * orientation and with all edge weights equal to one.
@@ -66,12 +69,12 @@ public class CentralityTest extends TopologySetUpTest {
         ds.open();
         DataSet[] tables = new DataSet[]{ds};
         String testName = "GRAPH2D ALL WEIGHTS ONE - Orientation: ";
-        testName += (graphType == GraphSchema.UNDIRECT) ? 
-                " Undirected." 
-                : (graphType == GraphSchema.DIRECT) ? 
-                " Directed." 
-                : (graphType == GraphSchema.DIRECT_REVERSED) ? 
-                " Reversed." 
+        testName += (graphType == GraphSchema.UNDIRECT)
+                ? " Undirected."
+                : (graphType == GraphSchema.DIRECT)
+                ? " Directed."
+                : (graphType == GraphSchema.DIRECT_REVERSED)
+                ? " Reversed."
                 : " Invalid";
         System.out.println("\n" + testName);
         sT_ClosenessCentrality.evaluate(
@@ -101,7 +104,7 @@ public class CentralityTest extends TopologySetUpTest {
             FunctionException {
         testClosenessGraph2DAllWeightsOne(GraphSchema.UNDIRECT);
     }
-    
+
     /**
      * Tests the closeness centrality calculation on a 2D graph considered as a
      * directed graph with all edge weights equal to one.
@@ -119,10 +122,11 @@ public class CentralityTest extends TopologySetUpTest {
             FunctionException {
         testClosenessGraph2DAllWeightsOne(GraphSchema.DIRECT);
     }
-    
+
     /**
      * Tests the closeness centrality calculation on a 2D graph considered as a
-     * directed graph with all edge weights equal to one and all edge orientations reversed.
+     * directed graph with all edge weights equal to one and all edge
+     * orientations reversed.
      *
      * @throws NoSuchTableException
      * @throws DataSourceCreationException
@@ -137,7 +141,57 @@ public class CentralityTest extends TopologySetUpTest {
             FunctionException {
         testClosenessGraph2DAllWeightsOne(GraphSchema.DIRECT_REVERSED);
     }
-    
+//    /**
+//     * Tests the closeness centrality calculation on a Nantes with the given
+//     * orientation and with all edge weights equal to one.
+//     */
+//    public void testClosenessNantesWeighted(int graphType) throws
+//            NoSuchTableException,
+//            DataSourceCreationException,
+//            DriverException,
+//            FunctionException {
+//        ST_ClosenessCentrality sT_ClosenessCentrality = new ST_ClosenessCentrality();
+//        dsf.getSourceManager().register(GRAPH_NANTES_EDGES,
+//                new File(internalData + GRAPH_NANTES_EDGES + ".shp"));
+//        DataSource ds = dsf.getDataSource(GRAPH_NANTES_EDGES);
+//        ds.open();
+//        DataSet[] tables = new DataSet[]{ds};
+//        String testName = "NANTES WEIGHTED - Orientation: ";
+//        testName += (graphType == GraphSchema.UNDIRECT)
+//                ? " Undirected."
+//                : (graphType == GraphSchema.DIRECT)
+//                ? " Directed."
+//                : (graphType == GraphSchema.DIRECT_REVERSED)
+//                ? " Reversed."
+//                : " Invalid";
+//        System.out.println("\n" + testName);
+//        sT_ClosenessCentrality.evaluate(
+//                dsf,
+//                tables,
+//                new Value[]{
+//                    ValueFactory.createValue("weight"),
+//                    ValueFactory.createValue(graphType)},
+//                new NullProgressMonitor());
+//        ds.close();
+//    }
+//
+//    /**
+//     * Tests the closeness centrality calculation on Nantes considered as an
+//     * undirected graph with weighted edges.
+//     *
+//     * @throws NoSuchTableException
+//     * @throws DataSourceCreationException
+//     * @throws DriverException
+//     * @throws FunctionException
+//     */
+//    @Test
+//    public void testClosenessNantesUndirectedAllWeightsOne() throws
+//            NoSuchTableException,
+//            DataSourceCreationException,
+//            DriverException,
+//            FunctionException {
+//        testClosenessNantesWeighted(GraphSchema.UNDIRECT);
+//    }
 //    /**
 //     * Tests the closeness centrality calculation on a Nantes with the given
 //     * orientation and with all edge weights equal to one.
@@ -148,8 +202,8 @@ public class CentralityTest extends TopologySetUpTest {
 //            DriverException,
 //            FunctionException {
 //        ST_ClosenessCentrality sT_ClosenessCentrality = new ST_ClosenessCentrality();
-//        dsf.getSourceManager().register("nantes", new File(internalData + "nantes_1.edges.shp"));
-//        DataSource ds = dsf.getDataSource("nantes");
+//        dsf.getSourceManager().register(GRAPH_NANTES_EDGES, new File(internalData + GRAPH_NANTES_EDGES + ".shp"));
+//        DataSource ds = dsf.getDataSource(GRAPH_NANTES_EDGES);
 //        ds.open();
 //        DataSet[] tables = new DataSet[]{ds};
 //        String testName = "NANTES ALL WEIGHTS ONE - Orientation: ";
@@ -166,7 +220,7 @@ public class CentralityTest extends TopologySetUpTest {
 //                tables,
 //                new Value[]{
 //                    ValueFactory.createValue(1),
-//                    ValueFactory.createValue(graphType),},
+//                    ValueFactory.createValue(graphType)},
 //                new NullProgressMonitor());
 //        ds.close();
 //    }
@@ -188,7 +242,6 @@ public class CentralityTest extends TopologySetUpTest {
 //            FunctionException {
 //        testClosenessNantesAllWeightsOne(GraphSchema.UNDIRECT);
 //    }
-    
 //    @Test
 //    public void testPossibleArguments() throws NoSuchTableException,
 //            DataSourceCreationException, DriverException, FunctionException {
