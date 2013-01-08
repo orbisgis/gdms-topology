@@ -90,6 +90,15 @@ import org.gdms.gdmstopology.process.GraphCentralityUtilities;
  */
 public class ST_ClosenessCentrality extends AbstractExecutorFunction {
 
+    /**
+     * The number of required arguments;
+     */
+    private static final int NUMBER_OF_REQUIRED_ARGUMENTS = 1;
+    // REQUIRED ARGUMENTS
+    /**
+     * Specifies the weight column (or 1 in the case of an unweighted graph).
+     */
+    private String weightsColumn;
     // OPTIONAL ARGUMENTS
     /**
      * Specifies the orientation of the graph.
@@ -99,14 +108,6 @@ public class ST_ClosenessCentrality extends AbstractExecutorFunction {
      * Specifies the prefix of the output table name.
      */
     private String outputTablePrefix;
-    /**
-     *
-     */
-    private String weightsColumn;
-    /**
-     * Default output table prefix;
-     */
-    private static final String DEFAULT_OUTPUT_TABLE_PREFIX = "output";
 
     /**
      * Evaluates the function to calculate the centrality indices.
@@ -116,7 +117,7 @@ public class ST_ClosenessCentrality extends AbstractExecutorFunction {
      *               only one element since there is only one input table.)
      * @param values Array containing the other arguments.
      * @param pm     The progress monitor used to track the progress of the
-     *               shortest path calculation.
+     *               calculation.
      *
      * @return The {@link DataSet} containing the shortest path.
      *
@@ -136,9 +137,9 @@ public class ST_ClosenessCentrality extends AbstractExecutorFunction {
             final DataSet dataSet = tables[0];
 
             // SECOND PARAMETER: Either 1 or weight column name.
-            parseRequiredArgument(values);
+            weightsColumn = GraphFunctionParser.parseWeight(values[0]);
 
-            // OPTIONAL PARAMETERS
+            // OPTIONAL PARAMETERS: [,'output_table_prefix'][, orientation]
             parseOptionalArguments(values);
 
             // Take all user-entered values into account when calculating
@@ -152,6 +153,18 @@ public class ST_ClosenessCentrality extends AbstractExecutorFunction {
         }
     }
 
+    /**
+     * Registers closeness centrality according to the SQL arguments provided by
+     * the user.
+     *
+     * @param dsf     The {@link DataSourceFactory} used to parse the data set.
+     * @param dataSet The input table.
+     * @param pm      The progress monitor used to track the progress of the
+     *                calculation.
+     *
+     * @throws GraphException
+     * @throws DriverException
+     */
     private void registerClosenessAccordingToUserInput(
             DataSourceFactory dsf,
             DataSet dataSet,
@@ -172,7 +185,7 @@ public class ST_ClosenessCentrality extends AbstractExecutorFunction {
                             registerClosenessCentralityIndicesAllWeightsOne(
                             dsf,
                             dataSet,
-                            DEFAULT_OUTPUT_TABLE_PREFIX,
+                            OutputFunctionParser.DEFAULT_OUTPUT_TABLE_PREFIX,
                             GraphSchema.DIRECT,
                             pm);
                 } else {
@@ -198,7 +211,7 @@ public class ST_ClosenessCentrality extends AbstractExecutorFunction {
                             registerClosenessCentralityIndicesAllWeightsOne(
                             dsf,
                             dataSet,
-                            DEFAULT_OUTPUT_TABLE_PREFIX,
+                            OutputFunctionParser.DEFAULT_OUTPUT_TABLE_PREFIX,
                             orientation,
                             pm);
                 } else {
@@ -228,7 +241,7 @@ public class ST_ClosenessCentrality extends AbstractExecutorFunction {
                             dsf,
                             dataSet,
                             weightsColumn,
-                            DEFAULT_OUTPUT_TABLE_PREFIX,
+                            OutputFunctionParser.DEFAULT_OUTPUT_TABLE_PREFIX,
                             GraphSchema.DIRECT,
                             pm);
                 } else {
@@ -256,7 +269,7 @@ public class ST_ClosenessCentrality extends AbstractExecutorFunction {
                             dsf,
                             dataSet,
                             weightsColumn,
-                            DEFAULT_OUTPUT_TABLE_PREFIX,
+                            OutputFunctionParser.DEFAULT_OUTPUT_TABLE_PREFIX,
                             orientation,
                             pm);
                 } else {
@@ -275,56 +288,57 @@ public class ST_ClosenessCentrality extends AbstractExecutorFunction {
         }
     }
 
-    private boolean orientationIsValid() {
-        final Integer[] possibleOrientations = new Integer[]{1, 2, 3};
-        if (Arrays.asList(possibleOrientations).
-                contains(orientation)) {
-            return true;
-        }
-        return false;
-    }
-
-    private void parseRequiredArgument(Value[] values) throws FunctionException {
-        final int secondSlotType = values[0].getType();
-        if (secondSlotType == Type.INT) {
-            final int allWeightsOneInt = values[0].getAsInt();
-            if (allWeightsOneInt == 1) {
-                System.out.println("Setting all weights equal to 1.");
-            } else { // We only accept 1 or a string.
-                throw new FunctionException(
-                        "Either enter 1 to set all weights equal to 1 "
-                        + "or specify the name of the weight column.");
-            }
-        } else if (secondSlotType == Type.STRING) {
-            // Set the weights column name.
-            weightsColumn = values[0].getAsString();
-            System.out.println("Setting the weight column name "
-                    + "to be \'" + weightsColumn
-                    + "\'.");
-        } else {
-            throw new FunctionException(
-                    "Either enter 1 to set all weights equal to 1 "
-                    + "or specify the name of the weight column.");
-        }
-    }
-
+//    private boolean orientationIsValid() {
+//        final Integer[] possibleOrientations = new Integer[]{1, 2, 3};
+//        if (Arrays.asList(possibleOrientations).
+//                contains(orientation)) {
+//            return true;
+//        }
+//        return false;
+//    }
+//    private void parseRequiredArgument(Value[] values) throws FunctionException {
+//        final int secondSlotType = values[0].getType();
+//        if (secondSlotType == Type.INT) {
+//            final int allWeightsOneInt = values[0].getAsInt();
+//            if (allWeightsOneInt == 1) {
+//                System.out.println("Setting all weights equal to 1.");
+//            } else { // We only accept 1 or a string.
+//                throw new FunctionException(
+//                        "Either enter 1 to set all weights equal to 1 "
+//                        + "or specify the name of the weight column.");
+//            }
+//        } else if (secondSlotType == Type.STRING) {
+//            // Set the weights column name.
+//            weightsColumn = values[0].getAsString();
+//            System.out.println("Setting the weight column name "
+//                    + "to be \'" + weightsColumn
+//                    + "\'.");
+//        } else {
+//            throw new FunctionException(
+//                    "Either enter 1 to set all weights equal to 1 "
+//                    + "or specify the name of the weight column.");
+//        }
+//    }
+    /**
+     * Parse the optional function argument at the given index.
+     *
+     * @param values Array containing the other arguments.
+     * @param index  The index.
+     *
+     * @throws FunctionException
+     */
     private void parseOptionalArgument(Value[] values, int index) throws
             FunctionException {
         final int slotType = values[index].getType();
         if (slotType == Type.INT) {
-            orientation = values[index].getAsInt();
-            System.out.println("Setting the orientation "
-                    + "to be " + orientation + ".");
-            if (!orientationIsValid()) {
+            orientation = GraphFunctionParser.parseOrientation(values[index]);
+            if (!GraphFunctionParser.validOrientation(orientation)) {
                 throw new FunctionException(
                         "Please enter a valid orientation.");
             }
         } else if (slotType == Type.STRING) {
-            // Set the output table prefix.
-            outputTablePrefix = values[index].getAsString();
-            System.out.println("Setting the output table prefix "
-                    + "to be \'" + outputTablePrefix
-                    + "\'.");
+            outputTablePrefix = OutputFunctionParser.
+                    parseOutputTablePrefix(values[index]);
         } else {
             throw new FunctionException(
                     "Enter a valid orientation and/or output "
@@ -332,15 +346,17 @@ public class ST_ClosenessCentrality extends AbstractExecutorFunction {
         }
     }
 
+    /**
+     * Parse the optional function arguments.
+     *
+     * @param values Array containing the other arguments.
+     *
+     * @throws FunctionException
+     */
     private void parseOptionalArguments(Value[] values) throws FunctionException {
-        // If there is at least one optional parameter, then get
-        // the first one.
-        if (values.length > 1) {
-            parseOptionalArgument(values, 1);
-            // If there are two optional parameters, then get the second one.
-            if (values.length > 2) {
-                parseOptionalArgument(values, 2);
-            }
+        int index = NUMBER_OF_REQUIRED_ARGUMENTS;
+        while (values.length > index) {
+            parseOptionalArgument(values, index++);
         }
     }
 

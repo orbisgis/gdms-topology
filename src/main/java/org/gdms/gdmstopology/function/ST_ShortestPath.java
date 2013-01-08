@@ -34,10 +34,12 @@ package org.gdms.gdmstopology.function;
 
 import org.gdms.data.DataSourceFactory;
 import org.gdms.data.schema.Metadata;
+import org.gdms.data.types.Type;
 import org.gdms.data.values.Value;
 import org.gdms.driver.DiskBufferDriver;
 import org.gdms.driver.DriverException;
 import org.gdms.driver.DataSet;
+import org.gdms.gdmstopology.model.GraphException;
 import org.gdms.gdmstopology.model.GraphMetadataFactory;
 import org.gdms.gdmstopology.model.GraphSchema;
 import org.gdms.gdmstopology.process.GraphPath;
@@ -54,9 +56,12 @@ import org.orbisgis.progress.ProgressMonitor;
  * Calculates the shortest path between two vertices of a graph using Dijkstra's
  * algorithm.
  *
- * <p> Example usage: <center>
- * {@code SELECT * from  ST_ShortestPath(input_table, source_vertex, target_vertex, 'weights_column'[,orientation]);}
- * </center>
+ * <p> Example usage: <center> null {@code SELECT * from
+ * ST_ShortestPath(
+ * input_table,
+ * source_vertex,
+ * target_vertex,
+ * 'weights_column'[,orientation]);} </center>
  *
  * <p> Required parameters: <ul> <li> {@code input_table} - the input table.
  * Specifically, this is the {@code output_table_prefix.edges} table produced by
@@ -76,20 +81,46 @@ import org.orbisgis.progress.ProgressMonitor;
  * <p> October 15, 2012: Documentation added by Adam Gouge.
  *
  * @author Erwan Bocher
+ * @author Adam Gouge
  */
 public class ST_ShortestPath extends AbstractTableFunction {
+
+    /**
+     * The number of required arguments;
+     */
+    private static final int NUMBER_OF_REQUIRED_ARGUMENTS = 3;
+    // REQUIRED
+    /**
+     * The source vertex.
+     */
+    private int source;
+    /**
+     * The target vertex.
+     */
+    private int target;
+    /**
+     * Specifies the weight column (or 1 in the case of an unweighted graph).
+     */
+    private String weightsColumn;
+    // OPTIONAL
+    /**
+     * Specifies the orientation of the graph.
+     */
+    private int orientation = -1;
 
     /**
      * Evaluates the function to calculate the shortest path using Dijkstra'
      * algorithm.
      *
-     * @param dsf The {@link DataSourceFactory} used to parse the data set.
+     * @param dsf    The {@link DataSourceFactory} used to parse the data set.
      * @param tables The input table. (This {@link DataSet} array will contain
-     * only one element since there is only one input table.)
+     *               only one element since there is only one input table.)
      * @param values Array containing the optional arguments.
-     * @param pm The progress monitor used to track the progress of the shortest
-     * path calculation.
+     * @param pm     The progress monitor used to track the progress of the
+     *               shortest path calculation.
+     *
      * @return The {@link DataSet} containing the shortest path.
+     *
      * @throws FunctionException
      */
     @Override
@@ -101,25 +132,88 @@ public class ST_ShortestPath extends AbstractTableFunction {
             throws FunctionException {
         try {
             // Set the source vertex.
-            int source = values[0].getAsInt();
+            source = GraphFunctionParser.parseSource(values[0]);
             // Set the target vertex.
-            int target = values[1].getAsInt();
+            target = GraphFunctionParser.parseTarget(values[1]);
             // Set the weights column.
-            String weightsColumn = values[2].getAsString();
-            // If the orientation is specified, we take it into account.
-            if (values.length == 4) {
-                // Calculate and return the shortest path.
-                DiskBufferDriver diskBufferDriver = GraphPath.getShortestPath(dsf, tables[0], source, target, weightsColumn, values[3].getAsInt(), pm);
-                diskBufferDriver.open();
-                return diskBufferDriver;
-            } else { // Orientation is not specified, so we assume the graph is directed.
-                // Calculate and return the shortest path.
-                DiskBufferDriver diskBufferDriver = GraphPath.getShortestPath(dsf, tables[0], source, target, weightsColumn, GraphSchema.DIRECT, pm);
-                diskBufferDriver.open();
-                return diskBufferDriver;
-            }
+            weightsColumn = GraphFunctionParser.parseWeight(values[2]);
+
+            parseOptionalArguments(values);
+
+            return calculateShortestPathAccordingToUserInput(
+                    dsf,
+                    tables[0],
+                    pm);
         } catch (Exception ex) {
             throw new FunctionException("Cannot compute the shortest path", ex);
+        }
+    }
+
+    /**
+     * Calculates the shortest path according to the SQL arguments provided by
+     * the user.
+     *
+     * @param dsf     The {@link DataSourceFactory} used to parse the data set.
+     * @param dataSet The input table.
+     * @param pm      The progress monitor used to track the progress of the
+     *                calculation.
+     *
+     * @return The shortest path.
+     *
+     * @throws GraphException
+     * @throws DriverException
+     */
+    private DiskBufferDriver calculateShortestPathAccordingToUserInput(
+            DataSourceFactory dsf,
+            DataSet dataSet,
+            ProgressMonitor pm) throws GraphException,
+            DriverException {
+        DiskBufferDriver diskBufferDriver =
+                GraphPath.getShortestPath(
+                dsf,
+                dataSet,
+                source,
+                target,
+                weightsColumn,
+                orientation,
+                pm);
+        diskBufferDriver.open();
+        return diskBufferDriver;
+    }
+
+    /**
+     * Parse the optional function argument at the given index.
+     *
+     * <p> <i>Note</i>: For this function, there is only one optional argument,
+     * the orientation.
+     *
+     * @param values Array containing the other arguments.
+     * @param index  The index.
+     *
+     * @throws FunctionException
+     */
+    private void parseOptionalArgument(Value[] values, int index) throws
+            FunctionException {
+        orientation = GraphFunctionParser.parseOrientation(values[index]);
+    }
+
+    /**
+     * Parse the optional function arguments.
+     *
+     * <p> <i>Note</i>: If the orientation is not specified, we consider the
+     * graph to be directed.
+     *
+     * @param values Array containing the other arguments.
+     *
+     * @throws FunctionException
+     */
+    private void parseOptionalArguments(Value[] values) throws FunctionException {
+        // Set the default orientation to be directed.
+        orientation = GraphSchema.DIRECT;
+        // If the orientation is specified, then recover it.
+        int index = NUMBER_OF_REQUIRED_ARGUMENTS;
+        while (values.length > index) {
+            parseOptionalArgument(values, index++);
         }
     }
 
@@ -173,7 +267,9 @@ public class ST_ShortestPath extends AbstractTableFunction {
      * executing the query.
      *
      * @param tables {@link Metadata} objects of the input tables.
+     *
      * @return The {@link Metadata} of the result.
+     *
      * @throws DriverException
      */
     // TODO: The input 'Metadata[] tables' is never used!
