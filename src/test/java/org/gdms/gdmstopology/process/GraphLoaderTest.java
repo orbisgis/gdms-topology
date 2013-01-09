@@ -174,8 +174,7 @@ public class GraphLoaderTest extends TopologySetUpTest {
         Graph graph = GraphLoaderUtilities.
                 loadGraphFromDataSet(
                 tables[0],
-                GRAPH2D_WEIGHT,
-                GraphSchema.UNDIRECT);
+                GraphSchema.UNDIRECT, GRAPH2D_WEIGHT);
 
 //        System.out.println("testLoadGraph2DUndirected()");
 //        graph.printEdges();
@@ -207,8 +206,7 @@ public class GraphLoaderTest extends TopologySetUpTest {
         Graph graph = GraphLoaderUtilities.
                 loadGraphFromDataSet(
                 tables[0],
-                GRAPH2D_WEIGHT,
-                GraphSchema.DIRECT);
+                GraphSchema.DIRECT, GRAPH2D_WEIGHT);
 
 //        System.out.println("testLoadGraph2DDirected()");
 //        graph.printEdges();
@@ -240,8 +238,7 @@ public class GraphLoaderTest extends TopologySetUpTest {
         Graph graph = GraphLoaderUtilities.
                 loadGraphFromDataSet(
                 tables[0],
-                GRAPH2D_WEIGHT,
-                GraphSchema.DIRECT_REVERSED);
+                GraphSchema.DIRECT_REVERSED, GRAPH2D_WEIGHT);
 
 //        System.out.println("testLoadGraph2DReversed()");
 //        graph.printEdges();

@@ -83,7 +83,8 @@ public class GraphCentralityUtilities extends GraphAnalysis {
             String outputTablePrefix,
             int graphType,
             ProgressMonitor pm)
-            throws GraphException, DriverException {
+            throws GraphException,
+            DriverException {
 
         // Create the graph from the data set.
         GraphStorage graph = GraphLoaderUtilities.
@@ -98,7 +99,7 @@ public class GraphCentralityUtilities extends GraphAnalysis {
         // Write the results to a new table.
         writeToTable(dsf, closenessCentralityDriver, outputTablePrefix);
     }
-    
+
     /**
      * Registers the closeness centrality indices of the nodes of the given
      * graph.
@@ -123,14 +124,15 @@ public class GraphCentralityUtilities extends GraphAnalysis {
             String outputTablePrefix,
             int graphType,
             ProgressMonitor pm)
-            throws GraphException, DriverException {
+            throws GraphException,
+            DriverException {
 
         // Create the graph from the data set.
         Graph graph = GraphLoaderUtilities.
                 loadGraphFromDataSet(
                 dataSet,
-                weightColumnName,
-                graphType);
+                graphType,
+                weightColumnName);
 
         // Calculate the closeness centrality.
         DiskBufferDriver closenessCentralityDriver =
@@ -213,8 +215,8 @@ public class GraphCentralityUtilities extends GraphAnalysis {
         // And return it.
         return closenessBufferDriver;
     }
-    
-        /**
+
+    /**
      * Calculates the closeness centrality indices of all nodes of the given
      * graph.
      *

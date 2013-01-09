@@ -166,8 +166,8 @@ public class GraphLoaderUtilities {
      */
     public static Graph loadGraphFromDataSet(
             DataSet dataSet,
-            String weightColumnName,
-            int graphType) throws DriverException,
+            int graphType,
+            String weightColumnName) throws DriverException,
             GraphException {
 
         // Initialize the graph.
