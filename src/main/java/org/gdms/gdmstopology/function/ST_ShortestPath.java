@@ -34,15 +34,14 @@ package org.gdms.gdmstopology.function;
 
 import org.gdms.data.DataSourceFactory;
 import org.gdms.data.schema.Metadata;
-import org.gdms.data.types.Type;
 import org.gdms.data.values.Value;
+import org.gdms.driver.DataSet;
 import org.gdms.driver.DiskBufferDriver;
 import org.gdms.driver.DriverException;
-import org.gdms.driver.DataSet;
 import org.gdms.gdmstopology.model.GraphException;
 import org.gdms.gdmstopology.model.GraphMetadataFactory;
 import org.gdms.gdmstopology.model.GraphSchema;
-import org.gdms.gdmstopology.process.GraphPath;
+import org.gdms.gdmstopology.process.GraphPathCalculator;
 import org.gdms.sql.function.FunctionException;
 import org.gdms.sql.function.FunctionSignature;
 import org.gdms.sql.function.ScalarArgument;
@@ -56,12 +55,17 @@ import org.orbisgis.progress.ProgressMonitor;
  * Calculates the shortest path between two vertices of a graph using Dijkstra's
  * algorithm.
  *
- * <p> Example usage: <center> null {@code SELECT * from
+ * <p> Example usage: <center> {@code SELECT * from
  * ST_ShortestPath(
  * input_table,
  * source_vertex,
  * target_vertex,
- * 'weights_column'[,orientation]);} </center>
+ * 'weights_column'[,orientation]);} </center> or: <center> {@code SELECT * from
+ * ST_ShortestPath(
+ * input_table,
+ * source_vertex,
+ * target_vertex,
+ * 1[,orientation]);} </center>
  *
  * <p> Required parameters: <ul> <li> {@code input_table} - the input table.
  * Specifically, this is the {@code output_table_prefix.edges} table produced by
@@ -168,15 +172,29 @@ public class ST_ShortestPath extends AbstractTableFunction {
             DataSet dataSet,
             ProgressMonitor pm) throws GraphException,
             DriverException {
-        DiskBufferDriver diskBufferDriver =
-                GraphPath.getShortestPath(
-                dsf,
-                dataSet,
-                source,
-                target,
-                weightsColumn,
-                orientation,
-                pm);
+
+        DiskBufferDriver diskBufferDriver;
+        // UNWEIGHTED GRAPHS
+        if (weightsColumn == null) {
+            diskBufferDriver =
+                    GraphPathCalculator.calculateShortestPathAllWeightsOne(
+                    dsf,
+                    dataSet,
+                    source,
+                    target,
+                    orientation,
+                    pm);
+        } else { // WEIGHTED GRAPHS
+            diskBufferDriver =
+                    GraphPathCalculator.calculateShortestPath(
+                    dsf,
+                    dataSet,
+                    source,
+                    target,
+                    orientation,
+                    weightsColumn,
+                    pm);
+        }
         diskBufferDriver.open();
         return diskBufferDriver;
     }
@@ -215,6 +233,7 @@ public class ST_ShortestPath extends AbstractTableFunction {
         while (values.length > index) {
             parseOptionalArgument(values, index++);
         }
+        System.out.println("Set the orientation to be " + orientation);
     }
 
     /**
@@ -282,22 +301,39 @@ public class ST_ShortestPath extends AbstractTableFunction {
      * Returns an array of all possible signatures of this function. Multiple
      * signatures arise from some arguments being optional.
      *
-     * <p> Possible signatures: <OL> <li> {@code (TABLE,INT,INT,STRING)} <li>
-     * {@code (TABLE,INT,INT,STRING,INT)} </OL>
-     *
      * @return An array of all possible signatures of this function.
      */
     @Override
     public FunctionSignature[] getFunctionSignatures() {
         return new FunctionSignature[]{
+                    // ALL WEIGHTS ONE
+                    // First possible signature: (TABLE input_table, INT source, INT target, INT 1).
                     new TableFunctionSignature(
-                    TableDefinition.GEOMETRY,
+                    TableDefinition.ANY, // was TableDefinition.GEOMETRY before,
+                    // but we are not necessarily going to return the geometries directly.
+                    new TableArgument(TableDefinition.GEOMETRY),
+                    ScalarArgument.INT,
+                    ScalarArgument.INT,
+                    ScalarArgument.INT),
+                    // Second possible signature: (TABLE input_table, INT source, INT target, INT 1, INT orientation).
+                    new TableFunctionSignature(
+                    TableDefinition.ANY,
+                    new TableArgument(TableDefinition.GEOMETRY),
+                    ScalarArgument.INT,
+                    ScalarArgument.INT,
+                    ScalarArgument.INT,
+                    ScalarArgument.INT),
+                    // WEIGHTED
+                    // First possible signature: (TABLE input_table, INT source, INT target, STRING 'weights_column').
+                    new TableFunctionSignature(
+                    TableDefinition.ANY,
                     new TableArgument(TableDefinition.GEOMETRY),
                     ScalarArgument.INT,
                     ScalarArgument.INT,
                     ScalarArgument.STRING),
+                    // Second possible signature: (TABLE input_table, INT source, INT target, STRING 'weights_column', INT orientation).
                     new TableFunctionSignature(
-                    TableDefinition.GEOMETRY,
+                    TableDefinition.ANY,
                     new TableArgument(TableDefinition.GEOMETRY),
                     ScalarArgument.INT,
                     ScalarArgument.INT,
