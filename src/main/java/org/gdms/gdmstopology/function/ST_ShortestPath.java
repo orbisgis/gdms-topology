@@ -75,7 +75,8 @@ import org.orbisgis.progress.ProgressMonitor;
  * {@code source_vertex} - an integer specifying the source vertex. <li>
  * {@code target_vertex} - an integer specifying the target vertex. <li>
  * {@code 'weights_column'} - a string specifying the name of the column of the
- * input table that gives the weight of each edge. </ul>
+ * input table that gives the weight of each edge. If the graph is to be
+ * considered unweighted, then enter 1.</ul>
  *
  * <p> Optional parameter: <ul> <li> {@code orientation} - an integer specifying
  * the orientation of the graph: <ul> <li> 1 if the graph is directed, <li> 2 if
@@ -109,12 +110,16 @@ public class ST_ShortestPath extends AbstractTableFunction {
             + "'weights_column'"
             + "[,orientation]);";
     /**
-     * Gives a description of this function.
+     * Short description of this function.
      */
-    private static final String DESCRIPTION =
+    private static final String SHORT_DESCRIPTION =
             "Calculates the shortest path between two vertices of a graph "
-            + "using Dijkstra's algorithm. "
-            + "<p> "
+            + "using Dijkstra's algorithm. ";
+    /**
+     * Long description of this function.
+     */
+    private static final String LONG_DESCRIPTION =
+            "<p> "
             + "Required parameters: "
             + "<ul> "
             + "<li> "
@@ -135,7 +140,8 @@ public class ST_ShortestPath extends AbstractTableFunction {
             + "<li> "
             + "<code>'weights_column'</code> "
             + "- a string specifying the name of the column of the input "
-            + "table that gives the weight of each edge. "
+            + "table that gives the weight of each edge. If the graph "
+            + "is to be considered unweighted, then enter 1."
             + "</ul> " // end required parameters.
             + "<p> "
             + "Optional parameter: "
@@ -167,6 +173,11 @@ public class ST_ShortestPath extends AbstractTableFunction {
      * Specifies the orientation of the graph.
      */
     private int orientation = -1;
+    /**
+     * Description of this function.
+     */
+    private static final String DESCRIPTION =
+            SHORT_DESCRIPTION + LONG_DESCRIPTION;
     /**
      * An error message to be displayed when {@link #evaluate(
      * org.gdms.data.DataSourceFactory,

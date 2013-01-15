@@ -55,17 +55,17 @@ import org.orbisgis.progress.ProgressMonitor;
  * connected component they belong.
  *
  * <p> Example usage: <center>
- * <code>EXECUTE ST_ConnectedComponents(
- * input_table,
+ * <code>
+ * EXECUTE ST_ConnectedComponents(input_table,
  * 'weights_column',
- * orientation);</code> </center>
+ * orientation);
+ * </code> </center>
  *
  * <p> Required parameters: <ul> <li>
  * <code>input_table</code> - the input table. Specifically, this is the
- * <code>output_table_prefix.edges</code> table produced by
- * <code>ST_Graph</code>, except that an additional column specifying the weight
- * of each edge must be added (this is the
- * <code>'weights_column'</code>). <li>
+ * <code>output_table_prefix.edges</code> table produced by {@link ST_Graph},
+ * except that an additional column specifying the weight of each edge must be
+ * added. <li>
  * <code>'weights_column'</code> - a string specifying the name of the column of
  * the input table that gives the weight of each edge. <li>
  * <code>orientation</code> - an integer specifying the orientation of the
@@ -91,11 +91,15 @@ public class ST_ConnectedComponents extends AbstractExecutorFunction {
             + "'weights_column', "
             + "orientation);";
     /**
-     * The description of this function.
+     * Short description of this function.
      */
-    private static final String DESCRIPTION =
-            "Calculates the connected components of a given graph. "
-            + "<p> "
+    private static final String SHORT_DESCRIPTION =
+            "Calculates the connected components of a given graph. ";
+    /**
+     * Long description of this function.
+     */
+    private static final String LONG_DESCRIPTION =
+            "<p> "
             + "Creates a new table called "
             + "<code>connected_components</code> "
             + "which lists all the vertices and to which "
@@ -110,10 +114,7 @@ public class ST_ConnectedComponents extends AbstractExecutorFunction {
             + "table produced by "
             + "<code>ST_Graph</code>, "
             + "except that an additional column specifying the weight "
-            + "of each edge must be added "
-            + "(this is the "
-            + "<code>'weights_column'</code>"
-            + "). "
+            + "of each edge must be added. "
             + "<li> "
             + "<code>'weights_column'</code> - "
             + "a string specifying the name of the column of the input "
@@ -131,12 +132,16 @@ public class ST_ConnectedComponents extends AbstractExecutorFunction {
             + "directed. "
             + "</ul> "; // end required parameters list
     /**
+     * Description of this function.
+     */
+    private static final String DESCRIPTION =
+            SHORT_DESCRIPTION + LONG_DESCRIPTION;
+    /**
      * An error message to be displayed when {@link #evaluate(
      * org.gdms.data.DataSourceFactory,
      * org.gdms.driver.DataSet[],
      * org.gdms.data.values.Value[],
-     * org.orbisgis.progress.ProgressMonitor)
-     * fails.
+     * org.orbisgis.progress.ProgressMonitor) evaluate} fails.
      */
     private static final String EVALUATE_ERROR =
             "Cannot compute the connected components.";
