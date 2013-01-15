@@ -79,14 +79,77 @@ import org.orbisgis.progress.ProgressMonitor;
 public class ST_ConnectedComponents extends AbstractExecutorFunction {
 
     /**
+     * The name of this function.
+     */
+    private static final String NAME = "ST_ConnectedComponents";
+    /**
+     * The SQL order of this function.
+     */
+    private static final String SQL_ORDER =
+            "EXECUTE ST_ConnectedComponents("
+            + "input_table, "
+            + "'weights_column', "
+            + "orientation);";
+    /**
+     * The description of this function.
+     */
+    private static final String DESCRIPTION =
+            "Calculates the connected components of a given graph. "
+            + "<p> "
+            + "Creates a new table called "
+            + "<code>connected_components</code> "
+            + "which lists all the vertices and to which "
+            + "connected component they belong. "
+            + "<p> "
+            + "Required parameters: "
+            + "<ul> "
+            + "<li> "
+            + "<code>input_table</code> - the input table. "
+            + "Specifically, this is the "
+            + "<code>output_table_prefix.edges</code> "
+            + "table produced by "
+            + "<code>ST_Graph</code>, "
+            + "except that an additional column specifying the weight "
+            + "of each edge must be added "
+            + "(this is the "
+            + "<code>'weights_column'</code>"
+            + "). "
+            + "<li> "
+            + "<code>'weights_column'</code> - "
+            + "a string specifying the name of the column of the input "
+            + "table that gives the weight of each edge. "
+            + "<li> "
+            + "<code>orientation</code> - "
+            + "an integer specifying the orientation of the graph: "
+            + "<ul> "
+            + "<li> 1 if the graph is directed, "
+            + "<li> 2 if it is directed and we wish to reverse the "
+            + "orientation of the edges, "
+            + "<li> 3 if the graph is undirected. "
+            + "</ul> " // end orientation list
+            + "If no orientation is specified, we assume the graph is"
+            + "directed. "
+            + "</ul> "; // end required parameters list
+    /**
+     * An error message to be displayed when {@link #evaluate(
+     * org.gdms.data.DataSourceFactory,
+     * org.gdms.driver.DataSet[],
+     * org.gdms.data.values.Value[],
+     * org.orbisgis.progress.ProgressMonitor)
+     * fails.
+     */
+    private static final String EVALUATE_ERROR =
+            "Cannot compute the connected components.";
+
+    /**
      * Evaluates the function to calculate the connected components of a graph.
      *
-     * @param dsf The {@link DataSourceFactory} used to parse the data set.
+     * @param dsf    The {@link DataSourceFactory} used to parse the data set.
      * @param tables The input table. (This {@link DataSet} array will contain
-     * only one element since there is only one input table.)
+     *               only one element since there is only one input table.)
      * @param values Array containing the other arguments.
-     * @param pm The progress monitor used to track the progress of the
-     * calculation.
+     * @param pm     The progress monitor used to track the progress of the
+     *               calculation.
      */
     @Override
     public void evaluate(
@@ -114,10 +177,11 @@ public class ST_ConnectedComponents extends AbstractExecutorFunction {
                     pm);
             // Record a new table listing all the vertices and to which
             // connected component they belong.
-            GraphConnectivityUtilities.registerConnectedComponents(dsf, inspector);
+            GraphConnectivityUtilities.registerConnectedComponents(dsf,
+                                                                   inspector);
         } catch (Exception ex) {
             System.out.println(ex);
-            throw new FunctionException("Cannot compute the connected components.", ex);
+            throw new FunctionException(EVALUATE_ERROR, ex);
         }
     }
 
@@ -129,7 +193,7 @@ public class ST_ConnectedComponents extends AbstractExecutorFunction {
      */
     @Override
     public String getName() {
-        return "ST_ConnectedComponents";
+        return NAME;
     }
 
     /**
@@ -139,10 +203,7 @@ public class ST_ConnectedComponents extends AbstractExecutorFunction {
      */
     @Override
     public String getSqlOrder() {
-        return "EXECUTE ST_ConnectedComponents("
-                + "input_table, "
-                + "'weights_column', "
-                + ",orientation);";
+        return SQL_ORDER;
     }
 
     /**
@@ -152,31 +213,7 @@ public class ST_ConnectedComponents extends AbstractExecutorFunction {
      */
     @Override
     public String getDescription() {
-        return "Calculates the connected components of a given graph. "
-                + "<p> Creates a new table called "
-                + "<code>connected_components</code> which lists all the "
-                + "vertices and to which connected component they belong. "
-                + "<p> Required parameters: <ul> "
-                + "<li> <code>input_table</code> - "
-                + "the input table. Specifically, this is the "
-                + "<code>output_table_prefix.edges</code> table produced by "
-                + "<code>ST_Graph</code>, except that an additional column "
-                + "specifying the weight of each edge must be added "
-                + "(this is the <code>'weights_column'</code>). "
-                + "<li> <code>'weights_column'</code> - "
-                + "a string specifying the "
-                + "name of the column of the input table that gives the weight "
-                + "of each edge. "
-                + "<li> <code>orientation</code> - "
-                + "an integer specifying the "
-                + "orientation of the graph: <ul> "
-                + "<li> 1 if the graph is directed, "
-                + "<li> 2 if it is directed and we wish to reverse the "
-                + "orientation of the edges, "
-                + "<li> 3 if the graph is undirected."
-                + " </ul> "
-                + "If no orientation is specified, we assume the graph is"
-                + "directed. </ul> ";
+        return DESCRIPTION;
     }
 
 //    /**
