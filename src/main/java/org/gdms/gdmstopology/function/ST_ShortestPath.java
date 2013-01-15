@@ -41,6 +41,7 @@ import org.gdms.driver.DriverException;
 import org.gdms.gdmstopology.model.GraphException;
 import org.gdms.gdmstopology.model.GraphMetadataFactory;
 import org.gdms.gdmstopology.model.GraphSchema;
+import org.gdms.gdmstopology.process.GraphLoaderUtilities;
 import org.gdms.gdmstopology.process.GraphPathCalculator;
 import org.gdms.sql.function.FunctionException;
 import org.gdms.sql.function.FunctionSignature;
@@ -225,7 +226,7 @@ public class ST_ShortestPath extends AbstractTableFunction {
      *
      * @throws FunctionException
      */
-    private void parseOptionalArguments(Value[] values) throws FunctionException {
+    private void parseOptionalArguments(Value[] values) throws FunctionException, GraphException {
         // Set the default orientation to be directed.
         orientation = GraphSchema.DIRECT;
         // If the orientation is specified, then recover it.
@@ -233,7 +234,16 @@ public class ST_ShortestPath extends AbstractTableFunction {
         while (values.length > index) {
             parseOptionalArgument(values, index++);
         }
-        System.out.println("Set the orientation to be " + orientation);
+        System.out.print("Set the orientation to be ");
+        if (orientation == GraphSchema.DIRECT) {
+            System.out.println("directed.");
+        } else if (orientation == GraphSchema.DIRECT_REVERSED) {
+            System.out.println("reversed.");
+        } else if (orientation == GraphSchema.UNDIRECT) {
+            System.out.println("undirected.");
+        } else {
+            throw new GraphException(GraphLoaderUtilities.GRAPH_TYPE_ERROR);
+        }
     }
 
     /**
