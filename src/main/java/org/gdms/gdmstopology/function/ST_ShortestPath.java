@@ -80,6 +80,54 @@ import org.orbisgis.progress.ProgressMonitor;
 public class ST_ShortestPath extends AbstractTableFunction {
 
     /**
+     * The name of this function.
+     */
+    private static final String NAME = "ST_ShortestPath";
+    /**
+     * The SQL order of this function.
+     */
+    private static final String SQL_ORDER =
+            "SELECT * from  ST_ShortestPath("
+            + "input_table, "
+            + "source_vertex, "
+            + "target_vertex, "
+            + "'weights_column'"
+            + "[,orientation]);";
+    /**
+     * Gives a description of this function.
+     */
+    private static final String DESCRIPTION =
+            "Calculates the shortest path between two vertices of a graph "
+            + "using Dijkstra's algorithm. "
+            + "The input_table is the <code>output_table_prefix.edges</code> "
+            + "table produced by the <code>ST_Graph</code> function, "
+            + "except that an extra column must be added to specify "
+            + "the weight of each edge (<code>'weights_column'</code>). "
+            + "The <code>source_vertex</code> and the "
+            + "<code>target_vertex</code> are specified by an integer. "
+            + "The <code>'weights_column'</code> is a string specifying "
+            + "the name of the column of the input table that gives the "
+            + "weight of each edge. "
+            + "The optional parameter orientation is an integer "
+            + "specifying the orientation of the graph: "
+            + "1 if the graph is directed, "
+            + "2 if it is directed and we wish to reverse the orientation "
+            + "of the edges, and "
+            + "3 if the graph is undirected. "
+            + "If no orientation is specified, we assume the graph is "
+            + "directed.";
+    /**
+     * An error message to be displayed when {@link #evaluate(
+     * org.gdms.data.DataSourceFactory,
+     * org.gdms.driver.DataSet[],
+     * org.gdms.data.values.Value[],
+     * org.orbisgis.progress.ProgressMonitor)
+     * fails.
+     */
+    private static final String EVALUATE_ERROR =
+            "Cannot compute the shortest path";
+
+    /**
      * Evaluates the function to calculate the shortest path using Dijkstra'
      * algorithm.
      *
@@ -119,7 +167,7 @@ public class ST_ShortestPath extends AbstractTableFunction {
                 return diskBufferDriver;
             }
         } catch (Exception ex) {
-            throw new FunctionException("Cannot compute the shortest path", ex);
+            throw new FunctionException(EVALUATE_ERROR, ex);
         }
     }
 
@@ -131,7 +179,7 @@ public class ST_ShortestPath extends AbstractTableFunction {
      */
     @Override
     public String getName() {
-        return "ST_ShortestPath";
+        return NAME;
     }
 
     /**
@@ -141,7 +189,7 @@ public class ST_ShortestPath extends AbstractTableFunction {
      */
     @Override
     public String getSqlOrder() {
-        return "SELECT * from  ST_ShortestPath(input_table, source_vertex, target_vertex, 'weights_column'[,orientation]);";
+        return SQL_ORDER;
     }
 
     /**
@@ -151,21 +199,7 @@ public class ST_ShortestPath extends AbstractTableFunction {
      */
     @Override
     public String getDescription() {
-        return "Calculates the shortest path between two vertices of a "
-                + "graph using Dijkstra's algorithm. The input_table is the "
-                + "output_table_prefix.edges table produced by the ST_Graph "
-                + "function, except that an extra column must be added to "
-                + "specify the weight of each edge ('weights_column'). The "
-                + "source_vertex and the "
-                + "target_vertex are specified by an integer. The "
-                + "'weights_column' is a string specifying the name of the "
-                + "column of the input table that gives the weight of each "
-                + "edge. The optional parameter orientation is an integer "
-                + "specifying the orientation of the graph: 1 if the graph is "
-                + "directed, 2 if it is directed and we wish to reverse the "
-                + "orientation of the edges, and 3 if the graph is undirected. "
-                + "If no orientation is specified, we assume the graph is "
-                + "directed.";
+        return DESCRIPTION;
     }
 
     /**
