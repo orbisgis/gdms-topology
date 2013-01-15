@@ -142,7 +142,7 @@ public class ST_ConnectedComponents extends AbstractExecutorFunction {
         return "EXECUTE ST_ConnectedComponents("
                 + "input_table, "
                 + "'weights_column', "
-                + ",orientation);";
+                + "orientation);";
     }
 
     /**
