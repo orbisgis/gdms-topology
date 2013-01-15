@@ -94,12 +94,16 @@ public class ST_ShortestPath extends AbstractTableFunction {
             + "'weights_column'"
             + "[,orientation]);";
     /**
-     * Gives a description of this function.
+     * Short description of this function.
      */
-    private static final String DESCRIPTION =
+    private static final String SHORT_DESCRIPTION =
             "Calculates the shortest path between two vertices of a graph "
-            + "using Dijkstra's algorithm. "
-            + "<p> "
+            + "using Dijkstra's algorithm. ";
+    /**
+     * Long description of this function.
+     */
+    private static final String LONG_DESCRIPTION =
+            "<p> "
             + "Required parameters: "
             + "<ul> "
             + "<li> "
@@ -135,6 +139,11 @@ public class ST_ShortestPath extends AbstractTableFunction {
             + "If no orientation is specified, we assume the graph is"
             + "directed. "; // end optional parameters. 
     /**
+     * Description of this function.
+     */
+    private static final String DESCRIPTION =
+            SHORT_DESCRIPTION + LONG_DESCRIPTION;
+    /**
      * An error message to be displayed when {@link #evaluate(
      * org.gdms.data.DataSourceFactory,
      * org.gdms.driver.DataSet[],
@@ -149,13 +158,15 @@ public class ST_ShortestPath extends AbstractTableFunction {
      * Evaluates the function to calculate the shortest path using Dijkstra'
      * algorithm.
      *
-     * @param dsf The {@link DataSourceFactory} used to parse the data set.
+     * @param dsf    The {@link DataSourceFactory} used to parse the data set.
      * @param tables The input table. (This {@link DataSet} array will contain
-     * only one element since there is only one input table.)
+     *               only one element since there is only one input table.)
      * @param values Array containing the optional arguments.
-     * @param pm The progress monitor used to track the progress of the shortest
-     * path calculation.
+     * @param pm     The progress monitor used to track the progress of the
+     *               shortest path calculation.
+     *
      * @return The {@link DataSet} containing the shortest path.
+     *
      * @throws FunctionException
      */
     @Override
@@ -175,12 +186,18 @@ public class ST_ShortestPath extends AbstractTableFunction {
             // If the orientation is specified, we take it into account.
             if (values.length == 4) {
                 // Calculate and return the shortest path.
-                DiskBufferDriver diskBufferDriver = GraphPath.getShortestPath(dsf, tables[0], source, target, weightsColumn, values[3].getAsInt(), pm);
+                DiskBufferDriver diskBufferDriver = GraphPath.getShortestPath(
+                        dsf, tables[0], source, target, weightsColumn,
+                        values[3].
+                        getAsInt(), pm);
                 diskBufferDriver.open();
                 return diskBufferDriver;
             } else { // Orientation is not specified, so we assume the graph is directed.
                 // Calculate and return the shortest path.
-                DiskBufferDriver diskBufferDriver = GraphPath.getShortestPath(dsf, tables[0], source, target, weightsColumn, GraphSchema.DIRECT, pm);
+                DiskBufferDriver diskBufferDriver = GraphPath.getShortestPath(
+                        dsf, tables[0], source, target, weightsColumn,
+                        GraphSchema.DIRECT,
+                        pm);
                 diskBufferDriver.open();
                 return diskBufferDriver;
             }
@@ -225,7 +242,9 @@ public class ST_ShortestPath extends AbstractTableFunction {
      * executing the query.
      *
      * @param tables {@link Metadata} objects of the input tables.
+     *
      * @return The {@link Metadata} of the result.
+     *
      * @throws DriverException
      */
     // TODO: The input 'Metadata[] tables' is never used!
