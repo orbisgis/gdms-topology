@@ -87,15 +87,94 @@ import org.orbisgis.progress.ProgressMonitor;
 public class ST_ClosenessCentrality extends AbstractExecutorFunction {
 
     /**
+     * The name of this function.
+     */
+    private static final String NAME = "ST_ClosenessCentrality";
+    /**
+     * The SQL order of this function.
+     */
+    private static final String SQL_ORDER = "EXECUTE ST_ClosenessCentrality("
+            + "input_table, "
+            + "'weights_column', "
+            + "'output_table_prefix'"
+            + "[,orientation]);";
+    /**
+     * Short description of this function.
+     */
+    private static final String SHORT_DESCRIPTION =
+            "Calculates the closeness centrality indices of all nodes of a "
+            + "given graph. ";
+    /**
+     * Long description of this function.
+     */
+    private static final String LONG_DESCRIPTION =
+            "<p> "
+            + "<i>Note</i>: This function uses the "
+            + "<code>jgrapht-sna</code> "
+            + "implementation of Freeman closeness centrality, which uses "
+            + "the Floyd-Warshall algorithm to calculate all possible "
+            + "shortest paths. The calculations are intense and can take "
+            + "a long time to complete."
+            + "<p> "
+            + "Required parameters: "
+            + "<ul> "
+            + "<li> <code>input_table</code> "
+            + "- the input table. Specifically, this is the "
+            + "<code>output_table_prefix.edges</code> "
+            + "table produced by "
+            + "<code>ST_Graph</code>, "
+            + "except that an additional column "
+            + "specifying the weight of each edge must be added. "
+            + "<li> "
+            + "<code>'weights_column'</code> "
+            + "- a string specifying the name of the column of the input "
+            + "table that gives the weight of each edge. "
+            + "<li> "
+            + "<code>'output_table_prefix'</code> "
+            + "- a string used to prefix the name of the output table. "
+            + "</ul>" // end required parameters.
+            + "<p> "
+            + "Optional parameters: "
+            + "<ul> "
+            + "<li> "
+            + "<code>orientation</code> "
+            + "- an integer specifying the orientation of the graph: "
+            + "<ul> "
+            + "<li> 1 if the graph is directed, "
+            + "<li> 2 if it is directed and we wish to reverse the "
+            + "orientation of the edges, "
+            + "<li> 3 if the graph is undirected."
+            + " </ul> " // end orientation list
+            + "If no orientation is specified, we assume the graph is"
+            + "directed. "
+            + "</ul> "; // end optional parameters
+    /**
+     * Description of this function.
+     */
+    private static final String DESCRIPTION =
+            SHORT_DESCRIPTION + LONG_DESCRIPTION;
+    /**
+     * An error message to be displayed when {@link #evaluate(
+     * org.gdms.data.DataSourceFactory,
+     * org.gdms.driver.DataSet[],
+     * org.gdms.data.values.Value[],
+     * org.orbisgis.progress.ProgressMonitor) evaluate} fails.
+     */
+    private static final String EVALUATE_ERROR =
+            "Cannot compute the closeness centrality indices.";
+
+    /**
      * Evaluates the function to calculate the centrality indices.
      *
-     * @param dsf The {@link DataSourceFactory} used to parse the data set.
+     * @param dsf    The {@link DataSourceFactory} used to parse the data set.
      * @param tables The input table. (This {@link DataSet} array will contain
-     * only one element since there is only one input table.)
+     *               only one element since there is only one input table.)
      * @param values Array containing the other arguments.
-     * @param pm The progress monitor used to track the progress of the shortest
-     * path calculation.
+     * @param pm     The progress monitor used to track the progress of the
+     *               shortest path calculation.
+     *
      * @return The {@link DataSet} containing the shortest path.
+     *
      * @throws FunctionException
      */
     @Override
@@ -139,7 +218,7 @@ public class ST_ClosenessCentrality extends AbstractExecutorFunction {
         } catch (Exception ex) {
             System.out.println(ex);
             throw new FunctionException(
-                    "Cannot compute the closeness centrality indices.", ex);
+                    EVALUATE_ERROR, ex);
         }
     }
 
@@ -151,7 +230,7 @@ public class ST_ClosenessCentrality extends AbstractExecutorFunction {
      */
     @Override
     public String getName() {
-        return "ST_ClosenessCentrality";
+        return NAME;
     }
 
     /**
@@ -161,11 +240,7 @@ public class ST_ClosenessCentrality extends AbstractExecutorFunction {
      */
     @Override
     public String getSqlOrder() {
-        return "EXECUTE ST_ClosenessCentrality("
-                + "input_table, "
-                + "'weights_column', "
-                + "'output_table_prefix'"
-                + "[,orientation]);";
+        return SQL_ORDER;
     }
 
     /**
@@ -176,36 +251,7 @@ public class ST_ClosenessCentrality extends AbstractExecutorFunction {
     // TODO: Make the output_table_prefix parameter optional.
     @Override
     public String getDescription() {
-        return "Calculates the closeness centrality indices of all nodes of a "
-                + "given graph. "
-                + "<p><i>Note</i>: This function uses the "
-                + "<code>jgrapht-sna</code> implementation of Freeman "
-                + "closeness centrality, which uses the Floyd-Warshall "
-                + "algorithm to calculate all possible shortest paths. "
-                + "The calculations are intense and can take a long time "
-                + "to complete."
-                + "<p> Required parameters: <ul> "
-                + "<li> <code>input_table</code> "
-                + "- the input table. Specifically, this is the "
-                + "<code>output_table_prefix.edges</code> table produced by "
-                + "<code>ST_Graph</code>, except that an additional column "
-                + "specifying the weight of each edge must be added "
-                + "(this is the <code>'weights_column'</code>). "
-                + "<li> <code>'weights_column'</code> - a string specifying the "
-                + "name of the column of the input table that gives the weight "
-                + "of each edge. "
-                + "<li> <code>'output_table_prefix'</code> - a string used to prefix "
-                + "the name of the output table. </ul>"
-                + "<p> Optional parameters: <ul> "
-                + "<li> <code>orientation</code> - an integer specifying the "
-                + "orientation of the graph: <ul> "
-                + "<li> 1 if the graph is directed, "
-                + "<li> 2 if it is directed and we wish to reverse the "
-                + "orientation of the edges, "
-                + "<li> 3 if the graph is undirected."
-                + " </ul> "
-                + "If no orientation is specified, we assume the graph is"
-                + "directed. </ul> ";
+        return DESCRIPTION;
     }
 
 //    /**
