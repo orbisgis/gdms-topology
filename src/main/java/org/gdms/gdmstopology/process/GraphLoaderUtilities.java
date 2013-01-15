@@ -68,7 +68,7 @@ public class GraphLoaderUtilities {
     /**
      * An error message given when a user inputs an erroneous graph orientation.
      */
-    private final static String GRAPH_TYPE_ERROR = "Only three types of graphs "
+    public final static String GRAPH_TYPE_ERROR = "Only three types of graphs "
             + "are allowed: enter 1 if the graph is "
             + "directed, 2 if it is directed and you wish to reverse the "
             + "orientation of the edges, and 3 if the graph is undirected. "
