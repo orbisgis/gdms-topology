@@ -91,13 +91,13 @@ import org.orbisgis.progress.ProgressMonitor;
 public class ST_ShortestPath extends AbstractTableFunction {
 
     /**
-     * The number of required arguments;
-     */
-    private static final int NUMBER_OF_REQUIRED_ARGUMENTS = 3;
-    /**
      * The name of this function.
      */
     private static final String NAME = "ST_ShortestPath";
+    /**
+     * The number of required arguments.
+     */
+    private static final int NUMBER_OF_REQUIRED_ARGUMENTS = 3;
     /**
      * The SQL order of this function.
      */
@@ -114,23 +114,41 @@ public class ST_ShortestPath extends AbstractTableFunction {
     private static final String DESCRIPTION =
             "Calculates the shortest path between two vertices of a graph "
             + "using Dijkstra's algorithm. "
-            + "The input_table is the <code>output_table_prefix.edges</code> "
-            + "table produced by the <code>ST_Graph</code> function, "
-            + "except that an extra column must be added to specify "
-            + "the weight of each edge (<code>'weights_column'</code>). "
-            + "The <code>source_vertex</code> and the "
-            + "<code>target_vertex</code> are specified by an integer. "
-            + "The <code>'weights_column'</code> is a string specifying "
-            + "the name of the column of the input table that gives the "
-            + "weight of each edge. "
-            + "The optional parameter orientation is an integer "
-            + "specifying the orientation of the graph: "
-            + "1 if the graph is directed, "
-            + "2 if it is directed and we wish to reverse the orientation "
-            + "of the edges, and "
-            + "3 if the graph is undirected. "
-            + "If no orientation is specified, we assume the graph is "
-            + "directed.";
+            + "<p> "
+            + "Required parameters: "
+            + "<ul> "
+            + "<li> "
+            + "<code>input_table</code> "
+            + "- the "
+            + "<code>output_table_prefix.edges</code> "
+            + "table produced by the "
+            + "<code>ST_Graph</code> function, except that an extra column "
+            + "must be added to specify the weight of each edge ("
+            + "<code>'weights_column'</code>"
+            + "). "
+            + "<li> "
+            + "<code>source_vertex</code> "
+            + "- specified by an integer. "
+            + "<li> "
+            + "<code>target_vertex</code> "
+            + "- specified by an integer. "
+            + "<li> "
+            + "<code>'weights_column'</code> "
+            + "- a string specifying the name of the column of the input "
+            + "table that gives the weight of each edge. "
+            + "</ul> " // end required parameters.
+            + "<p> "
+            + "Optional parameter: "
+            + "<code>orientation</code> "
+            + "- an integer specifying the orientation of the graph: "
+            + "<ul> "
+            + "<li> 1 if the graph is directed, "
+            + "<li> 2 if it is directed and we wish to reverse the "
+            + "orientation of the edges, "
+            + "<li> 3 if the graph is undirected. "
+            + "</ul> " // end orientation list
+            + "If no orientation is specified, we assume the graph is"
+            + "directed. "; // end optional parameters. 
     // REQUIRED ARGUMENTS
     /**
      * The source vertex.
@@ -149,6 +167,16 @@ public class ST_ShortestPath extends AbstractTableFunction {
      * Specifies the orientation of the graph.
      */
     private int orientation = -1;
+    /**
+     * An error message to be displayed when {@link #evaluate(
+     * org.gdms.data.DataSourceFactory,
+     * org.gdms.driver.DataSet[],
+     * org.gdms.data.values.Value[],
+     * org.orbisgis.progress.ProgressMonitor)
+     * fails.
+     */
+    private static final String EVALUATE_ERROR =
+            "Cannot compute the shortest path";
 
     /**
      * Evaluates the function to calculate the shortest path using Dijkstra's
@@ -187,7 +215,7 @@ public class ST_ShortestPath extends AbstractTableFunction {
                     tables[0],
                     pm);
         } catch (Exception ex) {
-            throw new FunctionException("Cannot compute the shortest path", ex);
+            throw new FunctionException(EVALUATE_ERROR, ex);
         }
     }
 
