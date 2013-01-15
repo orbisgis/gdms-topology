@@ -36,9 +36,13 @@ import com.graphhopper.routing.DijkstraBidirectionRef;
 import com.graphhopper.routing.Path;
 import com.graphhopper.storage.GraphStorage;
 import com.graphhopper.util.EdgeWriteIterator;
+import java.util.Iterator;
+import java.util.List;
 import org.gdms.data.DataSourceFactory;
 import org.gdms.data.schema.DefaultMetadata;
 import org.gdms.data.schema.Metadata;
+import org.gdms.data.types.Constraint;
+import org.gdms.data.types.GeometryDimensionConstraint;
 import org.gdms.data.types.Type;
 import org.gdms.data.types.TypeFactory;
 import org.gdms.data.values.Value;
@@ -160,8 +164,12 @@ public class GraphPathCalculator {
      */
     private static Path getPath(GraphStorage graph, int source, int target) {
         DijkstraBidirectionRef algorithm = new DijkstraBidirectionRef(graph);
+        long start = System.currentTimeMillis();
         Path path = algorithm.clear().calcPath(source, target);
-        System.out.println("Calculated path.");
+        long stop = System.currentTimeMillis();
+        System.out.println("Calculated path in " + (stop - start) + " ms.");
+//        System.out.println(path.toString());
+        System.out.println(path.toDetailsString());
         return path;
     }
 
@@ -200,7 +208,10 @@ public class GraphPathCalculator {
         // Clean up.
         cleanUp(shortestPathDriver, pm);
 
-        // Return the result.
+        // Print the path.
+        printDiskBufferDriver(shortestPathDriver);
+
+        // Return the (closed) DiskBufferDriver.
         return shortestPathDriver;
     }
 
@@ -240,41 +251,55 @@ public class GraphPathCalculator {
     /**
      * Stores the given path in a {@link DiskBufferDriver}.
      *
-     * @param graph              The graph.
-     * @param path               The shortest path.
-     * @param shortestPathDriver The {@link DiskBufferDriver} in which to store
-     *                           the given shortest path.
+     * @param graph  The graph.
+     * @param path   The shortest path.
+     * @param driver The {@link DiskBufferDriver} in which to store the given
+     *               shortest path.
      *
      * @throws DriverException
      */
     private static void storePath(
             Path path,
             GraphStorage graph,
-            DiskBufferDriver shortestPathDriver) throws DriverException {
+            DiskBufferDriver driver) throws DriverException {
+//                // Recover the edge Metadata.
+//                // TODO: Add a check to make sure the metadata was loaded correctly.
+//                Metadata edgeMetadata = dataSet.getMetadata();
+//                // Get the index of the geometry
+//                int geometryIndex = dataSet.getSpatialFieldIndex();
+//                int edgeID = edgeMetadata.getFieldIndex(GraphSchema.ID);
+//        //        int weight = edgeMetadata.getFieldIndex(GraphSchema.WEIGHT);
 
-        //        // Recover the edge Metadata.
-//        // TODO: Add a check to make sure the metadata was loaded correctly.
-//        Metadata edgeMetadata = dataSet.getMetadata();
-//        // Get the index of the geometry
-//        int geometryIndex = dataSet.getSpatialFieldIndex();
-//        int edgeID = edgeMetadata.getFieldIndex(GraphSchema.ID);
-////        int weight = edgeMetadata.getFieldIndex(GraphSchema.WEIGHT);
+//                int current;
+//                try {
+//                    current = path.node(0);
+//                } catch (ArrayIndexOutOfBoundsException e) {
+//                    System.out.println("There is no node(0)!");
+//                    current = 0;
+//                }
 
-        int current = path.node(0);
+        long start = System.currentTimeMillis();
+
+        List<Integer> nodeList = path.toNodeList();
+        Iterator<Integer> nodeListIt = nodeList.iterator();
+        if (!nodeListIt.hasNext()) {
+            System.out.println("The path is empty!!");
+        }
+        int current = nodeListIt.next();
         int next;
         int pathEdgeID = 1;
-        for (int i = 1; i < path.nodes(); i++) {
-            next = path.node(i);
+        while (nodeListIt.hasNext()) {
+            next = nodeListIt.next();
             // Get the smallest edge distance.
             double edgeLength =
                     getSmallestEdgeDistance(graph, current, next);
             // Store this path edge.
-            shortestPathDriver.
-                    addValues(
+            System.out.print("Adding " + current + " -> " + next
+                    + ", weight: " + edgeLength + " ... ");
+            driver.addValues(
                     new Value[]{
-                        //                        // the_geom
-                        //                        ValueFactory.createValue(
-                        //                        graph.getGeometry(currentEdge)),
+                        // the_geom
+                        //                        ValueFactory.createNullValue(),
                         //                        // The row ID of the edge in the data source.
                         //                        ValueFactory.createValue(currentEdge.getRowId()),
                         // An id for this edge in the shortest path.
@@ -286,11 +311,14 @@ public class GraphPathCalculator {
                         // Weight
                         ValueFactory.createValue(edgeLength)
                     });
-            System.out.println("Stored " + current + " -> " + next
-                    + ", weight: " + edgeLength);
+            System.out.println("DONE!");
             current = next;
             pathEdgeID++;
         }
+
+        long stop = System.currentTimeMillis();
+        System.out.println("Stored path in " + (stop - start) + " ms.");
+
     }
 
     /**
@@ -339,5 +367,38 @@ public class GraphPathCalculator {
         pm.endTask();
         // So close the DiskBufferDriver.
         shortestPathDriver.close();
+    }
+
+    /**
+     * Print out the contents of the given DiskBufferDriver.
+     *
+     * @param driver The given DiskBufferDriver.
+     *
+     * @throws DriverException
+     */
+    private static void printDiskBufferDriver(DiskBufferDriver driver)
+            throws DriverException {
+        long start = System.currentTimeMillis();
+        if (driver.isOpen()) {
+            System.out.println("Driver is open.");
+        } else {
+            System.out.println("Driver is closed.");
+            System.out.print("Opening the DiskBufferDriver ...");
+            driver.open();
+            System.out.println("DiskBufferDriver opened.");
+        }
+        final long rowCount = driver.getRowCount();
+        System.out.println("Printing " + rowCount + " rows.");
+        for (int rowIndex = 0; rowIndex < rowCount; rowIndex++) {
+            Value[] row = driver.getRow(rowIndex);
+            for (int i = 0; i < row.length; i++) {
+                String value = row[i].toString();
+                System.out.print(value + "; ");
+            }
+            System.out.println();
+        }
+        long stop = System.currentTimeMillis();
+        System.out.println("Finished printing in " + (stop - start) + " ms.");
+        driver.close();
     }
 }
