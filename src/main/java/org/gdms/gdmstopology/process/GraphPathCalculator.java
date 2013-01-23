@@ -35,14 +35,12 @@ package org.gdms.gdmstopology.process;
 import com.graphhopper.routing.DijkstraBidirectionRef;
 import com.graphhopper.routing.Path;
 import com.graphhopper.storage.GraphStorage;
-import com.graphhopper.util.EdgeWriteIterator;
-import java.util.Iterator;
-import java.util.List;
+import com.graphhopper.util.EdgeIterator;
+import gnu.trove.iterator.TIntIterator;
+import gnu.trove.list.TIntList;
 import org.gdms.data.DataSourceFactory;
 import org.gdms.data.schema.DefaultMetadata;
 import org.gdms.data.schema.Metadata;
-import org.gdms.data.types.Constraint;
-import org.gdms.data.types.GeometryDimensionConstraint;
 import org.gdms.data.types.Type;
 import org.gdms.data.types.TypeFactory;
 import org.gdms.data.values.Value;
@@ -280,8 +278,8 @@ public class GraphPathCalculator {
 
         long start = System.currentTimeMillis();
 
-        List<Integer> nodeList = path.toNodeList();
-        Iterator<Integer> nodeListIt = nodeList.iterator();
+        TIntList nodeList = path.calcNodes();
+        TIntIterator nodeListIt = nodeList.iterator();
         if (!nodeListIt.hasNext()) {
             System.out.println("The path is empty!!");
         }
@@ -337,7 +335,7 @@ public class GraphPathCalculator {
             int source,
             int target) {
         // Obtain the smallest weight for this edge.
-        EdgeWriteIterator outgoingEdges = graph.getOutgoing(source);
+        EdgeIterator outgoingEdges = graph.getOutgoing(source);
         double smallestDistance = Double.MAX_VALUE;
         while (outgoingEdges.next()) {
             if (outgoingEdges.node() == target) {
