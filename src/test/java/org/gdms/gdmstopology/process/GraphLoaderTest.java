@@ -65,7 +65,7 @@ public class GraphLoaderTest extends TopologySetUpTest {
      * @throws GraphException
      */
     @Test
-    public void testLoadGraph2DUndirectedAllWeightsOne() throws
+    public void testLoadUnweightedGraph2DUndirected() throws
             NoSuchTableException,
             DataSourceCreationException,
             DriverException,
@@ -76,11 +76,11 @@ public class GraphLoaderTest extends TopologySetUpTest {
         DataSet[] tables = new DataSet[]{ds};
 
         Graph graph = GraphLoaderUtilities.
-                loadGraphFromDataSetAllWeightsOne(
+                loadUnweightedGraphFromDataSet(
                 tables[0],
                 GraphSchema.UNDIRECT);
 
-//        System.out.println("testLoadGraph2DUndirectedAllWeightsOne()");
+//        System.out.println("testLoadUnweightedGraph2DUndirected()");
 //        graph.printEdges();
 //        System.out.println();
 
@@ -97,7 +97,7 @@ public class GraphLoaderTest extends TopologySetUpTest {
      * @throws GraphException
      */
     @Test
-    public void testLoadGraph2DDirectedAllWeightsOne() throws
+    public void testLoadUnweightedGraph2DDirected() throws
             NoSuchTableException,
             DataSourceCreationException,
             DriverException,
@@ -108,11 +108,11 @@ public class GraphLoaderTest extends TopologySetUpTest {
         DataSet[] tables = new DataSet[]{ds};
 
         Graph graph = GraphLoaderUtilities.
-                loadGraphFromDataSetAllWeightsOne(
+                loadUnweightedGraphFromDataSet(
                 tables[0],
                 GraphSchema.DIRECT);
 
-//        System.out.println("testLoadGraph2DDirectedAllWeightsOne()");
+//        System.out.println("testLoadUnweightedGraph2DDirected()");
 //        graph.printEdges();
 //        System.out.println();
 
@@ -129,7 +129,7 @@ public class GraphLoaderTest extends TopologySetUpTest {
      * @throws GraphException
      */
     @Test
-    public void testLoadGraph2DReversedAllWeightsOne() throws
+    public void testLoadUnweightedGraph2DReversed() throws
             NoSuchTableException,
             DataSourceCreationException,
             DriverException,
@@ -140,11 +140,11 @@ public class GraphLoaderTest extends TopologySetUpTest {
         DataSet[] tables = new DataSet[]{ds};
 
         Graph graph = GraphLoaderUtilities.
-                loadGraphFromDataSetAllWeightsOne(
+                loadUnweightedGraphFromDataSet(
                 tables[0],
                 GraphSchema.DIRECT_REVERSED);
 
-//        System.out.println("testLoadGraph2DReversedAllWeightsOne()");
+//        System.out.println("testLoadUnweightedGraph2DReversed()");
 //        graph.printEdges();
 //        System.out.println();
 

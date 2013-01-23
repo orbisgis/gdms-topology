@@ -88,7 +88,7 @@ public class GraphCentralityUtilities extends GraphAnalysis {
 
         // Create the graph from the data set.
         GraphStorage graph = GraphLoaderUtilities.
-                loadGraphFromDataSetAllWeightsOne(
+                loadUnweightedGraphFromDataSet(
                 dataSet,
                 graphType);
 

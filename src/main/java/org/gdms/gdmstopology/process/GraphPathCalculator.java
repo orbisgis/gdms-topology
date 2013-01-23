@@ -135,7 +135,7 @@ public class GraphPathCalculator {
 
         // Create the graph from the data set.
         GraphStorage graph = GraphLoaderUtilities.
-                loadGraphFromDataSetAllWeightsOne(
+                loadUnweightedGraphFromDataSet(
                 dataSet,
                 graphType);
         System.out.println("Created graph with all weights one.");
