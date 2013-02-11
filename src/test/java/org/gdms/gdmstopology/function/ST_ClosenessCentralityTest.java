@@ -46,13 +46,12 @@ import org.junit.Test;
 import org.orbisgis.progress.NullProgressMonitor;
 
 /**
- * Several tests of centrality metrics.
+ * Tests {@link ST_ClosenessCentrality}.
  *
  * @author Adam Gouge
  */
-public class CentralityTest extends TopologySetUpTest {
+public class ST_ClosenessCentralityTest extends TopologySetUpTest {
 
-    // private static final String GRAPH_NANTES_EDGES = "nantes_1.edges";
     /**
      * Tests the closeness centrality calculation on a 2D graph with the given
      * orientation and with all edge weights equal to one.
