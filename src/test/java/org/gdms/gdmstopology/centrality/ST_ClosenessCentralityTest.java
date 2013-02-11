@@ -30,8 +30,9 @@
  * For more information, please consult: <http://wwwc.orbisgis.org/> or contact
  * directly: info_at_ orbisgis.org
  */
-package org.gdms.gdmstopology.function;
+package org.gdms.gdmstopology.centrality;
 
+import org.gdms.gdmstopology.centrality.ST_ClosenessCentrality;
 import org.gdms.data.DataSource;
 import org.gdms.data.DataSourceCreationException;
 import org.gdms.data.NoSuchTableException;

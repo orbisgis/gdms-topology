@@ -32,6 +32,7 @@
  */
 package org.gdms.gdmstopology.function;
 
+import org.gdms.gdmstopology.centrality.GraphFunctionParser;
 import org.gdms.data.DataSourceFactory;
 import org.gdms.data.schema.Metadata;
 import org.gdms.data.values.Value;

@@ -31,7 +31,7 @@ package org.gdms.gdmstopology;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import org.gdms.gdmstopology.function.ST_BlockIdentity;
-import org.gdms.gdmstopology.function.ST_ClosenessCentrality;
+import org.gdms.gdmstopology.centrality.ST_ClosenessCentrality;
 import org.gdms.gdmstopology.function.ST_ConnectedComponents;
 import org.gdms.gdmstopology.function.ST_FindReachableEdges;
 import org.gdms.gdmstopology.function.ST_Graph;
