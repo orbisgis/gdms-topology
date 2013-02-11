@@ -37,7 +37,6 @@ import org.gdms.data.types.Type;
 import org.gdms.data.values.Value;
 import org.gdms.gdmstopology.model.GraphSchema;
 import org.gdms.sql.function.FunctionException;
-import org.gdms.sql.function.executor.AbstractExecutorFunction;
 
 /**
  * A helper class to parse {@link Value} arguments for SQL functions related to

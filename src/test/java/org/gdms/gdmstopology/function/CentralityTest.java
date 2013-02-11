@@ -32,7 +32,6 @@
  */
 package org.gdms.gdmstopology.function;
 
-import java.io.File;
 import org.gdms.data.DataSource;
 import org.gdms.data.DataSourceCreationException;
 import org.gdms.data.NoSuchTableException;
@@ -54,7 +53,6 @@ import org.orbisgis.progress.NullProgressMonitor;
 public class CentralityTest extends TopologySetUpTest {
 
     // private static final String GRAPH_NANTES_EDGES = "nantes_1.edges";
-
     /**
      * Tests the closeness centrality calculation on a 2D graph with the given
      * orientation and with all edge weights equal to one.

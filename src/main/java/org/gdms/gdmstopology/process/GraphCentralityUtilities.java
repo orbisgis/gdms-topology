@@ -32,14 +32,12 @@
  */
 package org.gdms.gdmstopology.process;
 
-import com.graphhopper.storage.Graph;
-import com.graphhopper.storage.GraphStorage;
-import com.graphhopper.storage.RAMDirectory;
 import com.graphhopper.sna.centrality.UnweightedGraphAnalyzer;
 import com.graphhopper.sna.centrality.WeightedGraphAnalyzer;
+import com.graphhopper.storage.Graph;
+import com.graphhopper.storage.GraphStorage;
 import gnu.trove.iterator.TIntDoubleIterator;
 import gnu.trove.map.hash.TIntDoubleHashMap;
-import java.util.Iterator;
 import org.gdms.data.DataSourceFactory;
 import org.gdms.data.schema.DefaultMetadata;
 import org.gdms.data.schema.Metadata;
@@ -186,7 +184,7 @@ public class GraphCentralityUtilities extends GraphAnalysis {
 
         // Create a DiskBufferDriver to store the centrality indices.
         DiskBufferDriver closenessBufferDriver = new DiskBufferDriver(dsf,
-                closenessMetadata);
+                                                                      closenessMetadata);
 
         // Get an iterator on the closeness centrality hash map.
         TIntDoubleIterator centralityIt = closenessCentrality.iterator();
@@ -260,7 +258,7 @@ public class GraphCentralityUtilities extends GraphAnalysis {
 
         // Create a DiskBufferDriver to store the centrality indices.
         DiskBufferDriver closenessBufferDriver = new DiskBufferDriver(dsf,
-                closenessMetadata);
+                                                                      closenessMetadata);
 
         // Get an iterator on the closeness centrality hash map.
         TIntDoubleIterator centralityIt = closenessCentrality.iterator();

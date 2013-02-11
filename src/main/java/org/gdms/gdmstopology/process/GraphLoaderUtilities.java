@@ -119,27 +119,27 @@ public class GraphLoaderUtilities {
             while (iterator.hasNext()) {
                 Value[] row = iterator.next();
                 graph.edge(row[startNodeIndex].getAsInt(),
-                        row[endNodeIndex].getAsInt(),
-                        ALL_WEIGHTS_ONE,
-                        false);
+                           row[endNodeIndex].getAsInt(),
+                           ALL_WEIGHTS_ONE,
+                           false);
             }
         } else if (graphType == GraphSchema.DIRECT_REVERSED) {
 //            System.out.println("reversed graph.");
             while (iterator.hasNext()) {
                 Value[] row = iterator.next();
                 graph.edge(row[endNodeIndex].getAsInt(),
-                        row[startNodeIndex].getAsInt(),
-                        ALL_WEIGHTS_ONE,
-                        false);
+                           row[startNodeIndex].getAsInt(),
+                           ALL_WEIGHTS_ONE,
+                           false);
             }
         } else if (graphType == GraphSchema.UNDIRECT) {
 //            System.out.println("undirected graph.");
             while (iterator.hasNext()) {
                 Value[] row = iterator.next();
                 graph.edge(row[startNodeIndex].getAsInt(),
-                        row[endNodeIndex].getAsInt(),
-                        ALL_WEIGHTS_ONE,
-                        true);
+                           row[endNodeIndex].getAsInt(),
+                           ALL_WEIGHTS_ONE,
+                           true);
             }
         } else {
             throw new GraphException(GRAPH_TYPE_ERROR);
@@ -195,27 +195,27 @@ public class GraphLoaderUtilities {
             while (iterator.hasNext()) {
                 Value[] row = iterator.next();
                 graph.edge(row[startNodeIndex].getAsInt(),
-                        row[endNodeIndex].getAsInt(),
-                        row[weightFieldIndex].getAsDouble(),
-                        false);
+                           row[endNodeIndex].getAsInt(),
+                           row[weightFieldIndex].getAsDouble(),
+                           false);
             }
         } else if (graphType == GraphSchema.DIRECT_REVERSED) {
 //            System.out.println("reversed graph.");
             while (iterator.hasNext()) {
                 Value[] row = iterator.next();
                 graph.edge(row[endNodeIndex].getAsInt(),
-                        row[startNodeIndex].getAsInt(),
-                        row[weightFieldIndex].getAsDouble(),
-                        false);
+                           row[startNodeIndex].getAsInt(),
+                           row[weightFieldIndex].getAsDouble(),
+                           false);
             }
         } else if (graphType == GraphSchema.UNDIRECT) {
 //            System.out.println("undirected graph.");
             while (iterator.hasNext()) {
                 Value[] row = iterator.next();
                 graph.edge(row[startNodeIndex].getAsInt(),
-                        row[endNodeIndex].getAsInt(),
-                        row[weightFieldIndex].getAsDouble(),
-                        true);
+                           row[endNodeIndex].getAsInt(),
+                           row[weightFieldIndex].getAsDouble(),
+                           true);
             }
         } else {
             throw new GraphException(GRAPH_TYPE_ERROR);

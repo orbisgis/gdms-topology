@@ -37,9 +37,9 @@ import org.gdms.data.values.Value;
 import org.gdms.data.values.ValueFactory;
 import org.gdms.driver.DataSet;
 import org.gdms.gdmstopology.TopologySetUpTest;
+import static org.junit.Assert.*;
 import org.junit.Test;
 import org.orbisgis.progress.NullProgressMonitor;
-import static org.junit.Assert.*;
 
 /**
  * Tests the function {@link ST_ShortestPath}.

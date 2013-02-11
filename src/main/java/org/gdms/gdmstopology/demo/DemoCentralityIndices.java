@@ -36,8 +36,8 @@ import org.jgrapht.Graph;
 import org.jgrapht.graph.DefaultEdge;
 
 /**
- * A class to test the jgrapht-sna implementations of betweenness
- * centrality, closeness centrality, and the Floyd-Warshall algorithm.
+ * A class to test the jgrapht-sna implementations of betweenness centrality,
+ * closeness centrality, and the Floyd-Warshall algorithm.
  *
  * @author Adam Gouge
  */
@@ -62,7 +62,6 @@ public class DemoCentralityIndices {
 //
 //        compareFloydWarshallAlgorithms(graph);
 //    }
-
     /**
      * Prints the number of nodes and edges of a graph as well as a list of all
      * edges with their weights.
@@ -71,14 +70,15 @@ public class DemoCentralityIndices {
      */
     public static void printGraph(Graph<Integer, DefaultEdge> graph) {
         // Print the number of nodes and edges.
-        System.out.println("Nodes: " + graph.vertexSet().size() + ", Edges: " + graph.edgeSet().size());
+        System.out.
+                println("Nodes: " + graph.vertexSet().size() + ", Edges: " + graph.
+                edgeSet().size());
         // Print the edges and their weights.
         for (DefaultEdge edge : graph.edgeSet()) {
             System.out.print(edge + " ");
             System.out.println(graph.getEdgeWeight(edge));
         }
     }
-
 //    /**
 //     * Prints the Freeman closeness centrality metric implemented in the
 //     * jgrapht-sna library applied to the given graph.
@@ -104,7 +104,6 @@ public class DemoCentralityIndices {
 //        System.out.println("Time: " + time + " ms.");
 //        System.out.println();
 //    }
-
 //    /**
 //     * Prints the betweenness centrality metric implemented in the jgrapht-sna
 //     * library applied to the given graph.
@@ -131,7 +130,6 @@ public class DemoCentralityIndices {
 //        System.out.println("Time: " + time + " ms.");
 //        System.out.println();
 //    }
-
 //    /**
 //     * Compares the JGraphT implementation of
 //     *

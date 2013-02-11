@@ -42,7 +42,7 @@ import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.WeightedMultigraph;
 
 /**
- * Generates several diffent kinds of random graphs.
+ * Generates several different kinds of random graphs.
  *
  * @author Erwan Bocher
  * @author Adam Gouge
@@ -56,13 +56,18 @@ public class RandomGraphCreator {
      * Creates a random {@link DefaultDirectedGraph}.
      *
      * @param numVertices The number of vertices in the graph.
-     * @param numEdges The number of edges in the graph.
+     * @param numEdges    The number of edges in the graph.
+     *
      * @return The newly-generated random graph.
      */
-    public static Graph<Integer, DefaultEdge> createRandomDirectGraph(int numVertices, int numEdges) {
-        RandomGraphGenerator<Integer, DefaultEdge> randomGraphGenerator = new RandomGraphGenerator<Integer, DefaultEdge>(numVertices, numEdges);
-        DefaultDirectedGraph<Integer, DefaultEdge> sourceGraph = new DefaultDirectedGraph<Integer, DefaultEdge>(DefaultEdge.class);
-        randomGraphGenerator.generateGraph(sourceGraph, new IntVertexFactory(), null);
+    public static Graph<Integer, DefaultEdge> createRandomDirectGraph(
+            int numVertices, int numEdges) {
+        RandomGraphGenerator<Integer, DefaultEdge> randomGraphGenerator = new RandomGraphGenerator<Integer, DefaultEdge>(
+                numVertices, numEdges);
+        DefaultDirectedGraph<Integer, DefaultEdge> sourceGraph = new DefaultDirectedGraph<Integer, DefaultEdge>(
+                DefaultEdge.class);
+        randomGraphGenerator.generateGraph(sourceGraph, new IntVertexFactory(),
+                                           null);
         return sourceGraph;
     }
 
@@ -70,13 +75,18 @@ public class RandomGraphCreator {
      * Creates a random {@link WeightedMultigraph}.
      *
      * @param numVertices The number of vertices in the graph.
-     * @param numEdges The number of edges in the graph.
+     * @param numEdges    The number of edges in the graph.
+     *
      * @return The newly-generated random graph.
      */
-    public static Graph<Integer, DefaultEdge> createRandomWeightedMultigraph(int numVertices, int numEdges) {
-        RandomGraphGenerator<Integer, DefaultEdge> randomGraphGenerator = new RandomGraphGenerator<Integer, DefaultEdge>(numVertices, numEdges);
-        WeightedMultigraph<Integer, DefaultEdge> sourceGraph = new WeightedMultigraph<Integer, DefaultEdge>(DefaultEdge.class);
-        randomGraphGenerator.generateGraph(sourceGraph, new IntVertexFactory(), null);
+    public static Graph<Integer, DefaultEdge> createRandomWeightedMultigraph(
+            int numVertices, int numEdges) {
+        RandomGraphGenerator<Integer, DefaultEdge> randomGraphGenerator = new RandomGraphGenerator<Integer, DefaultEdge>(
+                numVertices, numEdges);
+        WeightedMultigraph<Integer, DefaultEdge> sourceGraph = new WeightedMultigraph<Integer, DefaultEdge>(
+                DefaultEdge.class);
+        randomGraphGenerator.generateGraph(sourceGraph, new IntVertexFactory(),
+                                           null);
         return sourceGraph;
     }
 
@@ -91,18 +101,23 @@ public class RandomGraphCreator {
      *
      * @param numNodes The number of nodes.
      * @param numEdges The number of edges.
+     *
      * @return A random connected graph with the specified number of nodes and
-     * edges.
+     *         edges.
      */
-    public static Graph<Integer, DefaultEdge> createRandomConnectedWeightedMultigraph(int numNodes, int numEdges) {
+    public static Graph<Integer, DefaultEdge> createRandomConnectedWeightedMultigraph(
+            int numNodes, int numEdges) {
         int count = 1;
         while (true) {
             // Generate a random graph
-            Graph<Integer, DefaultEdge> graph = createRandomWeightedMultigraph(numNodes, numEdges);
+            Graph<Integer, DefaultEdge> graph = createRandomWeightedMultigraph(
+                    numNodes, numEdges);
             // Make sure the graph is connected.
             // We have to type-cast the graph in order to be able to use the constructor.
-            ConnectivityInspector inspector = new ConnectivityInspector((UndirectedGraph<Integer, DefaultEdge>) graph);
-            System.out.println(count + ". Graph is connected <-- " + inspector.isGraphConnected());
+            ConnectivityInspector inspector = new ConnectivityInspector(
+                    (UndirectedGraph<Integer, DefaultEdge>) graph);
+            System.out.println(count + ". Graph is connected <-- " + inspector.
+                    isGraphConnected());
             if (inspector.isGraphConnected()) {
                 return graph;
             }
@@ -115,13 +130,17 @@ public class RandomGraphCreator {
      * <code>10^nodesExponent</code> nodes and
      * <code>10^edgesExponent</code> edges.
      *
-     * @param nodesExponent The exponent for the number of nodes.
+     * @param nodesExponent    The exponent for the number of nodes.
      * @param edgesExponentThe exponent for the number of edges.
+     *
      * @return A random connected graph with the specified number of nodes and
-     * edges.
+     *         edges.
      */
-    public static Graph<Integer, DefaultEdge> createRandomConnectedWeightedMultigraphByExponents(int nodesExponent, int edgesExponent) {
-        return createRandomConnectedWeightedMultigraph((int) Math.pow(10, nodesExponent), (int) Math.pow(10, edgesExponent));
+    public static Graph<Integer, DefaultEdge> createRandomConnectedWeightedMultigraphByExponents(
+            int nodesExponent, int edgesExponent) {
+        return createRandomConnectedWeightedMultigraph(
+                (int) Math.pow(10, nodesExponent), (int) Math.pow(10,
+                                                                  edgesExponent));
     }
 
     /**

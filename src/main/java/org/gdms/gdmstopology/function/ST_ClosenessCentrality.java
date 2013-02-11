@@ -32,10 +32,14 @@
  */
 package org.gdms.gdmstopology.function;
 
-import java.util.Arrays;
 import org.gdms.data.DataSourceFactory;
+import org.gdms.data.types.Type;
 import org.gdms.data.values.Value;
 import org.gdms.driver.DataSet;
+import org.gdms.driver.DriverException;
+import org.gdms.gdmstopology.model.GraphException;
+import org.gdms.gdmstopology.model.GraphSchema;
+import org.gdms.gdmstopology.process.GraphCentralityUtilities;
 import org.gdms.sql.function.FunctionException;
 import org.gdms.sql.function.FunctionSignature;
 import org.gdms.sql.function.ScalarArgument;
@@ -44,12 +48,6 @@ import org.gdms.sql.function.executor.ExecutorFunctionSignature;
 import org.gdms.sql.function.table.TableArgument;
 import org.gdms.sql.function.table.TableDefinition;
 import org.orbisgis.progress.ProgressMonitor;
-import org.gdms.data.types.Type;
-import org.gdms.driver.DiskBufferDriver;
-import org.gdms.driver.DriverException;
-import org.gdms.gdmstopology.model.GraphException;
-import org.gdms.gdmstopology.model.GraphSchema;
-import org.gdms.gdmstopology.process.GraphCentralityUtilities;
 
 /**
  * Calculates the closeness centrality indices of all nodes of a given graph.

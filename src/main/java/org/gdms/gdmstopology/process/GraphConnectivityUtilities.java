@@ -62,41 +62,46 @@ import org.orbisgis.progress.ProgressMonitor;
 public class GraphConnectivityUtilities extends GraphAnalysis {
 
     /**
-     * Returns a JGraphT {@link ConnectivityInspector} on a given
-     * graph.
-     * 
-     * @param dsf The {@link DataSourceFactory} used to parse the data set.
-     * @param dataSet The graph data set.
+     * Returns a JGraphT {@link ConnectivityInspector} on a given graph.
+     *
+     * @param dsf              The {@link DataSourceFactory} used to parse the
+     *                         data set.
+     * @param dataSet          The graph data set.
      * @param weightColumnName The string specifying the name of the weight
-     * column specifying the weight of each edge.
-     * @param graphType An integer specifying the type of graph: 1 if directed,
-     * 2 if directed and we wish to reverse the direction of the edges, 3 if
-     * undirected.
-     * @param pm Used to track the progress of the calculation.
-     * 
+     *                         column specifying the weight of each edge.
+     * @param graphType        An integer specifying the type of graph: 1 if
+     *                         directed, 2 if directed and we wish to reverse the
+     *                         direction of the edges, 3 if undirected.
+     * @param pm               Used to track the progress of the calculation.
+     *
      * @return A {@link ConnectivityInspector} on the given graph.
-     * 
+     *
      * @throws DriverException
-     * @throws GraphException 
+     * @throws GraphException
      */
     public static ConnectivityInspector<Integer, GraphEdge> getConnectivityInspector(
             DataSourceFactory dsf,
             DataSet dataSet,
             String weightColumnName,
             int graphType,
-            ProgressMonitor pm) throws DriverException, GraphException {
+            ProgressMonitor pm) throws DriverException,
+            GraphException {
         // Return a connectivity inspector according to the graph type.
         if (graphType == GraphSchema.DIRECT) {
-            DWMultigraphDataSource dWMultigraphDataSource = new DWMultigraphDataSource(dsf, dataSet, pm);
+            DWMultigraphDataSource dWMultigraphDataSource = new DWMultigraphDataSource(
+                    dsf, dataSet, pm);
             dWMultigraphDataSource.setWeightFieldIndex(weightColumnName);
             return new ConnectivityInspector(dWMultigraphDataSource);
         } else if (graphType == GraphSchema.DIRECT_REVERSED) {
-            DWMultigraphDataSource dWMultigraphDataSource = new DWMultigraphDataSource(dsf, dataSet, pm);
+            DWMultigraphDataSource dWMultigraphDataSource = new DWMultigraphDataSource(
+                    dsf, dataSet, pm);
             dWMultigraphDataSource.setWeightFieldIndex(weightColumnName);
-            EdgeReversedGraphDataSource edgeReversedGraph = new EdgeReversedGraphDataSource(dWMultigraphDataSource);
+            EdgeReversedGraphDataSource edgeReversedGraph = new EdgeReversedGraphDataSource(
+                    dWMultigraphDataSource);
             return new ConnectivityInspector(edgeReversedGraph);
         } else if (graphType == GraphSchema.UNDIRECT) {
-            WMultigraphDataSource wMultigraphDataSource = new WMultigraphDataSource(dsf, dataSet, pm);
+            WMultigraphDataSource wMultigraphDataSource = new WMultigraphDataSource(
+                    dsf, dataSet, pm);
             wMultigraphDataSource.setWeightFieldIndex(weightColumnName);
             return new ConnectivityInspector(wMultigraphDataSource);
         } else {
@@ -110,15 +115,15 @@ public class GraphConnectivityUtilities extends GraphAnalysis {
     }
 
     /**
-     * Registers a new table listing all the vertices of a graph
-     * and to which connected component (numbered consecutively)
-     * they belong.
-     * 
-     * @param dsf The {@link DataSourceFactory} used to parse the data set.
-     * @param inspector A {@link ConnectivityInspector} on the given graph
-     * used to identify the connected components.
-     * 
-     * @throws DriverException 
+     * Registers a new table listing all the vertices of a graph and to which
+     * connected component (numbered consecutively) they belong.
+     *
+     * @param dsf       The {@link DataSourceFactory} used to parse the data
+     *                  set.
+     * @param inspector A {@link ConnectivityInspector} on the given graph used
+     *                  to identify the connected components.
+     *
+     * @throws DriverException
      */
     public static void registerConnectedComponents(
             DataSourceFactory dsf,
@@ -127,7 +132,8 @@ public class GraphConnectivityUtilities extends GraphAnalysis {
         // Recover the list of connected components.
         List<Set<Integer>> connectedComponentsList = inspector.connectedSets();
         // Get an iterator on the list.
-        Iterator<Set<Integer>> connectedComponentsListIterator = connectedComponentsList.iterator();
+        Iterator<Set<Integer>> connectedComponentsListIterator = connectedComponentsList.
+                iterator();
 
         // Create the metadata for the new table that will hold the first connected component
         Metadata md = new DefaultMetadata(
@@ -139,20 +145,24 @@ public class GraphConnectivityUtilities extends GraphAnalysis {
                     GraphSchema.CONNECTED_COMPONENT});
 
         // Create a DiskBufferDriver to store the centrality indices.
-        DiskBufferDriver connectedComponentsDriver = new DiskBufferDriver(dsf, md);
+        DiskBufferDriver connectedComponentsDriver = new DiskBufferDriver(dsf,
+                                                                          md);
 
         // Record the connected components in the DiskBufferDriver.
         int connectedComponentNumber = 1;
         while (connectedComponentsListIterator.hasNext()) {
             // Get the next connected component
-            Set<Integer> connectedComponent = connectedComponentsListIterator.next();
+            Set<Integer> connectedComponent = connectedComponentsListIterator.
+                    next();
             // Get an iterator on this component.
-            Iterator<Integer> connectedComponentIterator = connectedComponent.iterator();
+            Iterator<Integer> connectedComponentIterator = connectedComponent.
+                    iterator();
             while (connectedComponentIterator.hasNext()) {
                 connectedComponentsDriver.addValues(
                         new Value[]{
                             // Node ID
-                            ValueFactory.createValue(connectedComponentIterator.next()),
+                            ValueFactory.createValue(connectedComponentIterator.
+                            next()),
                             // Component number
                             ValueFactory.createValue(connectedComponentNumber)
                         });
@@ -163,7 +173,9 @@ public class GraphConnectivityUtilities extends GraphAnalysis {
         // CLEAN UP - Register the table.
         connectedComponentsDriver.writingFinished();
         connectedComponentsDriver.open();
-        String newTableName = dsf.getSourceManager().getUniqueName(GraphSchema.CONNECTED_COMPONENTS);
-        dsf.getSourceManager().register(newTableName, connectedComponentsDriver.getFile());
+        String newTableName = dsf.getSourceManager().getUniqueName(
+                GraphSchema.CONNECTED_COMPONENTS);
+        dsf.getSourceManager().register(newTableName, connectedComponentsDriver.
+                getFile());
     }
 }
