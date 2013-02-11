@@ -30,7 +30,7 @@
  * For more information, please consult: <http://wwwc.orbisgis.org/> or contact
  * directly: info_at_ orbisgis.org
  */
-package org.gdms.gdmstopology.centrality;
+package org.gdms.gdmstopology.parse;
 
 import org.gdms.data.types.Type;
 import org.gdms.data.values.Value;
