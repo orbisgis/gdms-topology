@@ -96,8 +96,15 @@ public class GraphFunctionParser {
         final int slotType = value.getType();
         if (slotType == Type.INT) {
             final int orientation = value.getAsInt();
-            System.out.println("Setting the orientation "
-                    + "to be " + orientation + ".");
+            System.out.print("Setting the orientation "
+                    + "to be ");
+            if (orientation == GraphSchema.DIRECT) {
+                System.out.println("directed.");
+            } else if (orientation == GraphSchema.DIRECT_REVERSED) {
+                System.out.println("reversed.");
+            } else if (orientation == GraphSchema.UNDIRECT) {
+                System.out.println("undirected.");
+            }
             return orientation;
         } else {
             throw new FunctionException(
