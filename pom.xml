@@ -6,7 +6,7 @@
         <packaging>bundle</packaging>
         <version>1.2</version>
         <name>gdms-topology</name>
-        <description>Tool for topological analysis</description>
+        <description>Tools for network analysis on transportation networks.</description>
         <url>http://www.orbisgis.org</url>
         <properties>
                 <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
