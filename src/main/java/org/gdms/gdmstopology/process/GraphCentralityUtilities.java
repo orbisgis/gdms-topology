@@ -58,7 +58,7 @@ import org.orbisgis.progress.ProgressMonitor;
  *
  * @author Adam Gouge
  */
-public class GraphCentralityUtilities extends GraphAnalysis {
+public class GraphCentralityUtilities {
 
     /**
      * Registers the closeness centrality indices of the nodes of the given
