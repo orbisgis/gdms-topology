@@ -250,14 +250,14 @@ public class ST_GraphAnalysis extends AbstractExecutorFunction {
             IOException,
             NoSuchTableException,
             DataSourceCreationException {
-        GraphAnalyzer util = (weightsColumn == null)
+        GraphAnalyzer analyzer = (weightsColumn == null)
                 ? // Unweighted graph
                 new UnweightedGraphAnalyzer(
                 dsf, dataSet, pm, orientation)
                 : // Weighted graph
                 new WeightedGraphAnalyzer(
                 dsf, dataSet, pm, orientation, weightsColumn);
-        util.doAnalysis(outputTablePrefix);
+        analyzer.doAnalysis(outputTablePrefix);
     }
 
     /**
