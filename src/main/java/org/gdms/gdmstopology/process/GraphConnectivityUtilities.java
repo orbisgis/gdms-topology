@@ -52,6 +52,7 @@ import org.gdms.gdmstopology.model.GraphException;
 import org.gdms.gdmstopology.model.GraphSchema;
 import org.gdms.gdmstopology.model.WMultigraphDataSource;
 import org.jgrapht.alg.ConnectivityInspector;
+import org.jgrapht.graph.DirectedMultigraph;
 import org.orbisgis.progress.ProgressMonitor;
 
 /**
@@ -88,20 +89,20 @@ public class GraphConnectivityUtilities extends GraphAnalysis {
             GraphException {
         // Return a connectivity inspector according to the graph type.
         if (graphType == GraphSchema.DIRECT) {
-            DWMultigraphDataSource dWMultigraphDataSource = new DWMultigraphDataSource(
-                    dsf, dataSet, pm);
+            DWMultigraphDataSource dWMultigraphDataSource =
+                    new DWMultigraphDataSource(dsf, dataSet, pm);
             dWMultigraphDataSource.setWeightFieldIndex(weightColumnName);
             return new ConnectivityInspector(dWMultigraphDataSource);
         } else if (graphType == GraphSchema.DIRECT_REVERSED) {
-            DWMultigraphDataSource dWMultigraphDataSource = new DWMultigraphDataSource(
-                    dsf, dataSet, pm);
+            DWMultigraphDataSource dWMultigraphDataSource =
+                    new DWMultigraphDataSource(dsf, dataSet, pm);
             dWMultigraphDataSource.setWeightFieldIndex(weightColumnName);
-            EdgeReversedGraphDataSource edgeReversedGraph = new EdgeReversedGraphDataSource(
-                    dWMultigraphDataSource);
+            EdgeReversedGraphDataSource edgeReversedGraph =
+                    new EdgeReversedGraphDataSource(dWMultigraphDataSource);
             return new ConnectivityInspector(edgeReversedGraph);
         } else if (graphType == GraphSchema.UNDIRECT) {
-            WMultigraphDataSource wMultigraphDataSource = new WMultigraphDataSource(
-                    dsf, dataSet, pm);
+            WMultigraphDataSource wMultigraphDataSource =
+                    new WMultigraphDataSource(dsf, dataSet, pm);
             wMultigraphDataSource.setWeightFieldIndex(weightColumnName);
             return new ConnectivityInspector(wMultigraphDataSource);
         } else {
@@ -145,24 +146,24 @@ public class GraphConnectivityUtilities extends GraphAnalysis {
                     GraphSchema.CONNECTED_COMPONENT});
 
         // Create a DiskBufferDriver to store the centrality indices.
-        DiskBufferDriver connectedComponentsDriver = new DiskBufferDriver(dsf,
-                                                                          md);
+        DiskBufferDriver connectedComponentsDriver =
+                new DiskBufferDriver(dsf, md);
 
         // Record the connected components in the DiskBufferDriver.
         int connectedComponentNumber = 1;
         while (connectedComponentsListIterator.hasNext()) {
             // Get the next connected component
-            Set<Integer> connectedComponent = connectedComponentsListIterator.
-                    next();
+            Set<Integer> connectedComponent =
+                    connectedComponentsListIterator.next();
             // Get an iterator on this component.
-            Iterator<Integer> connectedComponentIterator = connectedComponent.
-                    iterator();
+            Iterator<Integer> connectedComponentIterator =
+                    connectedComponent.iterator();
             while (connectedComponentIterator.hasNext()) {
                 connectedComponentsDriver.addValues(
                         new Value[]{
                             // Node ID
-                            ValueFactory.createValue(connectedComponentIterator.
-                            next()),
+                            ValueFactory.createValue(
+                            connectedComponentIterator.next()),
                             // Component number
                             ValueFactory.createValue(connectedComponentNumber)
                         });

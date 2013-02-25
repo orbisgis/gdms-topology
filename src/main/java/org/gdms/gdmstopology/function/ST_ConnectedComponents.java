@@ -173,7 +173,8 @@ public class ST_ConnectedComponents extends AbstractExecutorFunction {
             // Get the orientation
             int orientation = values[1].getAsInt();
             // Create the ConnectivityInspector.
-            ConnectivityInspector<Integer, GraphEdge> inspector = GraphConnectivityUtilities.
+            ConnectivityInspector<Integer, GraphEdge> inspector =
+                    GraphConnectivityUtilities.
                     getConnectivityInspector(
                     dsf,
                     dataSet,
@@ -182,8 +183,8 @@ public class ST_ConnectedComponents extends AbstractExecutorFunction {
                     pm);
             // Record a new table listing all the vertices and to which
             // connected component they belong.
-            GraphConnectivityUtilities.registerConnectedComponents(dsf,
-                                                                   inspector);
+            GraphConnectivityUtilities.
+                    registerConnectedComponents(dsf, inspector);
         } catch (Exception ex) {
             System.out.println(ex);
             throw new FunctionException(EVALUATE_ERROR, ex);
