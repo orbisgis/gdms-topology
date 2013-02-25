@@ -5,9 +5,9 @@
         <artifactId>gdms-topology</artifactId>
         <packaging>bundle</packaging>
         <version>1.2</version>
-        <name>gdms-topology</name>
+        <name>GDMS-Topology</name>
         <description>Tools for network analysis on transportation networks.</description>
-        <url>http://www.orbisgis.org</url>
+        <url>http://www.github.com/agouge/gdms-topology</url>
         <properties>
                 <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
                 <netbeans.hint.license>gdms-topology</netbeans.hint.license>
@@ -95,6 +95,7 @@
                                                 <Private-Package>org.gdms.gdmstopology.*</Private-Package>
                                                 <Bundle-Activator>org.gdms.gdmstopology.Activator</Bundle-Activator>
                                                 <Bundle-Vendor>IRSTV - FR CNRS 2488</Bundle-Vendor>
+                                                <Bundle-Category>OrbisGIS</Bundle-Category>
                                         </instructions>
                                 </configuration>
                         </plugin>
