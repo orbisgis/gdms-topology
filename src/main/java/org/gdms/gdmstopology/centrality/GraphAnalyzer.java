@@ -34,8 +34,6 @@ package org.gdms.gdmstopology.centrality;
 
 import com.graphhopper.sna.data.NodeBetweennessInfo;
 import com.graphhopper.storage.Graph;
-import com.graphhopper.storage.GraphStorage;
-import com.graphhopper.storage.RAMDirectory;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -62,34 +60,7 @@ import org.orbisgis.progress.ProgressMonitor;
  *
  * @author Adam Gouge
  */
-public abstract class GraphAnalyzer {
-
-    /**
-     * Used to parse the data set.
-     */
-    protected final DataSourceFactory dsf;
-    /**
-     * The data set.
-     */
-    protected final DataSet dataSet;
-    /**
-     * Progress monitor.
-     */
-    protected final ProgressMonitor pm;
-    /**
-     * Orientation.
-     */
-    protected final int orientation;
-    /**
-     * An error message given when a user inputs an erroneous graph orientation.
-     */
-    public final static String GRAPH_TYPE_ERROR =
-            "Please enter an appropriate graph orientation.";
-    /**
-     * Used to allocate enough space for the GraphHopper graph.
-     */
-    // TODO: How big does this need to be?
-    protected final static int ALLOCATE_GRAPH_SPACE = 10;
+public abstract class GraphAnalyzer extends GraphCreator {
 
     /**
      * Constructs a new {@link GraphAnalyzer}.
@@ -101,19 +72,12 @@ public abstract class GraphAnalyzer {
      *                    calculation.
      * @param orientation The orientation.
      *
-     * @throws DriverException
-     * @throws GraphException
      */
     public GraphAnalyzer(DataSourceFactory dsf,
                          DataSet dataSet,
                          ProgressMonitor pm,
-                         int orientation)
-            throws DriverException,
-            GraphException {
-        this.dsf = dsf;
-        this.dataSet = dataSet;
-        this.pm = pm;
-        this.orientation = orientation;
+                         int orientation) {
+        super(dsf, dataSet, pm, orientation);
     }
 
     /**
@@ -153,125 +117,6 @@ public abstract class GraphAnalyzer {
         // Return the results.
         return results;
     }
-
-    /**
-     * Prepares the graph according to the given orientation.
-     *
-     * @param orientation The orientation.
-     *
-     * @return The newly prepared graph.
-     *
-     * @throws DriverException
-     * @throws GraphException
-     */
-    private Graph prepareGraph(int orientation)
-            throws DriverException,
-            GraphException {
-
-        // DATASET INFORMATION
-        // Recover the edge Metadata.
-        // TODO: Add a check to make sure the metadata was loaded correctly.
-        Metadata edgeMetadata = dataSet.getMetadata();
-
-        // Recover the indices of the start node and end node.
-        int startNodeIndex = edgeMetadata.getFieldIndex(GraphSchema.START_NODE);
-        int endNodeIndex = edgeMetadata.getFieldIndex(GraphSchema.END_NODE);
-
-        // If the weight column name is not null, then recover the weight
-        // field index. Otherwise, set it to -1.
-        String weightColumnName = getWeightColumnName();
-        int weightFieldIndex =
-                (weightColumnName == null)
-                ? -1
-                : edgeMetadata.getFieldIndex(weightColumnName);
-
-        // GRAPH CREATION
-        // Initialize the graph.
-        GraphStorage graph = new GraphStorage(new RAMDirectory());
-        graph.createNew(ALLOCATE_GRAPH_SPACE);
-        // Add the edges according to the given graph type.
-        loadEdges(graph, orientation,
-                  startNodeIndex, endNodeIndex, weightFieldIndex);
-        return graph;
-    }
-
-    /**
-     * Returns the weight column name, or {@code null} for unweighted graphs.
-     *
-     * @return The weight column name.
-     */
-    protected abstract String getWeightColumnName();
-
-    /**
-     * Loads the graph edges with the appropriate orientation.
-     *
-     * @param graph            The graph.
-     * @param orientation      The orientation.
-     * @param startNodeIndex   The start node index.
-     * @param endNodeIndex     The end node index.
-     * @param weightFieldIndex The weight field index.
-     *
-     * @throws GraphException
-     */
-    private void loadEdges(Graph graph, int orientation,
-                           int startNodeIndex,
-                           int endNodeIndex,
-                           int weightFieldIndex) throws
-            GraphException {
-        if (orientation == GraphSchema.DIRECT) {
-            loadDirectedEdges(
-                    graph, startNodeIndex, endNodeIndex, weightFieldIndex);
-        } else if (orientation == GraphSchema.DIRECT_REVERSED) {
-            loadReversedEdges(
-                    graph, startNodeIndex, endNodeIndex, weightFieldIndex);
-        } else if (orientation == GraphSchema.UNDIRECT) {
-            loadUndirectedEdges(
-                    graph, startNodeIndex, endNodeIndex, weightFieldIndex);
-        } else {
-            throw new GraphException(GRAPH_TYPE_ERROR);
-        }
-    }
-
-    /**
-     * Loads directed edges.
-     *
-     * @param graph            The graph.
-     * @param startNodeIndex   The start node index.
-     * @param endNodeIndex     The end node index.
-     * @param weightFieldIndex The weight field index.
-     */
-    protected abstract void loadDirectedEdges(Graph graph,
-                                              int startNodeIndex,
-                                              int endNodeIndex,
-                                              int weightFieldIndex);
-
-    /**
-     * Loads directed edges with orientations reversed.
-     *
-     * @param graph            The graph.
-     * @param startNodeIndex   The start node index.
-     * @param endNodeIndex     The end node index.
-     * @param weightFieldIndex The weight field index.
-     */
-    private void loadReversedEdges(Graph graph,
-                                   int startNodeIndex,
-                                   int endNodeIndex,
-                                   int weightFieldIndex) {
-        loadDirectedEdges(graph, endNodeIndex, startNodeIndex, weightFieldIndex);
-    }
-
-    /**
-     * Loads undirected edges.
-     *
-     * @param graph            The graph.
-     * @param startNodeIndex   The start node index.
-     * @param endNodeIndex     The end node index.
-     * @param weightFieldIndex The weight field index.
-     */
-    protected abstract void loadUndirectedEdges(Graph graph,
-                                                int startNodeIndex,
-                                                int endNodeIndex,
-                                                int weightFieldIndex);
 
     /**
      * Computes all network parameters on the given graph.
