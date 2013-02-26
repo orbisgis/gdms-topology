@@ -59,11 +59,11 @@ public class WeightedGraphAnalyzer extends GraphAnalyzer {
     /**
      * Constructs a new {@link WeightedGraphAnalyzer}.
      *
-     * @param dsf       The {@link DataSourceFactory} used to parse the data
-     *                  set.
-     * @param dataSet   The data set.
-     * @param pm        The progress monitor used to track the progress of the
-     *                  calculation.
+     * @param dsf         The {@link DataSourceFactory} used to parse the data
+     *                    set.
+     * @param dataSet     The data set.
+     * @param pm          The progress monitor used to track the progress of the
+     *                    calculation.
      * @param orientation The orientation.
      *
      * @throws DriverException

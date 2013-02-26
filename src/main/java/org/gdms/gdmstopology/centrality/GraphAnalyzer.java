@@ -94,11 +94,11 @@ public abstract class GraphAnalyzer {
     /**
      * Constructs a new {@link GraphAnalyzer}.
      *
-     * @param dsf       The {@link DataSourceFactory} used to parse the data
-     *                  set.
-     * @param dataSet   The data set.
-     * @param pm        The progress monitor used to track the progress of the
-     *                  calculation.
+     * @param dsf         The {@link DataSourceFactory} used to parse the data
+     *                    set.
+     * @param dataSet     The data set.
+     * @param pm          The progress monitor used to track the progress of the
+     *                    calculation.
      * @param orientation The orientation.
      *
      * @throws DriverException
@@ -206,7 +206,7 @@ public abstract class GraphAnalyzer {
      * Loads the graph edges with the appropriate orientation.
      *
      * @param graph            The graph.
-     * @param orientation        The orientation.
+     * @param orientation      The orientation.
      * @param startNodeIndex   The start node index.
      * @param endNodeIndex     The end node index.
      * @param weightFieldIndex The weight field index.
@@ -214,9 +214,9 @@ public abstract class GraphAnalyzer {
      * @throws GraphException
      */
     private void loadEdges(Graph graph, int orientation,
-                             int startNodeIndex,
-                             int endNodeIndex,
-                             int weightFieldIndex) throws
+                           int startNodeIndex,
+                           int endNodeIndex,
+                           int weightFieldIndex) throws
             GraphException {
         if (orientation == GraphSchema.DIRECT) {
             loadDirectedEdges(
