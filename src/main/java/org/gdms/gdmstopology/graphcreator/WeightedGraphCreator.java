@@ -30,7 +30,7 @@
  * For more information, please consult: <http://wwwc.orbisgis.org/> or contact
  * directly: info_at_orbisgis.org
  */
-package org.gdms.gdmstopology.centrality;
+package org.gdms.gdmstopology.graphcreator;
 
 import com.graphhopper.storage.Graph;
 import java.util.Iterator;
@@ -38,28 +38,29 @@ import org.gdms.data.values.Value;
 import org.gdms.driver.DataSet;
 
 /**
- * Creates an unweighted graph with a specified orientation from the given
+ * Creates a weighted graph with a specified orientation from the given
  * {@link DataSet}.
  *
  * @author Adam Gouge
  */
-public class UnweightedGraphCreator extends GraphCreator {
+public class WeightedGraphCreator extends GraphCreator {
 
     /**
-     * Used to make sure all edges receive a weight of exactly 1 when
-     * appropriate.
+     * The name of the weight column.
      */
-    private final static double ALL_WEIGHTS_ONE = 1.0;
+    private final String weightColumnName;
 
     /**
-     * Constructs a new {@link UnweightedGraphCreator}.
+     * Constructs a new {@link WeightedGraphCreator}.
      *
      * @param dataSet     The data set.
      * @param orientation The orientation.
      *
      */
-    public UnweightedGraphCreator(DataSet dataSet, int orientation) {
+    public WeightedGraphCreator(DataSet dataSet, int orientation,
+                                String weightColumnName) {
         super(dataSet, orientation);
+        this.weightColumnName = weightColumnName;
     }
 
     /**
@@ -67,7 +68,7 @@ public class UnweightedGraphCreator extends GraphCreator {
      */
     @Override
     protected String getWeightColumnName() {
-        return null;
+        return weightColumnName;
     }
 
     /**
@@ -78,13 +79,12 @@ public class UnweightedGraphCreator extends GraphCreator {
                                      int startNodeIndex,
                                      int endNodeIndex,
                                      int weightFieldIndex) {
-        // The weightFieldIndex is ignored.
         Iterator<Value[]> iterator = dataSet.iterator();
         while (iterator.hasNext()) {
             Value[] row = iterator.next();
             graph.edge(row[startNodeIndex].getAsInt(),
                        row[endNodeIndex].getAsInt(),
-                       ALL_WEIGHTS_ONE,
+                       row[weightFieldIndex].getAsDouble(),
                        false);
         }
     }
@@ -97,13 +97,12 @@ public class UnweightedGraphCreator extends GraphCreator {
                                        int startNodeIndex,
                                        int endNodeIndex,
                                        int weightFieldIndex) {
-        // The weightFieldIndex is ignored.
         Iterator<Value[]> iterator = dataSet.iterator();
         while (iterator.hasNext()) {
             Value[] row = iterator.next();
             graph.edge(row[startNodeIndex].getAsInt(),
                        row[endNodeIndex].getAsInt(),
-                       ALL_WEIGHTS_ONE,
+                       row[weightFieldIndex].getAsDouble(),
                        true);
         }
     }

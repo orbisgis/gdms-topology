@@ -30,7 +30,7 @@
  * For more information, please consult: <http://wwwc.orbisgis.org/> or contact
  * directly: info_at_orbisgis.org
  */
-package org.gdms.gdmstopology.centrality;
+package org.gdms.gdmstopology.graphcreator;
 
 import com.graphhopper.storage.Graph;
 import com.graphhopper.storage.GraphStorage;
@@ -88,7 +88,7 @@ public abstract class GraphCreator {
      * @throws DriverException
      * @throws GraphException
      */
-    protected Graph prepareGraph() throws DriverException, GraphException {
+    public Graph prepareGraph() throws DriverException, GraphException {
 
         // DATASET INFORMATION
         // Recover the edge Metadata.

@@ -32,6 +32,7 @@
  */
 package org.gdms.gdmstopology.centrality;
 
+import org.gdms.gdmstopology.graphcreator.WeightedGraphCreator;
 import com.graphhopper.sna.data.NodeBetweennessInfo;
 import com.graphhopper.sna.progress.DefaultProgressMonitor;
 import com.graphhopper.storage.Graph;
