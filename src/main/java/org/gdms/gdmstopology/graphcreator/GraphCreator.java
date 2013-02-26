@@ -35,6 +35,8 @@ package org.gdms.gdmstopology.graphcreator;
 import com.graphhopper.storage.Graph;
 import com.graphhopper.storage.GraphStorage;
 import com.graphhopper.storage.RAMDirectory;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.gdms.data.schema.Metadata;
 import org.gdms.driver.DataSet;
 import org.gdms.driver.DriverException;
@@ -62,6 +64,18 @@ public abstract class GraphCreator {
     public final static String GRAPH_TYPE_ERROR =
             "Please enter an appropriate graph orientation (1, 2 or 3).";
     /**
+     * An error message given when there is a problem accessing the edge
+     * metadata or recovering the start node, end node or weight field indices.
+     */
+    public final static String METADATA_ERROR =
+            "Cannot load the edge metadata OR Cannot recover node "
+            + "or weight field indices.";
+    /**
+     * An error message given when the edges cannot be loaded.
+     */
+    public final static String EDGE_LOADING_ERROR =
+            "Cannot load the edges.";
+    /**
      * Used to allocate enough space for the GraphHopper graph.
      */
     // TODO: How big does this need to be?
@@ -88,32 +102,46 @@ public abstract class GraphCreator {
      * @throws DriverException
      * @throws GraphException
      */
-    public Graph prepareGraph() throws DriverException, GraphException {
+    public Graph prepareGraph() {
 
         // DATASET INFORMATION
-        // Recover the edge Metadata.
-        // TODO: Add a check to make sure the metadata was loaded correctly.
-        Metadata edgeMetadata = dataSet.getMetadata();
-
-        // Recover the indices of the start node and end node.
-        int startNodeIndex = edgeMetadata.getFieldIndex(GraphSchema.START_NODE);
-        int endNodeIndex = edgeMetadata.getFieldIndex(GraphSchema.END_NODE);
-
-        // If the weight column name is not null, then recover the weight
-        // field index. Otherwise, set it to -1.
+        // Get the weight column name.
         String weightColumnName = getWeightColumnName();
-        int weightFieldIndex =
-                (weightColumnName == null)
-                ? -1
-                : edgeMetadata.getFieldIndex(weightColumnName);
+        // Initialize all the indices to -1.
+        int startNodeIndex = -1;
+        int endNodeIndex = -1;
+        int weightFieldIndex = -1;
+        // Recover the indices from the metadata.
+        try {
+            // Recover the edge Metadata.
+            // TODO: Add a check to make sure the metadata was loaded correctly.
+            Metadata edgeMetadata = dataSet.getMetadata();
+
+            // Recover the indices of the start node and end node.
+            startNodeIndex = edgeMetadata.getFieldIndex(GraphSchema.START_NODE);
+            endNodeIndex = edgeMetadata.getFieldIndex(GraphSchema.END_NODE);
+
+            // Recover the weight field index if possible.
+            if (weightColumnName != null) {
+                weightFieldIndex = edgeMetadata.getFieldIndex(weightColumnName);
+            }
+        } catch (DriverException ex) {
+            Logger.getLogger(GraphCreator.class.getName()).
+                    log(Level.SEVERE, METADATA_ERROR, ex);
+        }
 
         // GRAPH CREATION
         // Initialize the graph.
         GraphStorage graph = new GraphStorage(new RAMDirectory());
         graph.createNew(ALLOCATE_GRAPH_SPACE);
-        // Add the edges according to the given graph type.
-        loadEdges(graph, orientation,
-                  startNodeIndex, endNodeIndex, weightFieldIndex);
+        try {
+            // Add the edges according to the given graph type.
+            loadEdges(graph, orientation,
+                      startNodeIndex, endNodeIndex, weightFieldIndex);
+        } catch (GraphException ex) {
+            Logger.getLogger(GraphCreator.class.getName()).
+                    log(Level.SEVERE, EDGE_LOADING_ERROR, ex);
+        }
         return graph;
     }
 
@@ -141,14 +169,14 @@ public abstract class GraphCreator {
                            int weightFieldIndex) throws
             GraphException {
         if (orientation == GraphSchema.DIRECT) {
-            loadDirectedEdges(
-                    graph, startNodeIndex, endNodeIndex, weightFieldIndex);
+            loadDirectedEdges(graph,
+                              startNodeIndex, endNodeIndex, weightFieldIndex);
         } else if (orientation == GraphSchema.DIRECT_REVERSED) {
-            loadReversedEdges(
-                    graph, startNodeIndex, endNodeIndex, weightFieldIndex);
+            loadReversedEdges(graph,
+                              startNodeIndex, endNodeIndex, weightFieldIndex);
         } else if (orientation == GraphSchema.UNDIRECT) {
-            loadUndirectedEdges(
-                    graph, startNodeIndex, endNodeIndex, weightFieldIndex);
+            loadUndirectedEdges(graph,
+                                startNodeIndex, endNodeIndex, weightFieldIndex);
         } else {
             throw new GraphException(GRAPH_TYPE_ERROR);
         }

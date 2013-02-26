@@ -32,7 +32,6 @@
  */
 package org.gdms.gdmstopology.centrality;
 
-import org.gdms.gdmstopology.graphcreator.UnweightedGraphCreator;
 import com.graphhopper.sna.data.NodeBetweennessInfo;
 import com.graphhopper.sna.progress.DefaultProgressMonitor;
 import com.graphhopper.storage.Graph;
@@ -40,6 +39,7 @@ import java.util.HashMap;
 import org.gdms.data.DataSourceFactory;
 import org.gdms.driver.DataSet;
 import org.gdms.driver.DriverException;
+import org.gdms.gdmstopology.graphcreator.UnweightedGraphCreator;
 import org.gdms.gdmstopology.model.GraphException;
 import org.orbisgis.progress.ProgressMonitor;
 
@@ -76,9 +76,7 @@ public class UnweightedGraphAnalyzer extends GraphAnalyzer {
      * {@inheritDoc}
      */
     @Override
-    protected HashMap<Integer, NodeBetweennessInfo> computeAll()
-            throws DriverException, GraphException {
-
+    protected HashMap<Integer, NodeBetweennessInfo> computeAll() {
         // Prepare the graph.
         Graph graph = new UnweightedGraphCreator(dataSet, orientation)
                 .prepareGraph();

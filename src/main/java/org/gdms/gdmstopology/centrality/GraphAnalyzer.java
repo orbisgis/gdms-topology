@@ -33,13 +33,13 @@
 package org.gdms.gdmstopology.centrality;
 
 import com.graphhopper.sna.data.NodeBetweennessInfo;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
-import org.gdms.data.DataSourceCreationException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.gdms.data.DataSourceFactory;
-import org.gdms.data.NoSuchTableException;
 import org.gdms.data.schema.DefaultMetadata;
 import org.gdms.data.schema.Metadata;
 import org.gdms.data.types.Type;
@@ -49,7 +49,6 @@ import org.gdms.data.values.ValueFactory;
 import org.gdms.driver.DataSet;
 import org.gdms.driver.DiskBufferDriver;
 import org.gdms.driver.DriverException;
-import org.gdms.gdmstopology.model.GraphException;
 import org.gdms.gdmstopology.model.GraphSchema;
 import org.orbisgis.progress.ProgressMonitor;
 
@@ -59,20 +58,12 @@ import org.orbisgis.progress.ProgressMonitor;
  *
  * @author Adam Gouge
  */
-public abstract class GraphAnalyzer {
+public abstract class GraphAnalyzer extends AbstractExecutorFunctionHelper {
 
-    /**
-     * Used to parse the data set.
-     */
-    protected final DataSourceFactory dsf;
     /**
      * The data set.
      */
     protected final DataSet dataSet;
-    /**
-     * Progress monitor.
-     */
-    protected final ProgressMonitor pm;
     /**
      * Orientation.
      */
@@ -93,114 +84,22 @@ public abstract class GraphAnalyzer {
                          DataSet dataSet,
                          ProgressMonitor pm,
                          int orientation) {
-        this.dsf = dsf;
+        super(dsf, pm);
         this.dataSet = dataSet;
-        this.pm = pm;
         this.orientation = orientation;
     }
 
     /**
-     * Creates the graph, performs the analysis, stores the results in a
-     * {@link DiskBufferDriver}, writes them to a table and returns the results.
-     *
-     * @param outputTablePrefix The output table prefix.
-     *
-     * @return The results.
-     *
-     * @throws GraphException
-     * @throws DriverException
-     * @throws IOException
-     * @throws NoSuchTableException
-     * @throws DataSourceCreationException
+     * {@inheritDoc}
      */
-    public HashMap<Integer, NodeBetweennessInfo> doAnalysis(
-            String outputTablePrefix)
-            throws GraphException,
-            DriverException,
-            IOException,
-            NoSuchTableException,
-            DataSourceCreationException {
-
-        // Compute all graph analysis parameters.
-        HashMap<Integer, NodeBetweennessInfo> results = computeAll();
-
-        // Get the DiskBufferDriver to store.
-        DiskBufferDriver driver = createDriver(results);
-
-        // Write it to a table.
-        writeToTable(driver, outputTablePrefix);
-
-        // Return the results.
-        return results;
-    }
+    @Override
+    protected abstract HashMap<Integer, NodeBetweennessInfo> computeAll();
 
     /**
-     * Computes all network parameters.
-     *
-     * @return The result.
-     *
-     * @see GraphAnalyzer#doAnalysis(java.lang.String).
+     * {@inheritDoc}
      */
-    protected abstract HashMap<Integer, NodeBetweennessInfo> computeAll()
-            throws DriverException, GraphException;
-
-    /**
-     * Creates and returns the {@link DiskBufferDriver} after storing the
-     * results inside.
-     *
-     * @param results The results to be stored.
-     *
-     * @return The {@link DiskBufferDriver} holding the results.
-     *
-     * @throws DriverException
-     */
-    private DiskBufferDriver createDriver(
-            HashMap<Integer, NodeBetweennessInfo> results) throws
-            DriverException {
-
-        final Metadata metadata = createMetadata();
-
-        DiskBufferDriver driver = new DiskBufferDriver(dsf, metadata);
-
-        storeResultsInDriver(results, driver);
-
-        cleanUp(driver, pm);
-
-        return driver;
-    }
-
-    /**
-     * Writes the results stored in the driver to a new table.
-     *
-     * @param driver            The driver.
-     * @param outputTablePrefix The output table prefix.
-     *
-     * @return The name of the table.
-     *
-     * @throws DriverException
-     */
-    private String writeToTable(DiskBufferDriver driver,
-                                String outputTablePrefix)
-            throws DriverException {
-        // TODO: Necessary?
-        driver.open();
-        // Register the result in a new output table.
-        String outputTableName = dsf.getSourceManager().
-                getUniqueName(
-                outputTablePrefix
-                + "." + GraphSchema.GRAPH_ANALYSIS);
-        dsf.getSourceManager().register(
-                outputTableName,
-                driver.getFile());
-        return outputTableName;
-    }
-
-    /**
-     * Creates the metadata for the results.
-     *
-     * @return The metadata.
-     */
-    private Metadata createMetadata() {
+    @Override
+    protected Metadata createMetadata() {
         return new DefaultMetadata(
                 new Type[]{
                     TypeFactory.createType(Type.INT),
@@ -213,60 +112,44 @@ public abstract class GraphAnalyzer {
     }
 
     /**
-     * Stores the results in a {@link DiskBufferDriver}.
-     *
-     * @param results The results.
-     * @param driver  The driver.
-     *
-     * @throws DriverException
+     * {@inheritDoc}
      */
-    private void storeResultsInDriver(
-            HashMap<Integer, NodeBetweennessInfo> results,
-            DiskBufferDriver driver) throws DriverException {
+    @Override
+    protected void storeResultsInDriver(
+            Map results,
+            DiskBufferDriver driver) {
 
         long start = System.currentTimeMillis();
 
         Set<Integer> keySet = results.keySet();
         Iterator<Integer> it = keySet.iterator();
 
-        while (it.hasNext()) {
+        try {
+            while (it.hasNext()) {
 
-            final int node = it.next();
-            final NodeBetweennessInfo nodeNBInfo = results.get(node);
+                final int node = it.next();
+                final NodeBetweennessInfo nodeNBInfo =
+                        (NodeBetweennessInfo) results.get(node);
 
-            Value[] valuesToAdd =
-                    new Value[]{
-                // ID
-                ValueFactory.createValue(node),
-                // Betweenness
-                ValueFactory.createValue(nodeNBInfo.getBetweenness()),
-                // Closeness
-                ValueFactory.createValue(nodeNBInfo.getCloseness())
-            };
+                Value[] valuesToAdd =
+                        new Value[]{
+                    // ID
+                    ValueFactory.createValue(node),
+                    // Betweenness
+                    ValueFactory.createValue(nodeNBInfo.getBetweenness()),
+                    // Closeness
+                    ValueFactory.createValue(nodeNBInfo.getCloseness())
+                };
 
-            driver.addValues(valuesToAdd);
+                driver.addValues(valuesToAdd);
+            }
+        } catch (DriverException ex) {
+            Logger.getLogger(GraphAnalyzer.class.getName()).
+                    log(Level.SEVERE, "Can't store values in driver.", ex);
         }
 
         long stop = System.currentTimeMillis();
         System.out.println("Stored graph analysis results in "
                 + (stop - start) + " ms.");
-    }
-
-    /**
-     * Cleans up.
-     *
-     * @param driver The driver.
-     * @param pm     The progress monitor.
-     *
-     * @throws DriverException
-     */
-    private void cleanUp(DiskBufferDriver driver, ProgressMonitor pm)
-            throws DriverException {
-        // We are done writing.
-        driver.writingFinished();
-        // The task is done.
-        pm.endTask();
-        // So close the DiskBufferDriver.
-        driver.close();
     }
 }
