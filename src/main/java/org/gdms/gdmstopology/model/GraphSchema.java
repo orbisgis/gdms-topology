@@ -118,10 +118,6 @@ public final class GraphSchema {
      */
     public static final String BETWEENNESS_CENTRALITY = "betweenness_centrality";
     /**
-     * Specifies graph analysis.
-     */
-    public static final String GRAPH_ANALYSIS = "graph_analysis";
-    /**
      * Specifies the connected components.
      */
     public static final String CONNECTED_COMPONENTS = "connected_components";

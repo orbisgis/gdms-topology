@@ -54,6 +54,10 @@ public class WeightedGraphAnalyzer extends GraphAnalyzer {
      * The name of the weight column.
      */
     private final String weightColumnName;
+    /**
+     * Output table suffix.
+     */
+    private static final String OUTPUT_TABLE_SUFFIX = "weighted";
 
     /**
      * Constructs a new {@link WeightedGraphAnalyzer}.
@@ -78,6 +82,14 @@ public class WeightedGraphAnalyzer extends GraphAnalyzer {
             GraphException {
         super(dsf, dataSet, pm, graphType);
         this.weightColumnName = weightColumnName;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected String getOutputTableSuffix() {
+        return OUTPUT_TABLE_SUFFIX + "." + super.getOutputTableSuffix();
     }
 
     /**

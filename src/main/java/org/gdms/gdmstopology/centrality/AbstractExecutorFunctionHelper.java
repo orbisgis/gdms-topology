@@ -73,6 +73,15 @@ public abstract class AbstractExecutorFunctionHelper {
     }
 
     /**
+     * Returns the suffix that will be appended to the output table name.
+     *
+     * @return The suffix that will be appended to the output table name.
+     *
+     * @see #writeToTable(org.gdms.driver.DiskBufferDriver, java.lang.String)
+     */
+    protected abstract String getOutputTableSuffix();
+
+    /**
      * Creates the graph, computes and stores the results in a
      * {@link DiskBufferDriver} and writes them to a table.
      *
@@ -178,7 +187,7 @@ public abstract class AbstractExecutorFunctionHelper {
         String outputTableName = dsf.getSourceManager().
                 getUniqueName(
                 outputTablePrefix
-                + "." + GraphSchema.GRAPH_ANALYSIS);
+                + "." + getOutputTableSuffix());
         dsf.getSourceManager().register(
                 outputTableName,
                 driver.getFile());

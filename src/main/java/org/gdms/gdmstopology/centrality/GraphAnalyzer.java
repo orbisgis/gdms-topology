@@ -68,6 +68,10 @@ public abstract class GraphAnalyzer extends AbstractExecutorFunctionHelper {
      * Orientation.
      */
     protected final int orientation;
+    /**
+     * Output table suffix.
+     */
+    private static final String OUTPUT_TABLE_SUFFIX = "graph_analysis";
 
     /**
      * Constructs a new {@link GraphAnalyzer}.
@@ -87,6 +91,14 @@ public abstract class GraphAnalyzer extends AbstractExecutorFunctionHelper {
         super(dsf, pm);
         this.dataSet = dataSet;
         this.orientation = orientation;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected String getOutputTableSuffix() {
+        return OUTPUT_TABLE_SUFFIX;
     }
 
     /**

@@ -51,6 +51,11 @@ import org.orbisgis.progress.ProgressMonitor;
 public class UnweightedGraphAnalyzer extends GraphAnalyzer {
 
     /**
+     * Output table suffix.
+     */
+    private static final String OUTPUT_TABLE_SUFFIX = "unweighted";
+
+    /**
      * Constructs a new {@link UnweightedGraphAnalyzer}.
      *
      * @param dsf         The {@link DataSourceFactory} used to parse the data
@@ -70,6 +75,14 @@ public class UnweightedGraphAnalyzer extends GraphAnalyzer {
             throws DriverException,
             GraphException {
         super(dsf, dataSet, pm, graphType);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected String getOutputTableSuffix() {
+        return OUTPUT_TABLE_SUFFIX + "." + super.getOutputTableSuffix();
     }
 
     /**
