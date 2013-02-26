@@ -32,17 +32,17 @@
  */
 package org.gdms.gdmstopology.function;
 
-import org.gdms.gdmstopology.parse.GraphFunctionParser;
 import org.gdms.data.DataSourceFactory;
 import org.gdms.data.schema.Metadata;
 import org.gdms.data.values.Value;
 import org.gdms.driver.DataSet;
 import org.gdms.driver.DiskBufferDriver;
 import org.gdms.driver.DriverException;
+import org.gdms.gdmstopology.graphcreator.GraphCreator;
 import org.gdms.gdmstopology.model.GraphException;
 import org.gdms.gdmstopology.model.GraphMetadataFactory;
 import org.gdms.gdmstopology.model.GraphSchema;
-import org.gdms.gdmstopology.process.GraphLoaderUtilities;
+import org.gdms.gdmstopology.parse.GraphFunctionParser;
 import org.gdms.gdmstopology.process.GraphPathCalculator;
 import org.gdms.sql.function.FunctionException;
 import org.gdms.sql.function.FunctionSignature;
@@ -320,7 +320,7 @@ public class ST_ShortestPath extends AbstractTableFunction {
         } else if (orientation == GraphSchema.UNDIRECT) {
             System.out.println("undirected.");
         } else {
-            throw new GraphException(GraphLoaderUtilities.GRAPH_TYPE_ERROR);
+            throw new GraphException(GraphCreator.GRAPH_TYPE_ERROR);
         }
     }
 

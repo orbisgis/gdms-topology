@@ -35,7 +35,6 @@ package org.gdms.gdmstopology.process;
 import com.graphhopper.sna.centrality.UnweightedGraphAnalyzer;
 import com.graphhopper.sna.centrality.WeightedGraphAnalyzer;
 import com.graphhopper.storage.Graph;
-import com.graphhopper.storage.GraphStorage;
 import gnu.trove.iterator.TIntDoubleIterator;
 import gnu.trove.map.hash.TIntDoubleHashMap;
 import org.gdms.data.DataSourceFactory;
@@ -48,6 +47,8 @@ import org.gdms.data.values.ValueFactory;
 import org.gdms.driver.DataSet;
 import org.gdms.driver.DiskBufferDriver;
 import org.gdms.driver.DriverException;
+import org.gdms.gdmstopology.graphcreator.UnweightedGraphCreator;
+import org.gdms.gdmstopology.graphcreator.WeightedGraphCreator;
 import org.gdms.gdmstopology.model.GraphException;
 import org.gdms.gdmstopology.model.GraphSchema;
 import org.orbisgis.progress.ProgressMonitor;
@@ -84,11 +85,9 @@ public class GraphCentralityUtilities {
             throws GraphException,
             DriverException {
 
-        // Create the graph from the data set.
-        GraphStorage graph = GraphLoaderUtilities.
-                loadUnweightedGraphFromDataSet(
-                dataSet,
-                graphType);
+        // Prepare the graph.
+        Graph graph = new UnweightedGraphCreator(dataSet, graphType)
+                .prepareGraph();
 
         // Calculate the closeness centrality.
         DiskBufferDriver closenessCentralityDriver =
@@ -125,12 +124,9 @@ public class GraphCentralityUtilities {
             throws GraphException,
             DriverException {
 
-        // Create the graph from the data set.
-        Graph graph = GraphLoaderUtilities.
-                loadGraphFromDataSet(
-                dataSet,
-                graphType,
-                weightColumnName);
+        // Prepare the graph.
+        Graph graph = new WeightedGraphCreator(
+                dataSet, graphType, weightColumnName).prepareGraph();
 
         // Calculate the closeness centrality.
         DiskBufferDriver closenessCentralityDriver =

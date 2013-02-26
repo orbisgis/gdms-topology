@@ -34,6 +34,7 @@ package org.gdms.gdmstopology.process;
 
 import com.graphhopper.routing.DijkstraBidirectionRef;
 import com.graphhopper.routing.Path;
+import com.graphhopper.storage.Graph;
 import com.graphhopper.storage.GraphStorage;
 import com.graphhopper.util.EdgeIterator;
 import gnu.trove.iterator.TIntIterator;
@@ -48,6 +49,8 @@ import org.gdms.data.values.ValueFactory;
 import org.gdms.driver.DataSet;
 import org.gdms.driver.DiskBufferDriver;
 import org.gdms.driver.DriverException;
+import org.gdms.gdmstopology.graphcreator.UnweightedGraphCreator;
+import org.gdms.gdmstopology.graphcreator.WeightedGraphCreator;
 import org.gdms.gdmstopology.model.GraphException;
 import org.gdms.gdmstopology.model.GraphSchema;
 import org.orbisgis.progress.ProgressMonitor;
@@ -89,12 +92,9 @@ public class GraphPathCalculator {
             ProgressMonitor pm) throws DriverException,
             GraphException {
 
-        // Create the graph.
-        GraphStorage graph = (GraphStorage) GraphLoaderUtilities.
-                loadGraphFromDataSet(
-                dataSet,
-                graphType,
-                weightColumnName);
+        // Prepare the graph.
+        Graph graph = new WeightedGraphCreator(
+                dataSet, graphType, weightColumnName).prepareGraph();
         System.out.println("Created weighted graph.");
 
         // Calculate the path,
@@ -133,11 +133,9 @@ public class GraphPathCalculator {
             ProgressMonitor pm) throws DriverException,
             GraphException {
 
-        // Create the graph from the data set.
-        GraphStorage graph = GraphLoaderUtilities.
-                loadUnweightedGraphFromDataSet(
-                dataSet,
-                graphType);
+        // Prepare the graph.
+        Graph graph = new UnweightedGraphCreator(dataSet, graphType)
+                .prepareGraph();
         System.out.println("Created graph with all weights one.");
 
         // Calculate the path,
@@ -160,7 +158,7 @@ public class GraphPathCalculator {
      *
      * @return A shortest path.
      */
-    private static Path getPath(GraphStorage graph, int source, int target) {
+    private static Path getPath(Graph graph, int source, int target) {
         DijkstraBidirectionRef algorithm = new DijkstraBidirectionRef(graph);
         long start = System.currentTimeMillis();
         Path path = algorithm.clear().calcPath(source, target);
@@ -186,7 +184,7 @@ public class GraphPathCalculator {
      */
     private static DiskBufferDriver getShortestPathDriver(
             DataSourceFactory dsf,
-            GraphStorage graph,
+            Graph graph,
             Path path,
             ProgressMonitor pm) throws DriverException {
 
@@ -258,7 +256,7 @@ public class GraphPathCalculator {
      */
     private static void storePath(
             Path path,
-            GraphStorage graph,
+            Graph graph,
             DiskBufferDriver driver) throws DriverException {
 //                // Recover the edge Metadata.
 //                // TODO: Add a check to make sure the metadata was loaded correctly.
@@ -331,7 +329,7 @@ public class GraphPathCalculator {
      *         given target vertex.
      */
     private static double getSmallestEdgeDistance(
-            GraphStorage graph,
+            Graph graph,
             int source,
             int target) {
         // Obtain the smallest weight for this edge.
