@@ -36,9 +36,7 @@ import com.graphhopper.sna.data.NodeBetweennessInfo;
 import com.graphhopper.sna.progress.DefaultProgressMonitor;
 import com.graphhopper.storage.Graph;
 import java.util.HashMap;
-import java.util.Iterator;
 import org.gdms.data.DataSourceFactory;
-import org.gdms.data.values.Value;
 import org.gdms.driver.DataSet;
 import org.gdms.driver.DriverException;
 import org.gdms.gdmstopology.model.GraphException;
@@ -50,12 +48,6 @@ import org.orbisgis.progress.ProgressMonitor;
  * @author Adam Gouge
  */
 public class UnweightedGraphAnalyzer extends GraphAnalyzer {
-
-    /**
-     * Used to make sure all edges receive a weight of exactly 1 when
-     * appropriate.
-     */
-    private final static double ALL_WEIGHTS_ONE = 1.0;
 
     /**
      * Constructs a new {@link UnweightedGraphAnalyzer}.
@@ -83,57 +75,20 @@ public class UnweightedGraphAnalyzer extends GraphAnalyzer {
      * {@inheritDoc}
      */
     @Override
-    protected String getWeightColumnName() {
-        return null;
-    }
+    protected HashMap<Integer, NodeBetweennessInfo> computeAll()
+            throws DriverException, GraphException {
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void loadDirectedEdges(Graph graph,
-                                     int startNodeIndex,
-                                     int endNodeIndex,
-                                     int weightFieldIndex) {
-        // The weightFieldIndex is ignored.
-        Iterator<Value[]> iterator = dataSet.iterator();
-        while (iterator.hasNext()) {
-            Value[] row = iterator.next();
-            graph.edge(row[startNodeIndex].getAsInt(),
-                       row[endNodeIndex].getAsInt(),
-                       ALL_WEIGHTS_ONE,
-                       false);
-        }
-    }
+        // Prepare the graph.
+        Graph graph = new UnweightedGraphCreator(dataSet, orientation)
+                .prepareGraph();
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void loadUndirectedEdges(Graph graph,
-                                       int startNodeIndex,
-                                       int endNodeIndex,
-                                       int weightFieldIndex) {
-        // The weightFieldIndex is ignored.
-        Iterator<Value[]> iterator = dataSet.iterator();
-        while (iterator.hasNext()) {
-            Value[] row = iterator.next();
-            graph.edge(row[startNodeIndex].getAsInt(),
-                       row[endNodeIndex].getAsInt(),
-                       ALL_WEIGHTS_ONE,
-                       true);
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected HashMap<Integer, NodeBetweennessInfo> computeAll(Graph graph) {
+        // Get an analyzer.
         com.graphhopper.sna.centrality.UnweightedGraphAnalyzer analyzer =
                 new com.graphhopper.sna.centrality.UnweightedGraphAnalyzer(
                 graph,
                 new DefaultProgressMonitor());
+
+        // Return the results.
         return analyzer.computeAll();
     }
 }

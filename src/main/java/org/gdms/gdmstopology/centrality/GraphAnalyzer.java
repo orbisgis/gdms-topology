@@ -33,7 +33,6 @@
 package org.gdms.gdmstopology.centrality;
 
 import com.graphhopper.sna.data.NodeBetweennessInfo;
-import com.graphhopper.storage.Graph;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -60,7 +59,24 @@ import org.orbisgis.progress.ProgressMonitor;
  *
  * @author Adam Gouge
  */
-public abstract class GraphAnalyzer extends GraphCreator {
+public abstract class GraphAnalyzer {
+
+    /**
+     * Used to parse the data set.
+     */
+    protected final DataSourceFactory dsf;
+    /**
+     * The data set.
+     */
+    protected final DataSet dataSet;
+    /**
+     * Progress monitor.
+     */
+    protected final ProgressMonitor pm;
+    /**
+     * Orientation.
+     */
+    protected final int orientation;
 
     /**
      * Constructs a new {@link GraphAnalyzer}.
@@ -77,7 +93,10 @@ public abstract class GraphAnalyzer extends GraphCreator {
                          DataSet dataSet,
                          ProgressMonitor pm,
                          int orientation) {
-        super(dsf, dataSet, pm, orientation);
+        this.dsf = dsf;
+        this.dataSet = dataSet;
+        this.pm = pm;
+        this.orientation = orientation;
     }
 
     /**
@@ -102,11 +121,8 @@ public abstract class GraphAnalyzer extends GraphCreator {
             NoSuchTableException,
             DataSourceCreationException {
 
-        // Prepare the graph.
-        Graph graph = prepareGraph(orientation);
-
         // Compute all graph analysis parameters.
-        HashMap<Integer, NodeBetweennessInfo> results = computeAll(graph);
+        HashMap<Integer, NodeBetweennessInfo> results = computeAll();
 
         // Get the DiskBufferDriver to store.
         DiskBufferDriver driver = createDriver(results);
@@ -119,16 +135,14 @@ public abstract class GraphAnalyzer extends GraphCreator {
     }
 
     /**
-     * Computes all network parameters on the given graph.
-     *
-     * @param graph The graph.
+     * Computes all network parameters.
      *
      * @return The result.
      *
      * @see GraphAnalyzer#doAnalysis(java.lang.String).
      */
-    protected abstract HashMap<Integer, NodeBetweennessInfo> computeAll(
-            Graph graph);
+    protected abstract HashMap<Integer, NodeBetweennessInfo> computeAll()
+            throws DriverException, GraphException;
 
     /**
      * Creates and returns the {@link DiskBufferDriver} after storing the

@@ -32,22 +32,18 @@
  */
 package org.gdms.gdmstopology.centrality;
 
-import com.graphhopper.sna.data.NodeBetweennessInfo;
-import com.graphhopper.sna.progress.DefaultProgressMonitor;
 import com.graphhopper.storage.Graph;
-import java.util.HashMap;
-import org.gdms.data.DataSourceFactory;
+import java.util.Iterator;
+import org.gdms.data.values.Value;
 import org.gdms.driver.DataSet;
-import org.gdms.driver.DriverException;
-import org.gdms.gdmstopology.model.GraphException;
-import org.orbisgis.progress.ProgressMonitor;
 
 /**
- * A {@link GraphAnalyzer} for weighted graphs.
+ * Creates a weighted graph with a specified orientation from the given
+ * {@link DataSet}.
  *
  * @author Adam Gouge
  */
-public class WeightedGraphAnalyzer extends GraphAnalyzer {
+public class WeightedGraphCreator extends GraphCreator {
 
     /**
      * The name of the weight column.
@@ -55,27 +51,15 @@ public class WeightedGraphAnalyzer extends GraphAnalyzer {
     private final String weightColumnName;
 
     /**
-     * Constructs a new {@link WeightedGraphAnalyzer}.
+     * Constructs a new {@link WeightedGraphCreator}.
      *
-     * @param dsf         The {@link DataSourceFactory} used to parse the data
-     *                    set.
      * @param dataSet     The data set.
-     * @param pm          The progress monitor used to track the progress of the
-     *                    calculation.
      * @param orientation The orientation.
      *
-     * @throws DriverException
-     * @throws GraphException
      */
-    public WeightedGraphAnalyzer(
-            DataSourceFactory dsf,
-            DataSet dataSet,
-            ProgressMonitor pm,
-            int graphType,
-            String weightColumnName)
-            throws DriverException,
-            GraphException {
-        super(dsf, dataSet, pm, graphType);
+    public WeightedGraphCreator(DataSet dataSet, int orientation,
+                                String weightColumnName) {
+        super(dataSet, orientation);
         this.weightColumnName = weightColumnName;
     }
 
@@ -83,19 +67,43 @@ public class WeightedGraphAnalyzer extends GraphAnalyzer {
      * {@inheritDoc}
      */
     @Override
-    protected HashMap<Integer, NodeBetweennessInfo> computeAll() throws
-            DriverException, GraphException {
-        // Prepare the graph.
-        Graph graph = new WeightedGraphCreator(
-                dataSet, orientation, weightColumnName).prepareGraph();
+    protected String getWeightColumnName() {
+        return weightColumnName;
+    }
 
-        // Get an analyzer.
-        com.graphhopper.sna.centrality.WeightedGraphAnalyzer analyzer =
-                new com.graphhopper.sna.centrality.WeightedGraphAnalyzer(
-                graph,
-                new DefaultProgressMonitor());
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void loadDirectedEdges(Graph graph,
+                                     int startNodeIndex,
+                                     int endNodeIndex,
+                                     int weightFieldIndex) {
+        Iterator<Value[]> iterator = dataSet.iterator();
+        while (iterator.hasNext()) {
+            Value[] row = iterator.next();
+            graph.edge(row[startNodeIndex].getAsInt(),
+                       row[endNodeIndex].getAsInt(),
+                       row[weightFieldIndex].getAsDouble(),
+                       false);
+        }
+    }
 
-        // Return the results.
-        return analyzer.computeAll();
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void loadUndirectedEdges(Graph graph,
+                                       int startNodeIndex,
+                                       int endNodeIndex,
+                                       int weightFieldIndex) {
+        Iterator<Value[]> iterator = dataSet.iterator();
+        while (iterator.hasNext()) {
+            Value[] row = iterator.next();
+            graph.edge(row[startNodeIndex].getAsInt(),
+                       row[endNodeIndex].getAsInt(),
+                       row[weightFieldIndex].getAsDouble(),
+                       true);
+        }
     }
 }

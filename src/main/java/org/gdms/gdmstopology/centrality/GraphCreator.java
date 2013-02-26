@@ -35,32 +35,23 @@ package org.gdms.gdmstopology.centrality;
 import com.graphhopper.storage.Graph;
 import com.graphhopper.storage.GraphStorage;
 import com.graphhopper.storage.RAMDirectory;
-import org.gdms.data.DataSourceFactory;
 import org.gdms.data.schema.Metadata;
 import org.gdms.driver.DataSet;
 import org.gdms.driver.DriverException;
 import org.gdms.gdmstopology.model.GraphException;
 import org.gdms.gdmstopology.model.GraphSchema;
-import org.orbisgis.progress.ProgressMonitor;
 
 /**
+ * Creates a graph with a specified orientation from the given {@link DataSet}.
  *
  * @author Adam Gouge
  */
 public abstract class GraphCreator {
 
     /**
-     * Used to parse the data set.
-     */
-    protected final DataSourceFactory dsf;
-    /**
      * The data set.
      */
     protected final DataSet dataSet;
-    /**
-     * Progress monitor.
-     */
-    protected final ProgressMonitor pm;
     /**
      * Orientation.
      */
@@ -79,21 +70,11 @@ public abstract class GraphCreator {
     /**
      * Constructs a new {@link GraphCreator}.
      *
-     * @param dsf         The {@link DataSourceFactory} used to parse the data
-     *                    set.
-     * @param dataSet     The data set.
-     * @param pm          The progress monitor used to track the progress of the
-     *                    calculation.
-     * @param orientation The orientation.
+     * @param dataSet The data set.
      *
      */
-    public GraphCreator(DataSourceFactory dsf,
-                        DataSet dataSet,
-                        ProgressMonitor pm,
-                        int orientation) {
-        this.dsf = dsf;
+    public GraphCreator(DataSet dataSet, int orientation) {
         this.dataSet = dataSet;
-        this.pm = pm;
         this.orientation = orientation;
     }
 
@@ -107,9 +88,7 @@ public abstract class GraphCreator {
      * @throws DriverException
      * @throws GraphException
      */
-    protected Graph prepareGraph(int orientation)
-            throws DriverException,
-            GraphException {
+    protected Graph prepareGraph() throws DriverException, GraphException {
 
         // DATASET INFORMATION
         // Recover the edge Metadata.
