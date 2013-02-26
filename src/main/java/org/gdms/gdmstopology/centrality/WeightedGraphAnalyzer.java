@@ -36,11 +36,12 @@ import com.graphhopper.sna.data.NodeBetweennessInfo;
 import com.graphhopper.sna.progress.DefaultProgressMonitor;
 import com.graphhopper.storage.Graph;
 import java.util.HashMap;
+import java.util.Iterator;
 import org.gdms.data.DataSourceFactory;
+import org.gdms.data.values.Value;
 import org.gdms.driver.DataSet;
 import org.gdms.driver.DriverException;
 import org.gdms.gdmstopology.model.GraphException;
-import org.gdms.gdmstopology.process.GraphLoaderUtilities;
 import org.orbisgis.progress.ProgressMonitor;
 
 /**
@@ -63,7 +64,7 @@ public class WeightedGraphAnalyzer extends GraphAnalyzer {
      * @param dataSet   The data set.
      * @param pm        The progress monitor used to track the progress of the
      *                  calculation.
-     * @param graphType The orientation.
+     * @param orientation The orientation.
      *
      * @throws DriverException
      * @throws GraphException
@@ -84,14 +85,44 @@ public class WeightedGraphAnalyzer extends GraphAnalyzer {
      * {@inheritDoc}
      */
     @Override
-    protected Graph prepareGraph(int graphType)
-            throws DriverException,
-            GraphException {
-        return GraphLoaderUtilities.
-                loadGraphFromDataSet(
-                dataSet,
-                graphType,
-                weightColumnName);
+    protected String getWeightColumnName() {
+        return weightColumnName;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void loadDirectedEdges(Graph graph,
+                                     int startNodeIndex,
+                                     int endNodeIndex,
+                                     int weightFieldIndex) {
+        Iterator<Value[]> iterator = dataSet.iterator();
+        while (iterator.hasNext()) {
+            Value[] row = iterator.next();
+            graph.edge(row[startNodeIndex].getAsInt(),
+                       row[endNodeIndex].getAsInt(),
+                       row[weightFieldIndex].getAsDouble(),
+                       false);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void loadUndirectedEdges(Graph graph,
+                                       int startNodeIndex,
+                                       int endNodeIndex,
+                                       int weightFieldIndex) {
+        Iterator<Value[]> iterator = dataSet.iterator();
+        while (iterator.hasNext()) {
+            Value[] row = iterator.next();
+            graph.edge(row[startNodeIndex].getAsInt(),
+                       row[endNodeIndex].getAsInt(),
+                       row[weightFieldIndex].getAsDouble(),
+                       true);
+        }
     }
 
     /**
