@@ -30,7 +30,7 @@
  * For more information, please consult: <http://wwwc.orbisgis.org/> or contact
  * directly: info_at_ orbisgis.org
  */
-package org.gdms.gdmstopology.process;
+package org.gdms.gdmstopology.centrality;
 
 import com.graphhopper.sna.centrality.UnweightedGraphAnalyzer;
 import com.graphhopper.sna.centrality.WeightedGraphAnalyzer;
@@ -59,7 +59,7 @@ import org.orbisgis.progress.ProgressMonitor;
  *
  * @author Adam Gouge
  */
-public class GraphCentralityUtilities {
+public class ClosenessCentralityUtilities {
 
     /**
      * Registers the closeness centrality indices of the nodes of the given

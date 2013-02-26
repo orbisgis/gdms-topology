@@ -32,8 +32,6 @@
  */
 package org.gdms.gdmstopology.centrality;
 
-import org.gdms.gdmstopology.parse.OutputFunctionParser;
-import org.gdms.gdmstopology.parse.GraphFunctionParser;
 import org.gdms.data.DataSourceFactory;
 import org.gdms.data.types.Type;
 import org.gdms.data.values.Value;
@@ -41,7 +39,8 @@ import org.gdms.driver.DataSet;
 import org.gdms.driver.DriverException;
 import org.gdms.gdmstopology.model.GraphException;
 import org.gdms.gdmstopology.model.GraphSchema;
-import org.gdms.gdmstopology.process.GraphCentralityUtilities;
+import org.gdms.gdmstopology.parse.GraphFunctionParser;
+import org.gdms.gdmstopology.parse.OutputFunctionParser;
 import org.gdms.sql.function.FunctionException;
 import org.gdms.sql.function.FunctionSignature;
 import org.gdms.sql.function.ScalarArgument;
@@ -248,7 +247,7 @@ public class ST_ClosenessCentrality extends AbstractExecutorFunction {
             DriverException {
         // Unweighted graph.
         if (weightsColumn == null) {
-            GraphCentralityUtilities.
+            ClosenessCentralityUtilities.
                     registerClosenessCentralityIndicesAllWeightsOne(
                     dsf,
                     dataSet,
@@ -256,7 +255,7 @@ public class ST_ClosenessCentrality extends AbstractExecutorFunction {
                     orientation,
                     pm);
         } else { // Weighted graph.
-            GraphCentralityUtilities.
+            ClosenessCentralityUtilities.
                     registerClosenessCentralityIndices(
                     dsf,
                     dataSet,
