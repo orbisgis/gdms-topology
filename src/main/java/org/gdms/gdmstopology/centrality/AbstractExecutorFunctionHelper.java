@@ -86,8 +86,8 @@ public abstract class AbstractExecutorFunctionHelper {
     protected abstract String getOutputTableSuffix();
 
     /**
-     * Creates the graph, computes and stores the results in a
-     * {@link DiskBufferDriver} and writes them to a table.
+     * Computes and stores the results in a {@link DiskBufferDriver} and writes
+     * them to a table.
      *
      * @param outputTablePrefix The output table prefix.
      *
@@ -117,7 +117,7 @@ public abstract class AbstractExecutorFunctionHelper {
     }
 
     /**
-     * Creates the graph and computes and returns the results.
+     * Computes and returns the results.
      *
      * @return The results.
      */
