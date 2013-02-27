@@ -64,6 +64,11 @@ public abstract class ClosenessComputer extends AbstractExecutorFunctionHelper {
      * Orientation.
      */
     protected final int orientation;
+    /**
+     * Error message when the analyzer cannot be prepared.
+     */
+    protected static final String CLOSENESS_ERROR =
+            "Could not compute closeness (problem with indices).";
 
     /**
      * Constructs a new {@link ClosenessComputer}.

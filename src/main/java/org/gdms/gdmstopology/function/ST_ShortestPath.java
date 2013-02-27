@@ -33,6 +33,7 @@
 package org.gdms.gdmstopology.function;
 
 import org.gdms.data.DataSourceFactory;
+import org.gdms.data.indexes.IndexException;
 import org.gdms.data.schema.Metadata;
 import org.gdms.data.values.Value;
 import org.gdms.driver.DataSet;
@@ -249,7 +250,8 @@ public class ST_ShortestPath extends AbstractTableFunction {
             DataSourceFactory dsf,
             DataSet dataSet,
             ProgressMonitor pm) throws GraphException,
-            DriverException {
+            DriverException,
+            IndexException {
 
         DiskBufferDriver diskBufferDriver;
         // UNWEIGHTED GRAPHS

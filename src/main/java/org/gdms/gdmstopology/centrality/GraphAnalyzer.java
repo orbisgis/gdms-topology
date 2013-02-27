@@ -67,6 +67,11 @@ public abstract class GraphAnalyzer extends AbstractExecutorFunctionHelper {
      * Orientation.
      */
     protected final int orientation;
+    /**
+     * Error message when the analyzer cannot be prepared.
+     */
+    protected static final String ANALYZER_PREP_ERROR =
+            "Could not prepare analyzer (problem with indices).";
 
     /**
      * Constructs a new {@link GraphAnalyzer}.

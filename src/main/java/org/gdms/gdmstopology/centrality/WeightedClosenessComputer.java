@@ -35,7 +35,10 @@ package org.gdms.gdmstopology.centrality;
 import com.graphhopper.sna.progress.DefaultProgressMonitor;
 import com.graphhopper.storage.Graph;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.gdms.data.DataSourceFactory;
+import org.gdms.data.indexes.IndexException;
 import org.gdms.driver.DataSet;
 import org.gdms.driver.DriverException;
 import org.gdms.gdmstopology.graphcreator.UnweightedGraphCreator;
@@ -92,10 +95,16 @@ public class WeightedClosenessComputer extends ClosenessComputer {
      */
     @Override
     protected Map computeAll() {
-        return new com.graphhopper.sna.centrality.WeightedGraphAnalyzer(
-                new WeightedGraphCreator(dataSet, orientation,
-                                         weightColumnName).prepareGraph(),
-                new DefaultProgressMonitor())
-                .computeCloseness();
+        try {
+            return new com.graphhopper.sna.centrality.WeightedGraphAnalyzer(
+                    new WeightedGraphCreator(dataSet, orientation,
+                                             weightColumnName).prepareGraph(),
+                    new DefaultProgressMonitor())
+                    .computeCloseness();
+        } catch (IndexException ex) {
+            Logger.getLogger(WeightedClosenessComputer.class.getName()).
+                    log(Level.SEVERE, CLOSENESS_ERROR, ex);
+        }
+        return null;
     }
 }

@@ -35,11 +35,11 @@ package org.gdms.gdmstopology.process;
 import com.graphhopper.routing.DijkstraBidirectionRef;
 import com.graphhopper.routing.Path;
 import com.graphhopper.storage.Graph;
-import com.graphhopper.storage.GraphStorage;
 import com.graphhopper.util.EdgeIterator;
 import gnu.trove.iterator.TIntIterator;
 import gnu.trove.list.TIntList;
 import org.gdms.data.DataSourceFactory;
+import org.gdms.data.indexes.IndexException;
 import org.gdms.data.schema.DefaultMetadata;
 import org.gdms.data.schema.Metadata;
 import org.gdms.data.types.Type;
@@ -90,7 +90,8 @@ public class GraphPathCalculator {
             int graphType,
             String weightColumnName,
             ProgressMonitor pm) throws DriverException,
-            GraphException {
+            GraphException,
+            IndexException {
 
         // Prepare the graph.
         Graph graph = new WeightedGraphCreator(
@@ -131,7 +132,8 @@ public class GraphPathCalculator {
             int target,
             int graphType,
             ProgressMonitor pm) throws DriverException,
-            GraphException {
+            GraphException,
+            IndexException {
 
         // Prepare the graph.
         Graph graph = new UnweightedGraphCreator(dataSet, graphType)

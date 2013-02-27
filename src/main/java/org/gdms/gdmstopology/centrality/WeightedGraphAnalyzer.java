@@ -33,7 +33,10 @@
 package org.gdms.gdmstopology.centrality;
 
 import com.graphhopper.sna.progress.DefaultProgressMonitor;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.gdms.data.DataSourceFactory;
+import org.gdms.data.indexes.IndexException;
 import org.gdms.driver.DataSet;
 import org.gdms.driver.DriverException;
 import org.gdms.gdmstopology.graphcreator.WeightedGraphCreator;
@@ -91,10 +94,16 @@ public class WeightedGraphAnalyzer extends GraphAnalyzer {
      */
     @Override
     protected com.graphhopper.sna.centrality.WeightedGraphAnalyzer prepareAnalyzer() {
-        return new com.graphhopper.sna.centrality.WeightedGraphAnalyzer(
-                new WeightedGraphCreator(dataSet, orientation,
-                                         weightColumnName)
-                .prepareGraph(),
-                new DefaultProgressMonitor());
+        try {
+            return new com.graphhopper.sna.centrality.WeightedGraphAnalyzer(
+                    new WeightedGraphCreator(dataSet, orientation,
+                                             weightColumnName)
+                    .prepareGraph(),
+                    new DefaultProgressMonitor());
+        } catch (IndexException ex) {
+            Logger.getLogger(WeightedGraphAnalyzer.class.getName()).
+                    log(Level.SEVERE, ANALYZER_PREP_ERROR, ex);
+        }
+        return null;
     }
 }

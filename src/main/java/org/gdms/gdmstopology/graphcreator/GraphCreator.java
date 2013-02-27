@@ -37,6 +37,7 @@ import com.graphhopper.storage.GraphStorage;
 import com.graphhopper.storage.RAMDirectory;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.gdms.data.indexes.IndexException;
 import org.gdms.data.schema.Metadata;
 import org.gdms.driver.DataSet;
 import org.gdms.driver.DriverException;
@@ -76,6 +77,11 @@ public abstract class GraphCreator {
     public final static String EDGE_LOADING_ERROR =
             "Cannot load the edges.";
     /**
+     * An error message given when a field is missing from the input table.
+     */
+    public final static String MISSING_FIELD_ERROR =
+            "The input table must contain the field \'";
+    /**
      * Used to allocate enough space for the GraphHopper graph.
      */
     // TODO: How big does this need to be?
@@ -102,7 +108,7 @@ public abstract class GraphCreator {
      * @throws DriverException
      * @throws GraphException
      */
-    public Graph prepareGraph() {
+    public Graph prepareGraph() throws IndexException {
 
         // DATASET INFORMATION
         // Get the weight column name.
@@ -120,10 +126,13 @@ public abstract class GraphCreator {
             // Recover the indices of the start node and end node.
             startNodeIndex = edgeMetadata.getFieldIndex(GraphSchema.START_NODE);
             endNodeIndex = edgeMetadata.getFieldIndex(GraphSchema.END_NODE);
+            verifyIndex(startNodeIndex, GraphSchema.START_NODE);
+            verifyIndex(endNodeIndex, GraphSchema.END_NODE);
 
             // Recover the weight field index if possible.
             if (weightColumnName != null) {
                 weightFieldIndex = edgeMetadata.getFieldIndex(weightColumnName);
+                verifyIndex(weightFieldIndex, weightColumnName);
             }
         } catch (DriverException ex) {
             Logger.getLogger(GraphCreator.class.getName()).
@@ -224,4 +233,21 @@ public abstract class GraphCreator {
                                                 int startNodeIndex,
                                                 int endNodeIndex,
                                                 int weightFieldIndex);
+
+    /**
+     * Verifies that the given index is not equal to -1; if it is, then throws
+     * an exception saying that the given field is missing.
+     *
+     * @param index        The index.
+     * @param missingField The field.
+     *
+     * @throws FunctionException
+     */
+    private void verifyIndex(int index, String missingField) throws
+            IndexException {
+        if (index == -1) {
+            throw new IndexException(
+                    MISSING_FIELD_ERROR + missingField + "\'.");
+        }
+    }
 }
