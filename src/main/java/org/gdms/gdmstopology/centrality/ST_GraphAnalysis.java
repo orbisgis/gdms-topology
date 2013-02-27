@@ -56,36 +56,33 @@ import org.orbisgis.progress.ProgressMonitor;
 /**
  * SQL function to perform graph analysis on all nodes of a given graph.
  *
- * <p><i>Note</i>: This function uses the
- * <code>jgrapht-sna</code> implementation of Freeman closeness centrality,
- * which uses the Floyd-Warshall algorithm to calculate all possible shortest
- * paths. The calculations are intense and can take a long time to complete.
+ * <p><i>Note</i>: This function use Dijkstra's algorithm to calculate, for each
+ * node, all possible shortest paths to all the other nodes (we assume the graph
+ * is connected). These calculations are intense and can take a long time to
+ * complete.
  *
- * <p> For the moment, only Freeman closeness centrality with all weights equal
- * to 1 has been implemented.
- *
- * <p> Example usage: <center> {@code SELECT * FROM ST_ClosenessCentrality(
+ * <p> Example usage: <center> {@code EXECUTE ST_GraphAnalysis(
  * input_table,
  * 'weights_column'
- * [,'output_table_prefix',
- * orientation]);} </center> or: <center> {@code SELECT * FROM ST_ClosenessCentrality(
+ * [,'output_table_prefix']
+ * [,orientation]);} </center> or: <center> {@code EXECUTE ST_GraphAnalysis(
  * input_table,
- * 1
- * [,'output_table_prefix',
- * orientation]);} </center>
+ * 1,
+ * [,'output_table_prefix']
+ * [,orientation]);} </center>
  *
  * <p> Required parameters: <ul> <li> {@code input_table} - the input table.
  * Specifically, this is the {@code output_table_prefix.edges} table produced by
- * {@link ST_Graph}, except that an additional column specifying the weight of
- * each edge must be added (this is the 'weights_column'). <li>
- * {@code 'weights_column'} - a string specifying the name of the column of the
- * input table that gives the weight of each edge. </ul>
+ * {@link ST_Graph}, with an optional additional column specifying the weight of
+ * each edge. <li> {@code 'weights_column'} - either a string specifying the
+ * name of the column of the input table that gives the weight of each edge, or
+ * 1 if the graph is to be considered unweighted. </ul>
  *
  * <p> Optional parameters: <ul> <li> {@code 'output_table_prefix'} - a string
  * used to prefix the name of the output table. <li> {@code orientation} - an
  * integer specifying the orientation of the graph: <ul> <li> 1 if the graph is
  * directed, <li> 2 if it is directed and we wish to reverse the orientation of
- * the edges. </ul> If no orientation is specified, we assume the graph is
+ * the edges. <li> 3 if it is undirected. </ul> The default orientation is
  * directed. </ul>
  *
  * @author Adam Gouge
@@ -101,9 +98,9 @@ public class ST_GraphAnalysis extends AbstractExecutorFunction {
      */
     private static final String SQL_ORDER = "EXECUTE ST_GraphAnalysis("
             + "input_table, "
-            + "'weights_column', "
-            + "'output_table_prefix'"
-            + "[,orientation]);";
+            + "'weights_column'"
+            + "[, 'output_table_prefix']"
+            + "[, orientation]);";
     /**
      * Short description of this function.
      */
@@ -113,46 +110,45 @@ public class ST_GraphAnalysis extends AbstractExecutorFunction {
      * Long description of this function.
      */
     private static final String LONG_DESCRIPTION =
-            "<p> "
-            + "<i>Note</i>: This function uses the "
-            + "<code>jgrapht-sna</code> "
-            + "implementation of Freeman closeness centrality, which uses "
-            + "the Floyd-Warshall algorithm to calculate all possible "
-            + "shortest paths. The calculations are intense and can take "
-            + "a long time to complete."
-            + "<p> "
-            + "Required parameters: "
+            "<p><i>Note</i>: This function use Dijkstra's algorithm to "
+            + "calculate, for each node, all possible shortest paths to all "
+            + "the other nodes (we assume the graph is connected). These "
+            + "calculations are intense and can take a long time to complete."
+            + "<p> Example usage: "
+            + "<center> "
+            + "<code>EXECUTE ST_GraphAnalysis("
+            + "input_table, "
+            + "'weights_column'"
+            + "[, 'output_table_prefix']"
+            + "[, orientation]);</code> </center> "
+            + "or: <center> "
+            + "<code>EXECUTE ST_GraphAnalysis("
+            + "input_table, "
+            + "1"
+            + "[, 'output_table_prefix']"
+            + "[, orientation]);</code> </center>"
+            + "<p> Required parameters: "
             + "<ul> "
-            + "<li> <code>input_table</code> "
-            + "- the input table. Specifically, this is the "
-            + "<code>output_table_prefix.edges</code> "
-            + "table produced by "
-            + "<code>ST_Graph</code>, "
-            + "except that an additional column "
-            + "specifying the weight of each edge must be added. "
-            + "<li> "
-            + "<code>'weights_column'</code> "
-            + "- a string specifying the name of the column of the input "
-            + "table that gives the weight of each edge. "
-            + "<li> "
-            + "<code>'output_table_prefix'</code> "
-            + "- a string used to prefix the name of the output table. "
-            + "</ul>" // end required parameters.
-            + "<p> "
-            + "Optional parameters: "
+            + "<li> <code>input_table</code> - the input table. Specifically, "
+            + "this is the <code>output_table_prefix.edges</code> table "
+            + "produced by <code>ST_Graph</code>, with an optional additional "
+            + "column specifying the weight of each edge. "
+            + "<li> <code>'weights_column'</code> - either a string specifying "
+            + "the name of the column of the input table that gives the weight "
+            + "of each edge, or 1 if the graph is to be considered unweighted. "
+            + "</ul>"
+            + "<p> Optional parameters: "
             + "<ul> "
-            + "<li> "
-            + "<code>orientation</code> "
-            + "- an integer specifying the orientation of the graph: "
+            + "<li> <code>'output_table_prefix'</code> - a string used to "
+            + "prefix the name of the output table. "
+            + "<li> <code>orientation</code> - an integer specifying the "
+            + "orientation of the graph: "
             + "<ul> "
             + "<li> 1 if the graph is directed, "
-            + "<li> 2 if it is directed and we wish to reverse the "
-            + "orientation of the edges, "
-            + "<li> 3 if the graph is undirected."
-            + " </ul> " // end orientation list
-            + "If no orientation is specified, we assume the graph is"
-            + "directed. "
-            + "</ul> "; // end optional parameters
+            + "<li> 2 if it is directed and we wish to reverse the orientation "
+            + "of the edges. "
+            + "<li> 3 if the graph is undirected, "
+            + "</ul> The default orientation is directed. </ul>";
     /**
      * Description of this function.
      */
@@ -166,7 +162,7 @@ public class ST_GraphAnalysis extends AbstractExecutorFunction {
      * org.orbisgis.progress.ProgressMonitor) evaluate} fails.
      */
     private static final String EVALUATE_ERROR =
-            "Cannot compute the closeness centrality indices.";
+            "Cannot perform graph analysis.";
     /*
      * The number of required arguments;
      */
@@ -355,7 +351,6 @@ public class ST_GraphAnalysis extends AbstractExecutorFunction {
      * @return Unweighted function signatures.
      */
     private FunctionSignature[] unweightedFunctionSignatures() {
-        // First two arguments: (input_table, 1, ...)
         return possibleFunctionSignatures(ScalarArgument.INT);
     }
 
@@ -365,7 +360,6 @@ public class ST_GraphAnalysis extends AbstractExecutorFunction {
      * @return Weighted function signatures.
      */
     private FunctionSignature[] weightedFunctionSignatures() {
-        // First two arguments: (input_table, 'weights_column', ...)
         return possibleFunctionSignatures(ScalarArgument.STRING);
     }
 
