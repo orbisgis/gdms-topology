@@ -331,7 +331,6 @@ public class ST_GraphAnalysis extends AbstractExecutorFunction {
      *
      * @return A description of this function.
      */
-    // TODO: Make the output_table_prefix parameter optional.
     @Override
     public String getDescription() {
         return DESCRIPTION;
@@ -343,8 +342,6 @@ public class ST_GraphAnalysis extends AbstractExecutorFunction {
      *
      * @return An array of all possible signatures of this function.
      */
-    // TODO: Make the output_table_prefix parameter optional:
-    // EXECUTE ST_ClosenessCentrality(input_table, 'weights_column'[,'output_table_prefix',orientation]);
     @Override
     public FunctionSignature[] getFunctionSignatures() {
         return ArrayConcatenator.
@@ -358,15 +355,17 @@ public class ST_GraphAnalysis extends AbstractExecutorFunction {
      * @return Unweighted function signatures.
      */
     private FunctionSignature[] unweightedFunctionSignatures() {
+        // First two arguments: (input_table, 1, ...)
         return possibleFunctionSignatures(ScalarArgument.INT);
     }
 
     /**
-     * Returns all possible function signatures for eeighted graph analyzers.
+     * Returns all possible function signatures for weighted graph analyzers.
      *
      * @return Weighted function signatures.
      */
     private FunctionSignature[] weightedFunctionSignatures() {
+        // First two arguments: (input_table, 'weights_column', ...)
         return possibleFunctionSignatures(ScalarArgument.STRING);
     }
 
