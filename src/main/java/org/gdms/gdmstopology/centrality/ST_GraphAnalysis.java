@@ -54,7 +54,7 @@ import org.gdms.sql.function.table.TableDefinition;
 import org.orbisgis.progress.ProgressMonitor;
 
 /**
- * Performs graph analysis on all nodes of a given graph.
+ * SQL function to perform graph analysis on all nodes of a given graph.
  *
  * <p><i>Note</i>: This function uses the
  * <code>jgrapht-sna</code> implementation of Freeman closeness centrality,
