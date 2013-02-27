@@ -97,6 +97,25 @@ public abstract class GraphAnalyzer extends AbstractExecutorFunctionHelper {
     }
 
     /**
+     * Computes and returns the results.
+     *
+     * @return The results.
+     *
+     * @see GraphAnalyzer#prepareAnalyzer()
+     */
+    @Override
+    protected Map computeAll() {
+        return prepareAnalyzer().computeAll();
+    }
+
+    /**
+     * Prepares the graph analyzer.
+     *
+     * @return The graph analyzer.
+     */
+    protected abstract com.graphhopper.sna.centrality.GraphAnalyzer prepareAnalyzer();
+
+    /**
      * {@inheritDoc}
      */
     @Override

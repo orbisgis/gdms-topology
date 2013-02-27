@@ -33,8 +33,6 @@
 package org.gdms.gdmstopology.centrality;
 
 import com.graphhopper.sna.progress.DefaultProgressMonitor;
-import com.graphhopper.storage.Graph;
-import java.util.Map;
 import org.gdms.data.DataSourceFactory;
 import org.gdms.driver.DataSet;
 import org.gdms.driver.DriverException;
@@ -92,19 +90,11 @@ public class WeightedGraphAnalyzer extends GraphAnalyzer {
      * {@inheritDoc}
      */
     @Override
-    protected Map computeAll() {
-        // Prepare the graph.
-        Graph graph = new WeightedGraphCreator(dataSet, orientation,
-                                               weightColumnName)
-                .prepareGraph();
-
-        // Get an analyzer.
-        com.graphhopper.sna.centrality.WeightedGraphAnalyzer analyzer =
-                new com.graphhopper.sna.centrality.WeightedGraphAnalyzer(
-                graph,
+    protected com.graphhopper.sna.centrality.WeightedGraphAnalyzer prepareAnalyzer() {
+        return new com.graphhopper.sna.centrality.WeightedGraphAnalyzer(
+                new WeightedGraphCreator(dataSet, orientation,
+                                         weightColumnName)
+                .prepareGraph(),
                 new DefaultProgressMonitor());
-
-        // Return the results.
-        return analyzer.computeAll();
     }
 }
