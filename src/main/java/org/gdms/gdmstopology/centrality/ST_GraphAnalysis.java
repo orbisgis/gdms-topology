@@ -44,13 +44,13 @@ import org.gdms.gdmstopology.model.GraphException;
 import org.gdms.gdmstopology.model.GraphSchema;
 import org.gdms.gdmstopology.parse.GraphFunctionParser;
 import org.gdms.gdmstopology.parse.OutputFunctionParser;
+import org.gdms.gdmstopology.utils.ArrayConcatenator;
 import org.gdms.sql.function.FunctionException;
 import org.gdms.sql.function.FunctionSignature;
 import org.gdms.sql.function.ScalarArgument;
 import org.gdms.sql.function.executor.AbstractExecutorFunction;
 import org.gdms.sql.function.executor.ExecutorFunctionSignature;
 import org.gdms.sql.function.table.TableArgument;
-import org.gdms.sql.function.table.TableDefinition;
 import org.orbisgis.progress.ProgressMonitor;
 
 /**
@@ -347,61 +347,67 @@ public class ST_GraphAnalysis extends AbstractExecutorFunction {
     // EXECUTE ST_ClosenessCentrality(input_table, 'weights_column'[,'output_table_prefix',orientation]);
     @Override
     public FunctionSignature[] getFunctionSignatures() {
+        return ArrayConcatenator.
+                concatenate(unweightedFunctionSignatures(),
+                            weightedFunctionSignatures());
+    }
+
+    /**
+     * Returns all possible function signatures for unweighted graph analyzers.
+     *
+     * @return Unweighted function signatures.
+     */
+    private FunctionSignature[] unweightedFunctionSignatures() {
+        return possibleFunctionSignatures(ScalarArgument.INT);
+    }
+
+    /**
+     * Returns all possible function signatures for eeighted graph analyzers.
+     *
+     * @return Weighted function signatures.
+     */
+    private FunctionSignature[] weightedFunctionSignatures() {
+        return possibleFunctionSignatures(ScalarArgument.STRING);
+    }
+
+    /**
+     * Returns all possible function signatures according to whether the graph
+     * analyzer is weighted or unweighted.
+     *
+     * @return Possible function signatures according to weight.
+     */
+    private FunctionSignature[] possibleFunctionSignatures(
+            ScalarArgument weight) {
         return new FunctionSignature[]{
-                    // ALL WEIGHTS ONE
-                    // First possible signature: (TABLE input_table, INT 1).
+                    // (input_table, weight)
                     new ExecutorFunctionSignature(
-                    new TableArgument(TableDefinition.GEOMETRY),
-                    ScalarArgument.INT),
-                    // Second possible signature: (TABLE input_table, INT 1, STRING 'output_table_prefix').
+                    TableArgument.GEOMETRY,
+                    weight),
+                    // (input_table, weight,
+                    //     'output_table_prefix')
                     new ExecutorFunctionSignature(
-                    new TableArgument(TableDefinition.GEOMETRY),
-                    ScalarArgument.INT,
+                    TableArgument.GEOMETRY,
+                    weight,
                     ScalarArgument.STRING),
-                    // Third possible signature: (TABLE input_table, INT 1, INT orientation).
+                    // (input_table, weight,
+                    //     orientation)
                     new ExecutorFunctionSignature(
-                    new TableArgument(TableDefinition.GEOMETRY),
-                    ScalarArgument.INT,
+                    TableArgument.GEOMETRY,
+                    weight,
                     ScalarArgument.INT),
-                    // Fourth possible signature: (TABLE input_table, INT 1, STRING 'output_table_prefix', INT orientation).
+                    // (input_table, weight,
+                    //     'output_table_prefix', orientation)
                     new ExecutorFunctionSignature(
-                    new TableArgument(TableDefinition.GEOMETRY),
-                    ScalarArgument.INT,
-                    ScalarArgument.STRING,
-                    ScalarArgument.INT),
-                    // Fifth possible signature: (TABLE input_table, INT 1, INT orientation, STRING 'output_table_prefix').
-                    new ExecutorFunctionSignature(
-                    new TableArgument(TableDefinition.GEOMETRY),
-                    ScalarArgument.INT,
-                    ScalarArgument.INT,
-                    ScalarArgument.STRING),
-                    // WEIGHTED
-                    // First possible signature: (TABLE input_table, STRING 'weights_column').
-                    new ExecutorFunctionSignature(
-                    new TableArgument(TableDefinition.GEOMETRY),
-                    ScalarArgument.STRING),
-                    // Second possible signature: (TABLE input_table, STRING 'weights_column', STRING 'output_table_prefix').
-                    new ExecutorFunctionSignature(
-                    new TableArgument(TableDefinition.GEOMETRY),
-                    ScalarArgument.STRING,
-                    ScalarArgument.STRING),
-                    // Third possible signature: (TABLE input_table, STRING 'weights_column', INT orientation).
-                    new ExecutorFunctionSignature(
-                    new TableArgument(TableDefinition.GEOMETRY),
+                    TableArgument.GEOMETRY,
+                    weight,
                     ScalarArgument.STRING,
                     ScalarArgument.INT),
-                    // Fourth possible signature: (TABLE input_table, STRING 'weights_column', STRING 'output_table_prefix', INT orientation).
+                    // (input_table, weight,
+                    //     orientation, 'output_table_prefix')
                     new ExecutorFunctionSignature(
-                    new TableArgument(TableDefinition.GEOMETRY),
-                    ScalarArgument.STRING,
-                    ScalarArgument.STRING,
-                    ScalarArgument.INT),
-                    // Fifth possible signature: (TABLE input_table, STRING 'weights_column', INT orientation, STRING 'output_table_prefix').
-                    new ExecutorFunctionSignature(
-                    new TableArgument(TableDefinition.GEOMETRY),
-                    ScalarArgument.STRING,
+                    TableArgument.GEOMETRY,
+                    weight,
                     ScalarArgument.INT,
-                    ScalarArgument.STRING)
-                };
+                    ScalarArgument.STRING),};
     }
 }
