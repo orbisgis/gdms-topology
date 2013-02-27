@@ -64,10 +64,10 @@ public class UnweightedGraphAnalyzer extends GraphAnalyzer {
     public UnweightedGraphAnalyzer(
             DataSourceFactory dsf,
             DataSet dataSet, ProgressMonitor pm,
-            int graphType)
+            int orientation)
             throws DriverException,
             GraphException {
-        super(dsf, dataSet, pm, graphType);
+        super(dsf, dataSet, pm, orientation);
     }
 
     /**

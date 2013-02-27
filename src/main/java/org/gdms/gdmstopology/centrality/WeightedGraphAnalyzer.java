@@ -70,11 +70,11 @@ public class WeightedGraphAnalyzer extends GraphAnalyzer {
             DataSourceFactory dsf,
             DataSet dataSet,
             ProgressMonitor pm,
-            int graphType,
+            int orientation,
             String weightColumnName)
             throws DriverException,
             GraphException {
-        super(dsf, dataSet, pm, graphType);
+        super(dsf, dataSet, pm, orientation);
         this.weightColumnName = weightColumnName;
     }
 
