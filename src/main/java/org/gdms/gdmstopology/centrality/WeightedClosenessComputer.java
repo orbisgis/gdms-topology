@@ -39,19 +39,25 @@ import org.gdms.data.DataSourceFactory;
 import org.gdms.driver.DataSet;
 import org.gdms.driver.DriverException;
 import org.gdms.gdmstopology.graphcreator.UnweightedGraphCreator;
+import org.gdms.gdmstopology.graphcreator.WeightedGraphCreator;
 import org.gdms.gdmstopology.model.GraphException;
 import org.gdms.gdmstopology.model.GraphSchema;
 import org.orbisgis.progress.ProgressMonitor;
 
 /**
- * A {@link GraphAnalyzer} for unweighted graphs.
+ * Calculates closeness centrality on weighted graphs.
  *
  * @author Adam Gouge
  */
-public class UnweightedGraphAnalyzer extends GraphAnalyzer {
+public class WeightedClosenessComputer extends ClosenessComputer {
 
     /**
-     * Constructs a new {@link UnweightedGraphAnalyzer}.
+     * The name of the weight column.
+     */
+    private final String weightColumnName;
+
+    /**
+     * Constructs a new {@link WeightedClosenessComputer}.
      *
      * @param dsf         The {@link DataSourceFactory} used to parse the data
      *                    set.
@@ -63,13 +69,14 @@ public class UnweightedGraphAnalyzer extends GraphAnalyzer {
      * @throws DriverException
      * @throws GraphException
      */
-    public UnweightedGraphAnalyzer(
-            DataSourceFactory dsf,
-            DataSet dataSet, ProgressMonitor pm,
-            int graphType)
-            throws DriverException,
-            GraphException {
-        super(dsf, dataSet, pm, graphType);
+    public WeightedClosenessComputer(DataSourceFactory dsf,
+                                     DataSet dataSet,
+                                     ProgressMonitor pm,
+                                     int orientation,
+                                     String weightColumnName)
+            throws DriverException, GraphException {
+        super(dsf, dataSet, pm, orientation);
+        this.weightColumnName = weightColumnName;
     }
 
     /**
@@ -77,7 +84,7 @@ public class UnweightedGraphAnalyzer extends GraphAnalyzer {
      */
     @Override
     protected String getOutputTableSuffix() {
-        return GraphSchema.UNWEIGHTED + "." + super.getOutputTableSuffix();
+        return GraphSchema.WEIGHTED + "." + super.getOutputTableSuffix();
     }
 
     /**
@@ -86,16 +93,17 @@ public class UnweightedGraphAnalyzer extends GraphAnalyzer {
     @Override
     protected Map computeAll() {
         // Prepare the graph.
-        Graph graph = new UnweightedGraphCreator(dataSet, orientation)
+        Graph graph = new WeightedGraphCreator(dataSet, orientation,
+                                               weightColumnName)
                 .prepareGraph();
 
         // Get an analyzer.
-        com.graphhopper.sna.centrality.UnweightedGraphAnalyzer analyzer =
-                new com.graphhopper.sna.centrality.UnweightedGraphAnalyzer(
+        com.graphhopper.sna.centrality.WeightedGraphAnalyzer analyzer =
+                new com.graphhopper.sna.centrality.WeightedGraphAnalyzer(
                 graph,
                 new DefaultProgressMonitor());
 
         // Return the results.
-        return analyzer.computeAll();
+        return analyzer.computeCloseness();
     }
 }

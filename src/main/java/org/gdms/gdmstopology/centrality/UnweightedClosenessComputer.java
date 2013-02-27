@@ -44,14 +44,14 @@ import org.gdms.gdmstopology.model.GraphSchema;
 import org.orbisgis.progress.ProgressMonitor;
 
 /**
- * A {@link GraphAnalyzer} for unweighted graphs.
+ * Calculates closeness centrality on unweighted graphs.
  *
  * @author Adam Gouge
  */
-public class UnweightedGraphAnalyzer extends GraphAnalyzer {
+public class UnweightedClosenessComputer extends ClosenessComputer {
 
     /**
-     * Constructs a new {@link UnweightedGraphAnalyzer}.
+     * Constructs a new {@link UnweightedClosenessComputer}.
      *
      * @param dsf         The {@link DataSourceFactory} used to parse the data
      *                    set.
@@ -63,13 +63,12 @@ public class UnweightedGraphAnalyzer extends GraphAnalyzer {
      * @throws DriverException
      * @throws GraphException
      */
-    public UnweightedGraphAnalyzer(
-            DataSourceFactory dsf,
-            DataSet dataSet, ProgressMonitor pm,
-            int graphType)
-            throws DriverException,
-            GraphException {
-        super(dsf, dataSet, pm, graphType);
+    public UnweightedClosenessComputer(DataSourceFactory dsf,
+                                       DataSet dataSet,
+                                       ProgressMonitor pm,
+                                       int orientation)
+            throws DriverException, GraphException {
+        super(dsf, dataSet, pm, orientation);
     }
 
     /**
@@ -96,6 +95,6 @@ public class UnweightedGraphAnalyzer extends GraphAnalyzer {
                 new DefaultProgressMonitor());
 
         // Return the results.
-        return analyzer.computeAll();
+        return analyzer.computeCloseness();
     }
 }

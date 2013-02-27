@@ -118,6 +118,18 @@ public final class GraphSchema {
      */
     public static final String BETWEENNESS_CENTRALITY = "betweenness_centrality";
     /**
+     * Specifies graph analysis.
+     */
+    public static final String GRAPH_ANALYSIS = "graph_analysis";
+    /**
+     * Specifies unweighted.
+     */
+    public static final String UNWEIGHTED = "unweighted";
+    /**
+     * Specifies weighted.
+     */
+    public static final String WEIGHTED = "weighted";
+    /**
      * Specifies the connected components.
      */
     public static final String CONNECTED_COMPONENTS = "connected_components";

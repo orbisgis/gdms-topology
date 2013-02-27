@@ -223,8 +223,7 @@ public class ST_ClosenessCentrality extends AbstractExecutorFunction {
 
         } catch (Exception ex) {
             System.out.println(ex);
-            throw new FunctionException(
-                    EVALUATE_ERROR, ex);
+            throw new FunctionException(EVALUATE_ERROR, ex);
         }
     }
 
@@ -245,25 +244,14 @@ public class ST_ClosenessCentrality extends AbstractExecutorFunction {
             DataSet dataSet,
             ProgressMonitor pm) throws GraphException,
             DriverException {
-        // Unweighted graph.
-        if (weightsColumn == null) {
-            ClosenessCentralityUtilities.
-                    registerClosenessCentralityIndicesAllWeightsOne(
-                    dsf,
-                    dataSet,
-                    outputTablePrefix,
-                    orientation,
-                    pm);
-        } else { // Weighted graph.
-            ClosenessCentralityUtilities.
-                    registerClosenessCentralityIndices(
-                    dsf,
-                    dataSet,
-                    weightsColumn,
-                    outputTablePrefix,
-                    orientation,
-                    pm);
-        }
+        ClosenessComputer computer = (weightsColumn == null)
+                ? // Unweighted graph
+                new UnweightedClosenessComputer(
+                dsf, dataSet, pm, orientation)
+                : // Weighted graph
+                new WeightedClosenessComputer(
+                dsf, dataSet, pm, orientation, weightsColumn);
+        computer.doAnalysis(outputTablePrefix);
     }
 
     /**

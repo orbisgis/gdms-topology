@@ -32,15 +32,15 @@
  */
 package org.gdms.gdmstopology.centrality;
 
-import com.graphhopper.sna.data.NodeBetweennessInfo;
 import com.graphhopper.sna.progress.DefaultProgressMonitor;
 import com.graphhopper.storage.Graph;
-import java.util.HashMap;
+import java.util.Map;
 import org.gdms.data.DataSourceFactory;
 import org.gdms.driver.DataSet;
 import org.gdms.driver.DriverException;
 import org.gdms.gdmstopology.graphcreator.WeightedGraphCreator;
 import org.gdms.gdmstopology.model.GraphException;
+import org.gdms.gdmstopology.model.GraphSchema;
 import org.orbisgis.progress.ProgressMonitor;
 
 /**
@@ -54,10 +54,6 @@ public class WeightedGraphAnalyzer extends GraphAnalyzer {
      * The name of the weight column.
      */
     private final String weightColumnName;
-    /**
-     * Output table suffix.
-     */
-    private static final String OUTPUT_TABLE_SUFFIX = "weighted";
 
     /**
      * Constructs a new {@link WeightedGraphAnalyzer}.
@@ -89,17 +85,18 @@ public class WeightedGraphAnalyzer extends GraphAnalyzer {
      */
     @Override
     protected String getOutputTableSuffix() {
-        return OUTPUT_TABLE_SUFFIX + "." + super.getOutputTableSuffix();
+        return GraphSchema.WEIGHTED + "." + super.getOutputTableSuffix();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected HashMap<Integer, NodeBetweennessInfo> computeAll() {
+    protected Map computeAll() {
         // Prepare the graph.
-        Graph graph = new WeightedGraphCreator(
-                dataSet, orientation, weightColumnName).prepareGraph();
+        Graph graph = new WeightedGraphCreator(dataSet, orientation,
+                                               weightColumnName)
+                .prepareGraph();
 
         // Get an analyzer.
         com.graphhopper.sna.centrality.WeightedGraphAnalyzer analyzer =

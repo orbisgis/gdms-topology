@@ -37,7 +37,6 @@ import org.gdms.data.DataSourceFactory;
 import org.gdms.data.schema.Metadata;
 import org.gdms.driver.DiskBufferDriver;
 import org.gdms.driver.DriverException;
-import org.gdms.gdmstopology.model.GraphSchema;
 import org.orbisgis.progress.ProgressMonitor;
 
 /**
@@ -58,6 +57,11 @@ public abstract class AbstractExecutorFunctionHelper {
      * Progress monitor.
      */
     protected final ProgressMonitor pm;
+    /**
+     * Error returned when there is a problem storing the results in a driver.
+     */
+    protected static final String STORAGE_ERROR =
+            "Can't store values in driver.";
 
     /**
      * Constructs a new {@link AbstractExecutorFunctionHelper}.
@@ -91,9 +95,19 @@ public abstract class AbstractExecutorFunctionHelper {
      */
     public void doAnalysis(String outputTablePrefix)
             throws DriverException {
+        storeResults(computeAll(), outputTablePrefix);
+    }
 
-        // Compute all graph analysis parameters.
-        Map results = computeAll();
+    /**
+     * Stores the given results in a {@link DiskBufferDriver} and writes them to
+     * a table.
+     *
+     * @param outputTablePrefix The output table prefix.
+     *
+     * @throws DriverException
+     */
+    public void storeResults(Map results, String outputTablePrefix)
+            throws DriverException {
 
         // Get the DiskBufferDriver to store.
         DiskBufferDriver driver = createDriver(results);

@@ -3,7 +3,7 @@
  * JGraphT library available at <http://www.jgrapht.org/>. It enables computing
  * and processing large graphs using spatial and alphanumeric indexes.
  *
- * This version is developed at French IRSTV institute as part of the EvalPDU
+ * This version is developed at French IRSTV Institute as part of the EvalPDU
  * project, funded by the French Agence Nationale de la Recherche (ANR) under
  * contract ANR-08-VILL-0005-01 and GEBD project funded by the French Ministry
  * of Ecology and Sustainable Development.
@@ -12,7 +12,7 @@
  * "Atelier SIG" team of the IRSTV Institute <http://www.irstv.fr/> CNRS FR
  * 2488.
  *
- * Copyright (C) 2009-2012 IRSTV (FR CNRS 2488)
+ * Copyright (C) 2009-2013 IRSTV (FR CNRS 2488)
  *
  * GDMS-Topology is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
@@ -28,14 +28,12 @@
  * GDMS-Topology. If not, see <http://www.gnu.org/licenses/>.
  *
  * For more information, please consult: <http://wwwc.orbisgis.org/> or contact
- * directly: info_at_ orbisgis.org
+ * directly: info_at_orbisgis.org
  */
 package org.gdms.gdmstopology.centrality;
 
-import com.graphhopper.sna.data.NodeBetweennessInfo;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.gdms.data.DataSourceFactory;
@@ -52,12 +50,11 @@ import org.gdms.gdmstopology.model.GraphSchema;
 import org.orbisgis.progress.ProgressMonitor;
 
 /**
- * Calculates network parameters such as centrality indices on the nodes of a
- * given graph and writes them to a table.
+ * Calculates closeness centrality.
  *
  * @author Adam Gouge
  */
-public abstract class GraphAnalyzer extends AbstractExecutorFunctionHelper {
+public abstract class ClosenessComputer extends AbstractExecutorFunctionHelper {
 
     /**
      * The data set.
@@ -69,20 +66,16 @@ public abstract class GraphAnalyzer extends AbstractExecutorFunctionHelper {
     protected final int orientation;
 
     /**
-     * Constructs a new {@link GraphAnalyzer}.
+     * Constructs a new {@link ClosenessComputer}.
      *
-     * @param dsf         The {@link DataSourceFactory} used to parse the data
-     *                    set.
-     * @param dataSet     The data set.
-     * @param pm          The progress monitor used to track the progress of the
-     *                    calculation.
-     * @param orientation The orientation.
-     *
+     * @param dsf The {@link DataSourceFactory} used to parse the data set.
+     * @param pm  The progress monitor used to track the progress of the
+     *            calculation.
      */
-    public GraphAnalyzer(DataSourceFactory dsf,
-                         DataSet dataSet,
-                         ProgressMonitor pm,
-                         int orientation) {
+    public ClosenessComputer(DataSourceFactory dsf,
+                             DataSet dataSet,
+                             ProgressMonitor pm,
+                             int orientation) {
         super(dsf, pm);
         this.dataSet = dataSet;
         this.orientation = orientation;
@@ -93,7 +86,7 @@ public abstract class GraphAnalyzer extends AbstractExecutorFunctionHelper {
      */
     @Override
     protected String getOutputTableSuffix() {
-        return GraphSchema.GRAPH_ANALYSIS;
+        return GraphSchema.CLOSENESS_CENTRALITY;
     }
 
     /**
@@ -104,11 +97,9 @@ public abstract class GraphAnalyzer extends AbstractExecutorFunctionHelper {
         return new DefaultMetadata(
                 new Type[]{
                     TypeFactory.createType(Type.INT),
-                    TypeFactory.createType(Type.DOUBLE),
                     TypeFactory.createType(Type.DOUBLE)},
                 new String[]{
                     GraphSchema.ID,
-                    GraphSchema.BETWEENNESS_CENTRALITY,
                     GraphSchema.CLOSENESS_CENTRALITY});
     }
 
@@ -120,24 +111,20 @@ public abstract class GraphAnalyzer extends AbstractExecutorFunctionHelper {
             Map results,
             DiskBufferDriver driver) {
 
-        Set<Integer> keySet = results.keySet();
-        Iterator<Integer> it = keySet.iterator();
+        Iterator<Integer> it = results.keySet().iterator();
 
         try {
             while (it.hasNext()) {
 
                 final int node = it.next();
-                final NodeBetweennessInfo nodeNBInfo =
-                        (NodeBetweennessInfo) results.get(node);
+                final Double closeness = (Double) results.get(node);
 
                 Value[] valuesToAdd =
                         new Value[]{
                     // ID
                     ValueFactory.createValue(node),
-                    // Betweenness
-                    ValueFactory.createValue(nodeNBInfo.getBetweenness()),
                     // Closeness
-                    ValueFactory.createValue(nodeNBInfo.getCloseness())
+                    ValueFactory.createValue(closeness)
                 };
 
                 driver.addValues(valuesToAdd);
