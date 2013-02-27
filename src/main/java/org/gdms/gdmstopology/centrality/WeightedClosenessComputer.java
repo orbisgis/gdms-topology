@@ -92,18 +92,10 @@ public class WeightedClosenessComputer extends ClosenessComputer {
      */
     @Override
     protected Map computeAll() {
-        // Prepare the graph.
-        Graph graph = new WeightedGraphCreator(dataSet, orientation,
-                                               weightColumnName)
-                .prepareGraph();
-
-        // Get an analyzer.
-        com.graphhopper.sna.centrality.WeightedGraphAnalyzer analyzer =
-                new com.graphhopper.sna.centrality.WeightedGraphAnalyzer(
-                graph,
-                new DefaultProgressMonitor());
-
-        // Return the results.
-        return analyzer.computeCloseness();
+        return new com.graphhopper.sna.centrality.WeightedGraphAnalyzer(
+                new WeightedGraphCreator(dataSet, orientation,
+                                         weightColumnName).prepareGraph(),
+                new DefaultProgressMonitor())
+                .computeCloseness();
     }
 }
