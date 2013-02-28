@@ -34,7 +34,7 @@ package org.gdms.gdmstopology.model;
 
 import org.junit.Test;
 import org.gdms.data.DataSource;
-import org.gdms.gdmstopology.TopologySetUpTest;
+import org.gdms.gdmstopology.TopologySetupTest;
 import org.orbisgis.progress.NullProgressMonitor;
 
 import static org.junit.Assert.*;
@@ -43,7 +43,7 @@ import static org.junit.Assert.*;
  *
  * @author Erwan Bocher
  */
-public class GraphModelTest extends TopologySetUpTest {
+public class GraphModelTest extends TopologySetupTest {
 
     /**
      * A test to wrap a DirectedWeightedMultigraph with JGrapht.

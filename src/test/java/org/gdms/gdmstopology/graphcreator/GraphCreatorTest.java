@@ -39,7 +39,7 @@ import org.gdms.data.DataSourceCreationException;
 import org.gdms.data.NoSuchTableException;
 import org.gdms.data.indexes.IndexException;
 import org.gdms.driver.DriverException;
-import org.gdms.gdmstopology.TopologySetUpTest;
+import org.gdms.gdmstopology.TopologySetupTest;
 import org.gdms.gdmstopology.model.GraphSchema;
 import org.gdms.sql.function.FunctionException;
 import org.junit.Test;
@@ -49,7 +49,7 @@ import org.junit.Test;
  *
  * @author Adam Gouge
  */
-public abstract class GraphCreatorTest extends TopologySetUpTest {
+public abstract class GraphCreatorTest extends TopologySetupTest {
 
     /**
      * A switch to control whether or not we print out all edges when running

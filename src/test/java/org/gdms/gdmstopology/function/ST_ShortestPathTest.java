@@ -36,7 +36,7 @@ import org.gdms.data.DataSource;
 import org.gdms.data.values.Value;
 import org.gdms.data.values.ValueFactory;
 import org.gdms.driver.DataSet;
-import org.gdms.gdmstopology.TopologySetUpTest;
+import org.gdms.gdmstopology.TopologySetupTest;
 import static org.junit.Assert.*;
 import org.junit.Test;
 import org.orbisgis.progress.NullProgressMonitor;
@@ -46,7 +46,7 @@ import org.orbisgis.progress.NullProgressMonitor;
  *
  * @author Adam Gouge
  */
-public class ST_ShortestPathTest extends TopologySetUpTest {
+public class ST_ShortestPathTest extends TopologySetupTest {
 
     /**
      * Tests finding the shortest path between neighboring vertices of a

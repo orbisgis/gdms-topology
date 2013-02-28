@@ -32,26 +32,24 @@
  */
 package org.gdms.gdmstopology.function;
 
-import org.gdms.data.DataSource;
 import com.vividsolutions.jts.geom.Geometry;
+import org.gdms.data.DataSource;
 import org.gdms.data.types.Type;
 import org.gdms.data.types.TypeFactory;
 import org.gdms.data.values.Value;
 import org.gdms.data.values.ValueFactory;
 import org.gdms.driver.DataSet;
 import org.gdms.driver.memory.MemoryDataSetDriver;
-import org.gdms.gdmstopology.TopologySetUpTest;
-import org.orbisgis.progress.NullProgressMonitor;
-import org.junit.Test;
-
-
+import org.gdms.gdmstopology.TopologySetupTest;
 import static org.junit.Assert.*;
+import org.junit.Test;
+import org.orbisgis.progress.NullProgressMonitor;
 
 /**
  *
  * @author Erwan Bocher
  */
-public class GraphUtilitiesTest extends TopologySetUpTest {
+public class GraphUtilitiesTest extends TopologySetupTest {
 
     @Test
     public void testFindReachableEdges() throws Exception {

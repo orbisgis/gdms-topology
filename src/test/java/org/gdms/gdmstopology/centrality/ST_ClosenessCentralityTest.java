@@ -32,7 +32,6 @@
  */
 package org.gdms.gdmstopology.centrality;
 
-import org.gdms.gdmstopology.centrality.ST_ClosenessCentrality;
 import org.gdms.data.DataSource;
 import org.gdms.data.DataSourceCreationException;
 import org.gdms.data.NoSuchTableException;
@@ -40,7 +39,7 @@ import org.gdms.data.values.Value;
 import org.gdms.data.values.ValueFactory;
 import org.gdms.driver.DataSet;
 import org.gdms.driver.DriverException;
-import org.gdms.gdmstopology.TopologySetUpTest;
+import org.gdms.gdmstopology.TopologySetupTest;
 import org.gdms.gdmstopology.model.GraphSchema;
 import org.gdms.sql.function.FunctionException;
 import org.junit.Test;
@@ -51,7 +50,7 @@ import org.orbisgis.progress.NullProgressMonitor;
  *
  * @author Adam Gouge
  */
-public class ST_ClosenessCentralityTest extends TopologySetUpTest {
+public class ST_ClosenessCentralityTest extends TopologySetupTest {
 
     /**
      * Tests the closeness centrality calculation on a 2D graph with the given

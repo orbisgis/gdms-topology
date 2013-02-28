@@ -32,25 +32,23 @@
  */
 package org.gdms.gdmstopology.function;
 
-import org.gdms.driver.DriverException;
-import org.gdms.driver.memory.MemoryDataSetDriver;
 import org.gdms.data.DataSource;
 import org.gdms.data.types.Type;
 import org.gdms.data.types.TypeFactory;
 import org.gdms.data.values.Value;
 import org.gdms.data.values.ValueFactory;
 import org.gdms.driver.DataSet;
-import org.gdms.gdmstopology.TopologySetUpTest;
+import org.gdms.driver.memory.MemoryDataSetDriver;
+import org.gdms.gdmstopology.TopologySetupTest;
+import static org.junit.Assert.*;
 import org.junit.Test;
 import org.orbisgis.progress.NullProgressMonitor;
-
-import static org.junit.Assert.*;
 
 /**
  *
  * @author Erwan Bocher
  */
-public class GraphBuilderTest extends TopologySetUpTest {
+public class GraphBuilderTest extends TopologySetupTest {
 
     /**
      * A test to validate the planar graph method with two polygons.
