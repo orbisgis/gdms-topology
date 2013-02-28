@@ -38,7 +38,7 @@ import org.gdms.data.values.Value;
 import org.gdms.data.values.ValueFactory;
 import org.gdms.driver.DataSet;
 import org.gdms.driver.memory.MemoryDataSetDriver;
-import org.gdms.gdmstopology.TopologySetUpTest;
+import org.gdms.gdmstopology.TopologySetupTest;
 import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 import org.orbisgis.progress.NullProgressMonitor;
@@ -47,7 +47,7 @@ import org.orbisgis.progress.NullProgressMonitor;
  *
  * @author Erwan Bocher
  */
-public class ConnectivityTest extends TopologySetUpTest {
+public class ConnectivityTest extends TopologySetupTest {
 
     @Test
     public void testST_BlockIdentity() throws Exception {

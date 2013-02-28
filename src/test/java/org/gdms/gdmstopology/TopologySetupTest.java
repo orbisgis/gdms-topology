@@ -32,7 +32,6 @@
  */
 package org.gdms.gdmstopology;
 
-import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.io.WKTReader;
 import java.io.File;
 import org.gdms.data.DataSourceFactory;
@@ -41,39 +40,88 @@ import org.junit.Before;
 import org.orbisgis.utils.FileUtils;
 
 /**
+ * Registers some data sources for use in unit tests.
  *
- * @author Erwan Bocher
+ * @author Erwan Bocher, Adam Gouge
  */
-public abstract class TopologySetUpTest {
+public abstract class TopologySetupTest {
 
+    /**
+     * Data source factory.
+     */
     protected DataSourceFactory dsf;
+    /**
+     * Well-known text reader for constructing geometries.
+     */
     protected WKTReader wktReader;
+    /**
+     * 2D graph.
+     */
     protected String GRAPH2D = "graph2D";
+    /**
+     * 2D graph edges.
+     */
     protected String GRAPH2D_EDGES = "graph2D_edges";
+    /**
+     * 2D graph nodes.
+     */
     protected String GRAPH2D_NODES = "graph2D_nodes";
-    public static String internalData = "src/test/resources/org/gdms/gdmstopology/";
-    public static File backupDir = new File(System.getProperty("user.home") + File.separator + ".gdmstopology");
+    /**
+     * The shape file extension.
+     */
+    private static final String DOT_SHP = ".shp";
+    /**
+     * The resources folder.
+     */
+    private static final String resourcesFolder =
+            "src/test/resources/org/gdms/gdmstopology/";
+    /**
+     * Temporary folder for saving results.
+     */
+    public static File tmpFolder = new File("./target/gdmstopology");
 
+    /**
+     * Creates the temp folder and registers some data sources.
+     *
+     * @throws Exception
+     */
     @Before
     public void setUp() throws Exception {
-        if (backupDir.exists()) {
-            //Create a folder to save all results
-            FileUtils.deleteDir(backupDir);
-        }
-        backupDir.mkdir();
-        //Create the datasourcefactory that uses the folder
-        dsf = new DataSourceFactory(backupDir.getAbsolutePath(), backupDir.getAbsolutePath());
 
-        //Create some geometries
+        // Make the temp folder, deleting any previous temp folder.
+        if (tmpFolder.exists()) {
+            FileUtils.deleteDir(tmpFolder);
+        }
+        tmpFolder.mkdir();
+
+        // Initialize the DataSourceFactory that uses the folder.
+        // We store both the sources and the temporary sources in the
+        // temp folder.
+        dsf = new DataSourceFactory(tmpFolder.getAbsolutePath(),
+                                    tmpFolder.getAbsolutePath());
+
+        // Initialize the WKTReader.
         wktReader = new WKTReader();
-        dsf.getSourceManager().register(GRAPH2D, new File(internalData + "graph2D.shp"));
-        dsf.getSourceManager().register(GRAPH2D_EDGES, new File(internalData + "graph2D_edges.shp"));
-        dsf.getSourceManager().register(GRAPH2D_NODES, new File(internalData + "graph2D_nodes.shp"));
+
+        // Register some data sources.
+        dsf.getSourceManager()
+                .register(GRAPH2D,
+                          new File(resourcesFolder + GRAPH2D + DOT_SHP));
+        dsf.getSourceManager()
+                .register(GRAPH2D_EDGES,
+                          new File(resourcesFolder + GRAPH2D_EDGES + DOT_SHP));
+        dsf.getSourceManager()
+                .register(GRAPH2D_NODES,
+                          new File(resourcesFolder + GRAPH2D_NODES + DOT_SHP));
     }
 
+    /**
+     * Deletes the temp folder.
+     *
+     * @throws Exception
+     */
     @After
     public void tearDown() throws Exception {
-        //Delete the folder that contains result
-        FileUtils.deleteDir(backupDir);
+        FileUtils.deleteDir(tmpFolder);
     }
 }

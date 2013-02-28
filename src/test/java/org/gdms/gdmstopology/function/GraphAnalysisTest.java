@@ -45,7 +45,7 @@ import org.gdms.data.values.ValueFactory;
 import org.gdms.driver.DataSet;
 import org.gdms.driver.DriverException;
 import org.gdms.driver.memory.MemoryDataSetDriver;
-import org.gdms.gdmstopology.TopologySetUpTest;
+import org.gdms.gdmstopology.TopologySetupTest;
 import org.jgrapht.DirectedGraph;
 import org.jgrapht.Graphs;
 import org.jgrapht.graph.DefaultDirectedGraph;
@@ -59,7 +59,7 @@ import org.orbisgis.progress.NullProgressMonitor;
  *
  * @author Erwan Bocher
  */
-public class GraphAnalysisTest extends TopologySetUpTest {
+public class GraphAnalysisTest extends TopologySetupTest {
 
     /**
      * Tests finding the shortest path between neighboring vertices of a
