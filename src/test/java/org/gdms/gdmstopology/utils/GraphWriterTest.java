@@ -48,7 +48,7 @@ public class GraphWriterTest extends TopologySetUpTest {
 
         @Test
         public void saveAGraph() throws Exception {                
-                String dirPath = backupDir.getAbsolutePath();
+                String dirPath = tmpFolder.getAbsolutePath();
                 String nodes = dirPath+ File.separator+"nodes.gdms";
                 String edges = dirPath+ File.separator+"edges.gdms";
                 Graph<Integer, DefaultEdge> graph = RandomGraphCreator.createRandomWeightedMultigraph(5, 10);
