@@ -89,7 +89,8 @@ public class UnweightedClosenessComputer extends ClosenessComputer {
     protected Map computeAll() {
         try {
             return new com.graphhopper.sna.centrality.UnweightedGraphAnalyzer(
-                    new UnweightedGraphCreator(dataSet, orientation).prepareGraph(),
+                    new UnweightedGraphCreator(dataSet, orientation)
+                    .prepareLevelGraph(),
                     new DefaultProgressMonitor())
                     .computeCloseness();
         } catch (IndexException ex) {

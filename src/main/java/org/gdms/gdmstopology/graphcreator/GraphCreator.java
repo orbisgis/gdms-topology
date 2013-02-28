@@ -34,6 +34,7 @@ package org.gdms.gdmstopology.graphcreator;
 
 import com.graphhopper.storage.Graph;
 import com.graphhopper.storage.GraphStorage;
+import com.graphhopper.storage.LevelGraphStorage;
 import com.graphhopper.storage.RAMDirectory;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -41,6 +42,7 @@ import org.gdms.data.indexes.IndexException;
 import org.gdms.data.schema.Metadata;
 import org.gdms.driver.DataSet;
 import org.gdms.driver.DriverException;
+import org.gdms.gdmstopology.centrality.ClosenessComputer;
 import org.gdms.gdmstopology.model.GraphException;
 import org.gdms.gdmstopology.model.GraphSchema;
 
@@ -99,17 +101,35 @@ public abstract class GraphCreator {
     }
 
     /**
-     * Prepares the graph according to the given orientation.
-     *
-     * @param orientation The orientation.
+     * Prepares a graph.
      *
      * @return The newly prepared graph.
      *
-     * @throws DriverException
-     * @throws GraphException
+     * @throws IndexException
      */
     public Graph prepareGraph() throws IndexException {
+        return prepareGraph(false);
+    }
 
+    /**
+     * Prepares a level graph for use by a {@link ClosenessComputer}.
+     *
+     * @return The newly prepared graph.
+     *
+     * @throws IndexException
+     */
+    public Graph prepareLevelGraph() throws IndexException {
+        return prepareGraph(true);
+    }
+
+    /**
+     * Prepares a graph (or a level graph).
+     *
+     * @return The newly prepared graph.
+     *
+     * @throws IndexException
+     */
+    private Graph prepareGraph(boolean levelGraph) throws IndexException {
         // DATASET INFORMATION
         // Get the weight column name.
         String weightColumnName = getWeightColumnName();
@@ -141,7 +161,9 @@ public abstract class GraphCreator {
 
         // GRAPH CREATION
         // Initialize the graph.
-        GraphStorage graph = new GraphStorage(new RAMDirectory());
+        GraphStorage graph = levelGraph
+                ? new LevelGraphStorage(new RAMDirectory())
+                : new GraphStorage(new RAMDirectory());
         graph.createNew(ALLOCATE_GRAPH_SPACE);
         try {
             // Add the edges according to the given graph type.
