@@ -44,7 +44,7 @@ import org.orbisgis.utils.FileUtils;
  *
  * @author Erwan Bocher, Adam Gouge
  */
-public abstract class TopologySetUpTest {
+public abstract class TopologySetupTest {
 
     /**
      * Data source factory.

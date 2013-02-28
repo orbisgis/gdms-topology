@@ -40,7 +40,7 @@ import org.gdms.data.values.Value;
 import org.gdms.data.values.ValueFactory;
 import org.gdms.driver.DataSet;
 import org.gdms.driver.memory.MemoryDataSetDriver;
-import org.gdms.gdmstopology.TopologySetUpTest;
+import org.gdms.gdmstopology.TopologySetupTest;
 import org.orbisgis.progress.NullProgressMonitor;
 import org.junit.Test;
 
@@ -51,7 +51,7 @@ import static org.junit.Assert.*;
  *
  * @author Erwan Bocher
  */
-public class GraphUtilitiesTest extends TopologySetUpTest {
+public class GraphUtilitiesTest extends TopologySetupTest {
 
     @Test
     public void testFindReachableEdges() throws Exception {

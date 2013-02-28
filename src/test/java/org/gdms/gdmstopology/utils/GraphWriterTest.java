@@ -34,7 +34,7 @@ package org.gdms.gdmstopology.utils;
 
 import java.io.File;
 import org.gdms.data.DataSource;
-import org.gdms.gdmstopology.TopologySetUpTest;
+import org.gdms.gdmstopology.TopologySetupTest;
 import org.jgrapht.Graph;
 import org.jgrapht.graph.DefaultEdge;
 import static org.junit.Assert.assertTrue;
@@ -44,7 +44,7 @@ import org.junit.Test;
  *
  * @author ebocher
  */
-public class GraphWriterTest extends TopologySetUpTest {
+public class GraphWriterTest extends TopologySetupTest {
 
         @Test
         public void saveAGraph() throws Exception {                

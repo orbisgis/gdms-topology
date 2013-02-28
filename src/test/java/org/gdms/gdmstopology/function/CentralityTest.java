@@ -36,7 +36,7 @@ import org.gdms.data.DataSource;
 import org.gdms.driver.DataSet;
 import org.gdms.driver.DiskBufferDriver;
 import org.gdms.driver.DriverException;
-import org.gdms.gdmstopology.TopologySetUpTest;
+import org.gdms.gdmstopology.TopologySetupTest;
 import org.gdms.gdmstopology.model.GraphSchema;
 import org.gdms.gdmstopology.model.WMultigraphDataSource;
 import org.gdms.gdmstopology.process.GraphCentralityUtilities;
@@ -50,7 +50,7 @@ import org.orbisgis.progress.ProgressMonitor;
  *
  * @author Adam Gouge
  */
-public class CentralityTest extends TopologySetUpTest {
+public class CentralityTest extends TopologySetupTest {
 
     /**
      * Test the closeness centrality calculation on a 2D graph considered as an
