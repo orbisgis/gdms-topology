@@ -32,7 +32,6 @@
  */
 package org.gdms.gdmstopology;
 
-import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.io.WKTReader;
 import java.io.File;
 import org.gdms.data.DataSourceFactory;
@@ -52,7 +51,7 @@ public abstract class TopologySetUpTest {
     protected String GRAPH2D_EDGES = "graph2D_edges";
     protected String GRAPH2D_NODES = "graph2D_nodes";
     public static String internalData = "src/test/resources/org/gdms/gdmstopology/";
-    public static File backupDir = new File(System.getProperty("user.home") + File.separator + ".gdmstopology");
+    public static File backupDir = new File("./target/gdmstopology");
 
     @Before
     public void setUp() throws Exception {
