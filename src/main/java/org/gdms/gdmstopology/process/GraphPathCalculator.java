@@ -34,8 +34,10 @@ package org.gdms.gdmstopology.process;
 
 import com.graphhopper.routing.DijkstraBidirectionRef;
 import com.graphhopper.routing.Path;
+import com.graphhopper.routing.util.CarFlagEncoder;
 import com.graphhopper.storage.Graph;
 import com.graphhopper.util.EdgeIterator;
+import com.graphhopper.util.GHUtility;
 import gnu.trove.iterator.TIntIterator;
 import gnu.trove.list.TIntList;
 import org.gdms.data.DataSourceFactory;
@@ -161,9 +163,10 @@ public class GraphPathCalculator {
      * @return A shortest path.
      */
     private static Path getPath(Graph graph, int source, int target) {
-        DijkstraBidirectionRef algorithm = new DijkstraBidirectionRef(graph);
+        DijkstraBidirectionRef algorithm = 
+                new DijkstraBidirectionRef(graph, new CarFlagEncoder());
         long start = System.currentTimeMillis();
-        Path path = algorithm.clear().calcPath(source, target);
+        Path path = algorithm.calcPath(source, target);
         long stop = System.currentTimeMillis();
         System.out.println("Calculated path in " + (stop - start) + " ms.");
 //        System.out.println(path.toString());
@@ -335,7 +338,7 @@ public class GraphPathCalculator {
             int source,
             int target) {
         // Obtain the smallest weight for this edge.
-        EdgeIterator outgoingEdges = graph.getOutgoing(source);
+        EdgeIterator outgoingEdges = GHUtility.getCarOutgoing(graph, source);
         double smallestDistance = Double.MAX_VALUE;
         while (outgoingEdges.next()) {
             if (outgoingEdges.node() == target) {

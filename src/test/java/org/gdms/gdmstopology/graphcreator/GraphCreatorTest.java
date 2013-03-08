@@ -34,6 +34,7 @@ package org.gdms.gdmstopology.graphcreator;
 
 import com.graphhopper.storage.Graph;
 import com.graphhopper.util.EdgeIterator;
+import com.graphhopper.util.GHUtility;
 import org.gdms.data.DataSource;
 import org.gdms.data.DataSourceCreationException;
 import org.gdms.data.NoSuchTableException;
@@ -96,12 +97,12 @@ public abstract class GraphCreatorTest extends TopologySetupTest {
      */
     private void printAllEdges(Graph graph) {
         for (int i = 0; i < graph.nodes(); i++) {
-            EdgeIterator incoming = graph.getIncoming(i);
+            EdgeIterator incoming = GHUtility.getCarIncoming(graph, i);
             while (incoming.next()) {
                 System.out.print(i + " <- " + incoming.node()
                         + " (" + incoming.distance() + "); ");
             }
-            EdgeIterator outgoing = graph.getOutgoing(i);
+            EdgeIterator outgoing = GHUtility.getCarOutgoing(graph, i);
             while (outgoing.next()) {
                 System.out.print(i + " -> " + outgoing.node()
                         + " (" + outgoing.distance() + "); ");
