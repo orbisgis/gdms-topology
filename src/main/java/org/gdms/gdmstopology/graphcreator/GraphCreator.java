@@ -42,7 +42,6 @@ import org.gdms.data.indexes.IndexException;
 import org.gdms.data.schema.Metadata;
 import org.gdms.driver.DataSet;
 import org.gdms.driver.DriverException;
-import org.gdms.gdmstopology.centrality.ClosenessComputer;
 import org.gdms.gdmstopology.model.GraphException;
 import org.gdms.gdmstopology.model.GraphSchema;
 
