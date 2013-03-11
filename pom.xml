@@ -95,7 +95,7 @@
                                                 <Private-Package>org.gdms.gdmstopology.*</Private-Package>
                                                 <Bundle-Activator>org.gdms.gdmstopology.Activator</Bundle-Activator>
                                                 <Bundle-Vendor>IRSTV - FR CNRS 2488</Bundle-Vendor>
-                                                <Bundle-Category>Network Analysis</Bundle-Category>
+                                                <Bundle-Category>OrbisGIS,Network Analysis</Bundle-Category>
                                         </instructions>
                                 </configuration>
                         </plugin>
