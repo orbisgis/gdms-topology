@@ -223,7 +223,7 @@ public class GraphPathCalculator {
      * @return The metadata model used to store the shortest path in a
      *         {@link DiskBufferDriver}.
      */
-    private static Metadata createShortestPathMetadata() {
+    public static Metadata createShortestPathMetadata() {
         Metadata md = new DefaultMetadata(
                 new Type[]{
                     //                    TypeFactory.createType(

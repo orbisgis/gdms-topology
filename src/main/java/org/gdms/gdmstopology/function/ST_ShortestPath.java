@@ -370,7 +370,7 @@ public class ST_ShortestPath extends AbstractTableFunction {
     // TODO: The input 'Metadata[] tables' is never used!
     @Override
     public Metadata getMetadata(Metadata[] tables) throws DriverException {
-        return GraphMetadataFactory.createEdgeMetadataShortestPath();
+        return GraphPathCalculator.createShortestPathMetadata();
     }
 
     /**
