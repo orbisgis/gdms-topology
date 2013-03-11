@@ -43,14 +43,7 @@ import org.gdms.data.values.ValueFactory;
 import org.gdms.driver.DataSet;
 import org.gdms.driver.DiskBufferDriver;
 import org.gdms.driver.DriverException;
-import org.gdms.gdmstopology.model.DWMultigraphDataSource;
-import org.gdms.gdmstopology.model.EdgeReversedGraphDataSource;
-import org.gdms.gdmstopology.model.GDMSValueGraph;
-import org.gdms.gdmstopology.model.GraphEdge;
-import org.gdms.gdmstopology.model.GraphException;
-import org.gdms.gdmstopology.model.GraphMetadataFactory;
-import org.gdms.gdmstopology.model.GraphSchema;
-import org.gdms.gdmstopology.model.WMultigraphDataSource;
+import org.gdms.gdmstopology.model.*;
 import org.jgrapht.Graphs;
 import org.jgrapht.alg.DijkstraShortestPath;
 import org.jgrapht.traverse.ClosestFirstIterator;
@@ -117,8 +110,11 @@ public class GraphPath extends GraphAnalysis {
      */
     public static DiskBufferDriver findPathBetween2Nodes(DataSourceFactory dsf, GDMSValueGraph<Integer, GraphEdge> graph,
             Integer sourceVertex, Integer targetVertex, double radius, ProgressMonitor pm) throws GraphException, DriverException {
-
         // PRELIMINARIES
+        //Make sure the source and target nodes are not equal.
+        if (sourceVertex==targetVertex){
+                throw new GraphException("The target vertex must be different than source vertex.");
+        }
         // Make sure the graph contains the target vertex.
         if (!graph.containsVertex(targetVertex)) {
             throw new GraphException("The graph must contain the target vertex");
@@ -152,7 +148,6 @@ public class GraphPath extends GraphAnalysis {
             // Once we've reached the target vertex, 
             // work backwards to recover the shortest path.
             if (nextClosestNeighbor == targetVertex) {
-
                 // Start at the target vertex.
                 int currentVertex = targetVertex;
                 // A counter to sequentially label the edges in terms of 
@@ -196,8 +191,7 @@ public class GraphPath extends GraphAnalysis {
                     // from the current edge.
                     currentVertex = Graphs.getOppositeVertex(graph, currentEdge, currentVertex);
                 }
-
-                break; // TODO: What does this break do?
+                
             } // Finished writing the shortest path to the diskBufferDriver.
 
         } // Finished going through the iterator
