@@ -38,13 +38,15 @@ import org.gdms.data.DataSourceFactory;
 import org.gdms.driver.DriverException;
 import org.gdms.gdmstopology.function.ST_ShortestPath;
 import org.gdms.gdmstopology.model.GraphException;
+import org.gdms.gdmstopology.process.GraphPath;
+import org.gdms.gdmstopology.process.GraphUtilities;
 import org.gdms.gdmstopology.utils.GraphWriter;
 import org.gdms.gdmstopology.utils.RandomGraphCreator;
 import org.gdms.sql.engine.ParseException;
-import org.gdms.sql.function.FunctionManager;
 import org.jgrapht.Graph;
 import org.jgrapht.alg.DijkstraShortestPath;
 import org.jgrapht.graph.DefaultEdge;
+import org.orbisgis.progress.NullProgressMonitor;
 
 /**
  *
@@ -107,26 +109,26 @@ public class DemoGraph {
                 System.out.println("Duration " + (end - start));
                 }
 
-//        public static void GDMSGraphStatistic(String filePath) throws DataSourceCreationException, DriverException, GraphException {
-//                long start = System.currentTimeMillis();
-//                DataSource dsEdges = dsf.getDataSource(new File(filePath));
-//                dsEdges.open();
-//                GraphUtilities.getGraphStatistics(dsf, dsEdges, "length", 3, new NullProgressMonitor());
-//                dsEdges.close();
-//                long end = System.currentTimeMillis();
-//                System.out.println("Duration " + (end - start));
-//                }
+        public static void GDMSGraphStatistic(String filePath) throws DataSourceCreationException, DriverException, GraphException {
+                long start = System.currentTimeMillis();
+                DataSource dsEdges = dsf.getDataSource(new File(filePath));
+                dsEdges.open();
+                GraphUtilities.getGraphStatistics(dsf, dsEdges, "length", 3, new NullProgressMonitor());
+                dsEdges.close();
+                long end = System.currentTimeMillis();
+                System.out.println("Duration " + (end - start));
+        }
 
 
-//        public static void GDMSGraphDistance(String filePath) throws DataSourceCreationException, DriverException, GraphException {
-//                long start = System.currentTimeMillis();
-//                DataSource dsEdges = dsf.getDataSource(new File(filePath));
-//                dsEdges.open();
-//                GraphPath.getShortestPathLength(dsf, dsEdges,1, "length", 3, new NullProgressMonitor());
-//                dsEdges.close();
-//                long end = System.currentTimeMillis();
-//                System.out.println("Duration " + (end - start));
-//        }
+        public static void GDMSGraphDistance(String filePath) throws DataSourceCreationException, DriverException, GraphException {
+                long start = System.currentTimeMillis();
+                DataSource dsEdges = dsf.getDataSource(new File(filePath));
+                dsEdges.open();
+                GraphPath.getShortestPathLength(dsf, dsEdges,1, "length", 3, new NullProgressMonitor());
+                dsEdges.close();
+                long end = System.currentTimeMillis();
+                System.out.println("Duration " + (end - start));
+        }
 
         private static void GDMSGraphWriter(String path_nodes, String path_edges, int nbNodes, int nbEdges) throws DriverException {
                 Graph<Integer, DefaultEdge> graph = RandomGraphCreator.createRandomWeightedMultigraph(nbNodes, nbEdges);
