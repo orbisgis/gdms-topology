@@ -32,9 +32,9 @@
                         <scope>provided</scope>
                 </dependency>
                 <dependency>
-                        <groupId>graphlayout</groupId>
-                        <artifactId>graphlayout</artifactId>
-                        <version>1.2.1</version>
+                        <groupId>net.sf.jgrapht</groupId>
+                        <artifactId>jgrapht</artifactId>
+                        <version>0.8.3</version>
                 </dependency>
 		<dependency>
 			<groupId>jgraph</groupId>
@@ -42,15 +42,15 @@
 			<version>5.13.0.0</version>
 		</dependency>
                 <dependency>
+                        <groupId>graphlayout</groupId>
+                        <artifactId>graphlayout</artifactId>
+                        <version>1.2.1</version>
+                </dependency>
+                <dependency>
                         <groupId>log4j</groupId>
                         <artifactId>log4j</artifactId>
                         <version>1.2.16</version>
                         <type>jar</type>
-                </dependency>
-                <dependency>
-                        <groupId>net.sf.jgrapht</groupId>
-                        <artifactId>jgrapht</artifactId>
-                        <version>0.8.3</version>
                 </dependency>
                 <dependency>
                         <groupId>com.graphhopper.sna</groupId>
@@ -90,7 +90,7 @@
                                         <instructions>
                                                 <!--Embed-Dependency not a good choice,
                                                 jgrapht-sna should be passed as OSGi bundle-->
-                                                <Embed-Dependency>jgraph;jgrapht-sna;fuzzy4j;graphlayout;jgrapht;commons-math</Embed-Dependency>
+                                                <Embed-Dependency>jgraph;graphlayout;jgrapht</Embed-Dependency>                                                
                                                 <Embed-Transitive>true</Embed-Transitive>
                                                 <Private-Package>org.gdms.gdmstopology.*</Private-Package>
                                                 <Bundle-Activator>org.gdms.gdmstopology.Activator</Bundle-Activator>

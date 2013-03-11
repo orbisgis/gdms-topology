@@ -35,13 +35,14 @@ import java.util.List;
 import org.gdms.data.DataSource;
 import org.gdms.data.DataSourceCreationException;
 import org.gdms.data.DataSourceFactory;
-import org.gdms.driver.DiskBufferDriver;
 import org.gdms.driver.DriverException;
+import org.gdms.gdmstopology.function.ST_ShortestPath;
 import org.gdms.gdmstopology.model.GraphException;
 import org.gdms.gdmstopology.process.GraphPath;
 import org.gdms.gdmstopology.process.GraphUtilities;
 import org.gdms.gdmstopology.utils.GraphWriter;
 import org.gdms.gdmstopology.utils.RandomGraphCreator;
+import org.gdms.sql.engine.ParseException;
 import org.jgrapht.Graph;
 import org.jgrapht.alg.DijkstraShortestPath;
 import org.jgrapht.graph.DefaultEdge;
@@ -62,10 +63,10 @@ public class DemoGraph {
          */
         public static void main(String[] args) throws Exception {
                 dsf = new DataSourceFactory("/tmp/orbis", "/tmp/orbis");
-                //GDMSGraphPath(path_edges);
+                GDMSGraphPath(path_edges);
                 //GDMSGraphStatistic(path_edges);
                 //GDMSGraphDistance(path_edges);
-                GDMSGraphWriter(path_nodes, path_edges, 100000,500000);
+                //GDMSGraphWriter(path_nodes, path_edges, 100000,500000);
 
         }
 
@@ -78,18 +79,31 @@ public class DemoGraph {
                 System.out.println("Duration " + (end - start));
                 }
 
-        public static void GDMSGraphPath(String filePath) throws DataSourceCreationException, DriverException, GraphException {
-                long start = System.currentTimeMillis();
+        /**
+         * A method to test the ShortestPath function
+         * @param filePath
+         * @throws DataSourceCreationException
+         * @throws DriverException
+         * @throws GraphException 
+         */
+        public static void GDMSGraphPath(String filePath) throws DataSourceCreationException, DriverException, GraphException, ParseException {
+                long start = System.currentTimeMillis();                
+                
+                dsf.getFunctionManager().addFunction(ST_ShortestPath.class);
+                
+                dsf.getSourceManager().register("graph_edges", new File(filePath));
 
-                DataSource dsEdges = dsf.getDataSource(new File(filePath));
-
-                dsEdges.open();
-                DiskBufferDriver result = GraphPath.getShortestPath(dsf, dsEdges, 44772, 1, "length", 3, new NullProgressMonitor());
+                DataSource result = dsf.getDataSourceFromSQL("SELECT * from  ST_ShortestPath(graph_edges, 85287, 56134, \'cost\', 3);");
 
                 result.open();
                 System.out.println("Objects : " + result.getRowCount());
+                
+                
+                for (int i = 0; i < result.getRowCount(); i++) {
+                        System.out.println("Path "+ i+ " -> "+  result.getGeometry(i, 0).toString());
+                }
+                
                 result.close();
-                dsEdges.close();
 
                 long end = System.currentTimeMillis();
                 System.out.println("Duration " + (end - start));
@@ -103,10 +117,10 @@ public class DemoGraph {
                 dsEdges.close();
                 long end = System.currentTimeMillis();
                 System.out.println("Duration " + (end - start));
-                }
+        }
 
 
-         public static void GDMSGraphDistance(String filePath) throws DataSourceCreationException, DriverException, GraphException {
+        public static void GDMSGraphDistance(String filePath) throws DataSourceCreationException, DriverException, GraphException {
                 long start = System.currentTimeMillis();
                 DataSource dsEdges = dsf.getDataSource(new File(filePath));
                 dsEdges.open();
