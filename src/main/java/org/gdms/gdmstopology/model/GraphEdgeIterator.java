@@ -33,9 +33,6 @@
 package org.gdms.gdmstopology.model;
 
 import java.util.Iterator;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import org.gdms.driver.DataSet;
 import org.gdms.driver.DriverException;
 
 /**

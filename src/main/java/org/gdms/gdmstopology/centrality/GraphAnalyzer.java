@@ -36,8 +36,8 @@ import com.graphhopper.sna.data.NodeBetweennessInfo;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 import org.gdms.data.DataSourceFactory;
 import org.gdms.data.schema.DefaultMetadata;
 import org.gdms.data.schema.Metadata;
@@ -48,6 +48,7 @@ import org.gdms.data.values.ValueFactory;
 import org.gdms.driver.DataSet;
 import org.gdms.driver.DiskBufferDriver;
 import org.gdms.driver.DriverException;
+import static org.gdms.gdmstopology.centrality.AbstractExecutorFunctionHelper.STORAGE_ERROR;
 import org.gdms.gdmstopology.model.GraphSchema;
 import org.orbisgis.progress.ProgressMonitor;
 
@@ -72,6 +73,18 @@ public abstract class GraphAnalyzer extends AbstractExecutorFunctionHelper {
      */
     protected static final String ANALYZER_PREP_ERROR =
             "Could not prepare analyzer (problem with indices).";
+    /**
+     * A logger.
+     */
+    protected static final Logger LOGGER;
+
+    /**
+     * Static block to set the logger level.
+     */
+    static {
+        LOGGER = Logger.getLogger(GraphAnalyzer.class);
+        LOGGER.setLevel(Level.TRACE);
+    }
 
     /**
      * Constructs a new {@link GraphAnalyzer}.
@@ -127,13 +140,13 @@ public abstract class GraphAnalyzer extends AbstractExecutorFunctionHelper {
     protected Metadata createMetadata() {
         return new DefaultMetadata(
                 new Type[]{
-                    TypeFactory.createType(Type.INT),
-                    TypeFactory.createType(Type.DOUBLE),
-                    TypeFactory.createType(Type.DOUBLE)},
+            TypeFactory.createType(Type.INT),
+            TypeFactory.createType(Type.DOUBLE),
+            TypeFactory.createType(Type.DOUBLE)},
                 new String[]{
-                    GraphSchema.ID,
-                    GraphSchema.BETWEENNESS_CENTRALITY,
-                    GraphSchema.CLOSENESS_CENTRALITY});
+            GraphSchema.ID,
+            GraphSchema.BETWEENNESS_CENTRALITY,
+            GraphSchema.CLOSENESS_CENTRALITY});
     }
 
     /**
@@ -167,8 +180,7 @@ public abstract class GraphAnalyzer extends AbstractExecutorFunctionHelper {
                 driver.addValues(valuesToAdd);
             }
         } catch (DriverException ex) {
-            Logger.getLogger(GraphAnalyzer.class.getName()).
-                    log(Level.SEVERE, STORAGE_ERROR, ex);
+            LOGGER.trace(STORAGE_ERROR, ex);
         }
     }
 }

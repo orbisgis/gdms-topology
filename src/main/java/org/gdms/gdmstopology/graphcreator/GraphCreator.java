@@ -35,8 +35,8 @@ package org.gdms.gdmstopology.graphcreator;
 import com.graphhopper.storage.Graph;
 import com.graphhopper.storage.GraphStorage;
 import com.graphhopper.storage.RAMDirectory;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 import org.gdms.data.indexes.IndexException;
 import org.gdms.data.schema.Metadata;
 import org.gdms.driver.DataSet;
@@ -86,6 +86,18 @@ public abstract class GraphCreator {
      */
     // TODO: How big does this need to be?
     protected final static int ALLOCATE_GRAPH_SPACE = 10;
+    /**
+     * A logger.
+     */
+    private static final Logger LOGGER;
+
+    /**
+     * Static block to set the logger level.
+     */
+    static {
+        LOGGER = Logger.getLogger(GraphCreator.class);
+        LOGGER.setLevel(Level.TRACE);
+    }
 
     /**
      * Constructs a new {@link GraphCreator}.
@@ -131,8 +143,7 @@ public abstract class GraphCreator {
                 verifyIndex(weightFieldIndex, weightColumnName);
             }
         } catch (DriverException ex) {
-            Logger.getLogger(GraphCreator.class.getName()).
-                    log(Level.SEVERE, METADATA_ERROR, ex);
+            LOGGER.trace(METADATA_ERROR, ex);
         }
 
         // GRAPH CREATION
@@ -144,8 +155,7 @@ public abstract class GraphCreator {
             loadEdges(graph, orientation,
                       startNodeIndex, endNodeIndex, weightFieldIndex);
         } catch (GraphException ex) {
-            Logger.getLogger(GraphCreator.class.getName()).
-                    log(Level.SEVERE, EDGE_LOADING_ERROR, ex);
+            LOGGER.trace(EDGE_LOADING_ERROR, ex);
         }
         return graph;
     }

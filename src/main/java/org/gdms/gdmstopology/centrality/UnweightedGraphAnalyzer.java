@@ -33,12 +33,11 @@
 package org.gdms.gdmstopology.centrality;
 
 import com.graphhopper.sna.progress.DefaultProgressMonitor;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.gdms.data.DataSourceFactory;
 import org.gdms.data.indexes.IndexException;
 import org.gdms.driver.DataSet;
 import org.gdms.driver.DriverException;
+import static org.gdms.gdmstopology.centrality.GraphAnalyzer.ANALYZER_PREP_ERROR;
 import org.gdms.gdmstopology.graphcreator.UnweightedGraphCreator;
 import org.gdms.gdmstopology.model.GraphException;
 import org.gdms.gdmstopology.model.GraphSchema;
@@ -92,8 +91,7 @@ public class UnweightedGraphAnalyzer extends GraphAnalyzer {
                     .prepareGraph(),
                     new DefaultProgressMonitor());
         } catch (IndexException ex) {
-            Logger.getLogger(UnweightedGraphAnalyzer.class.getName()).
-                    log(Level.SEVERE, ANALYZER_PREP_ERROR, ex);
+            LOGGER.trace(ANALYZER_PREP_ERROR, ex);
         }
         return null;
     }
