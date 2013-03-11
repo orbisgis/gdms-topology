@@ -28,13 +28,11 @@
                         <groupId>org.gdms</groupId>
                         <artifactId>gdms</artifactId>
                         <version>2.0-SNAPSHOT</version>
-                        <scope>provided</scope>
                 </dependency>                
                 <dependency>
                         <groupId>org.osgi</groupId>
                         <artifactId>org.osgi.core</artifactId>
                         <version>5.0.0</version>
-                        <scope>provided</scope>
                 </dependency>
         </dependencies>
         <repositories>
@@ -62,8 +60,7 @@
                                         <instructions>
                                                 <!--Embed-Dependency not a good choice,
                                                 jgrapht-sna should be passed as OSGi bundle-->
-                                                <Embed-Dependency>jgrapht</Embed-Dependency>
-                                                <Embed-Transitive>true</Embed-Transitive>
+                                                <Embed-Dependency>jgraph;graphlayout;jgrapht</Embed-Dependency>                                                <Embed-Transitive>true</Embed-Transitive>
                                                 <Private-Package>org.gdms.gdmstopology.*</Private-Package>
                                                 <Bundle-Activator>org.gdms.gdmstopology.Activator</Bundle-Activator>
                                                 <Bundle-Vendor>IRSTV - FR CNRS 2488</Bundle-Vendor>
