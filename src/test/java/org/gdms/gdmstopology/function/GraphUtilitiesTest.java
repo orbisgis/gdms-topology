@@ -32,8 +32,8 @@
  */
 package org.gdms.gdmstopology.function;
 
-import org.gdms.data.DataSource;
 import com.vividsolutions.jts.geom.Geometry;
+import org.gdms.data.DataSource;
 import org.gdms.data.types.Type;
 import org.gdms.data.types.TypeFactory;
 import org.gdms.data.values.Value;
@@ -41,11 +41,9 @@ import org.gdms.data.values.ValueFactory;
 import org.gdms.driver.DataSet;
 import org.gdms.driver.memory.MemoryDataSetDriver;
 import org.gdms.gdmstopology.TopologySetupTest;
-import org.orbisgis.progress.NullProgressMonitor;
-import org.junit.Test;
-
-
 import static org.junit.Assert.*;
+import org.junit.Test;
+import org.orbisgis.progress.NullProgressMonitor;
 
 /**
  *
