@@ -59,8 +59,7 @@ import org.orbisgis.progress.ProgressMonitor;
  * <p> Example usage: <center>
  * <code>
  * EXECUTE ST_ConnectedComponents(input_table,
- * 'weights_column',
- * orientation);
+ *  orientation);
  * </code> </center>
  *
  * <p> Required parameters: <ul> <li>
@@ -68,8 +67,6 @@ import org.orbisgis.progress.ProgressMonitor;
  * <code>output_table_prefix.edges</code> table produced by {@link ST_Graph},
  * except that an additional column specifying the weight of each edge must be
  * added. <li>
- * <code>'weights_column'</code> - a string specifying the name of the column of
- * the input table that gives the weight of each edge. <li>
  * <code>orientation</code> - an integer specifying the orientation of the
  * graph: <ul> <li> 1 if the graph is directed, <li> 2 if it is directed and we
  * wish to reverse the orientation of the edges, <li> 3 if the graph is
@@ -90,7 +87,6 @@ public class ST_ConnectedComponents extends AbstractTableFunction {
     private static final String SQL_ORDER =
             "EXECUTE ST_ConnectedComponents("
             + "input_table, "
-            + "'weights_column', "
             + "orientation);";
     /**
      * Short description of this function.
@@ -114,13 +110,7 @@ public class ST_ConnectedComponents extends AbstractTableFunction {
             + "Specifically, this is the "
             + "<code>output_table_prefix.edges</code> "
             + "table produced by "
-            + "<code>ST_Graph</code>, "
-            + "except that an additional column specifying the weight "
-            + "of each edge must be added. "
-            + "<li> "
-            + "<code>'weights_column'</code> - "
-            + "a string specifying the name of the column of the input "
-            + "table that gives the weight of each edge. "
+            + "<code>ST_Graph</code>. "
             + "<li> "
             + "<code>orientation</code> - "
             + "an integer specifying the orientation of the graph: "
@@ -168,19 +158,14 @@ public class ST_ConnectedComponents extends AbstractTableFunction {
         try {
             // Recover the DataSet.
             final DataSet dataSet = tables[0];
-            // Set the weights column name.
-            String weightsColumn = values[0].getAsString();
-            // Set the output table prefix.
-//            String outputTablePrefix = values[1].getAsString();
             // Get the orientation
-            int orientation = values[1].getAsInt();
+            int orientation = values[0].getAsInt();
             // Create the ConnectivityInspector.
             ConnectivityInspector<Integer, GraphEdge> inspector =
                     GraphConnectivityUtilities.
                     getConnectivityInspector(
                     dsf,
                     dataSet,
-                    weightsColumn,
                     orientation,
                     pm);
             // Record a new table listing all the vertices and to which
