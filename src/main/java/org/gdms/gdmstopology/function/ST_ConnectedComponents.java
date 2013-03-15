@@ -34,18 +34,21 @@ package org.gdms.gdmstopology.function;
 
 import org.gdms.data.DataSourceFactory;
 import org.gdms.data.schema.Metadata;
+import org.gdms.data.types.Type;
 import org.gdms.data.values.Value;
 import org.gdms.driver.DataSet;
 import org.gdms.driver.DriverException;
 import org.gdms.gdmstopology.model.GraphEdge;
+import org.gdms.gdmstopology.model.GraphSchema;
+import org.gdms.gdmstopology.parse.GraphFunctionParser;
 import org.gdms.gdmstopology.process.GraphConnectivityUtilities;
 import org.gdms.sql.function.FunctionException;
 import org.gdms.sql.function.FunctionSignature;
 import org.gdms.sql.function.ScalarArgument;
-import org.gdms.sql.function.executor.ExecutorFunctionSignature;
 import org.gdms.sql.function.table.AbstractTableFunction;
 import org.gdms.sql.function.table.TableArgument;
 import org.gdms.sql.function.table.TableDefinition;
+import org.gdms.sql.function.table.TableFunctionSignature;
 import org.jgrapht.alg.ConnectivityInspector;
 import org.orbisgis.progress.ProgressMonitor;
 
@@ -58,15 +61,15 @@ import org.orbisgis.progress.ProgressMonitor;
  *
  * <p> Example usage: <center>
  * <code>
- * EXECUTE ST_ConnectedComponents(input_table,
- *  orientation);
+ * SELECT * FROM ST_ConnectedComponents(input_table[, orientation]);
  * </code> </center>
  *
- * <p> Required parameters: <ul> <li>
+ * <p> Required parameter: <ul> <li>
  * <code>input_table</code> - the input table. Specifically, this is the
  * <code>output_table_prefix.edges</code> table produced by {@link ST_Graph},
  * except that an additional column specifying the weight of each edge must be
- * added. <li>
+ * added. </ul>
+ * <p> Optional parameter: <ul> <li>
  * <code>orientation</code> - an integer specifying the orientation of the
  * graph: <ul> <li> 1 if the graph is directed, <li> 2 if it is directed and we
  * wish to reverse the orientation of the edges, <li> 3 if the graph is
@@ -85,9 +88,9 @@ public class ST_ConnectedComponents extends AbstractTableFunction {
      * The SQL order of this function.
      */
     private static final String SQL_ORDER =
-            "EXECUTE ST_ConnectedComponents("
-            + "input_table, "
-            + "orientation);";
+            "SELECT * FROM ST_ConnectedComponents("
+            + "input_table"
+            + "[, orientation]);";
     /**
      * Short description of this function.
      */
@@ -103,14 +106,17 @@ public class ST_ConnectedComponents extends AbstractTableFunction {
             + "which lists all the vertices and to which "
             + "connected component they belong. "
             + "<p> "
-            + "Required parameters: "
+            + "Required parameter: "
             + "<ul> "
             + "<li> "
             + "<code>input_table</code> - the input table. "
             + "Specifically, this is the "
             + "<code>output_table_prefix.edges</code> "
             + "table produced by "
-            + "<code>ST_Graph</code>. "
+            + "<code>ST_Graph</code>. </ul>"
+            + "<p> "
+            + "Optional parameter: "
+            + "<ul> "
             + "<li> "
             + "<code>orientation</code> - "
             + "an integer specifying the orientation of the graph: "
@@ -128,6 +134,11 @@ public class ST_ConnectedComponents extends AbstractTableFunction {
      */
     private static final String DESCRIPTION =
             SHORT_DESCRIPTION + LONG_DESCRIPTION;
+    // OPTIONAL ARGUMENT
+    /**
+     * Specifies the orientation of the graph (default: directed).
+     */
+    private int orientation = GraphSchema.DIRECT;
     /**
      * An error message to be displayed when {@link #evaluate(
      * org.gdms.data.DataSourceFactory,
@@ -159,7 +170,7 @@ public class ST_ConnectedComponents extends AbstractTableFunction {
             // Recover the DataSet.
             final DataSet dataSet = tables[0];
             // Get the orientation
-            int orientation = values[0].getAsInt();
+            parseOptionalArgument(values[0]);
             // Create the ConnectivityInspector.
             ConnectivityInspector<Integer, GraphEdge> inspector =
                     GraphConnectivityUtilities.
@@ -175,6 +186,29 @@ public class ST_ConnectedComponents extends AbstractTableFunction {
         } catch (Exception ex) {
             System.out.println(ex);
             throw new FunctionException(EVALUATE_ERROR, ex);
+        }
+    }
+
+    /**
+     * Parse the optional function argument at the given index.
+     *
+     * @param values Array containing the other arguments.
+     * @param index  The index.
+     *
+     * @throws FunctionException
+     */
+    private void parseOptionalArgument(Value value) throws
+            FunctionException {
+        final int slotType = value.getType();
+        if (slotType == Type.INT) {
+            orientation = GraphFunctionParser.parseOrientation(value);
+            if (!GraphFunctionParser.validOrientation(orientation)) {
+                throw new FunctionException(
+                        "Please enter a valid orientation: 1, 2 or 3.");
+            }
+        } else {
+            throw new FunctionException(
+                    "Please enter an integer orientation.");
         }
     }
 
@@ -208,9 +242,14 @@ public class ST_ConnectedComponents extends AbstractTableFunction {
     @Override
     public FunctionSignature[] getFunctionSignatures() {
         return new FunctionSignature[]{
-            new ExecutorFunctionSignature(
-            new TableArgument(TableDefinition.GEOMETRY),
-            ScalarArgument.STRING,
+            // No orientation specified.
+            new TableFunctionSignature(
+            TableDefinition.ANY,
+            TableArgument.GEOMETRY),
+            // Specify orientation.
+            new TableFunctionSignature(
+            TableDefinition.ANY,
+            TableArgument.GEOMETRY,
             ScalarArgument.INT)
         };
     }
