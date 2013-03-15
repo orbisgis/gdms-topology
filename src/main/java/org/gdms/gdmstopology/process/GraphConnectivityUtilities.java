@@ -52,7 +52,6 @@ import org.gdms.gdmstopology.model.GraphException;
 import org.gdms.gdmstopology.model.GraphSchema;
 import org.gdms.gdmstopology.model.WMultigraphDataSource;
 import org.jgrapht.alg.ConnectivityInspector;
-import org.jgrapht.graph.DirectedMultigraph;
 import org.orbisgis.progress.ProgressMonitor;
 
 /**
@@ -71,8 +70,8 @@ public class GraphConnectivityUtilities extends GraphAnalysis {
      * @param weightColumnName The string specifying the name of the weight
      *                         column specifying the weight of each edge.
      * @param graphType        An integer specifying the type of graph: 1 if
-     *                         directed, 2 if directed and we wish to reverse the
-     *                         direction of the edges, 3 if undirected.
+     *                         directed, 2 if directed and we wish to reverse
+     *                         the direction of the edges, 3 if undirected.
      * @param pm               Used to track the progress of the calculation.
      *
      * @return A {@link ConnectivityInspector} on the given graph.
@@ -126,7 +125,7 @@ public class GraphConnectivityUtilities extends GraphAnalysis {
      *
      * @throws DriverException
      */
-    public static void registerConnectedComponents(
+    public static DataSet registerConnectedComponents(
             DataSourceFactory dsf,
             ConnectivityInspector inspector) throws DriverException {
 
@@ -135,15 +134,7 @@ public class GraphConnectivityUtilities extends GraphAnalysis {
         // Get an iterator on the list.
         Iterator<Set<Integer>> connectedComponentsListIterator = connectedComponentsList.
                 iterator();
-
-        // Create the metadata for the new table that will hold the first connected component
-        Metadata md = new DefaultMetadata(
-                new Type[]{
-                    TypeFactory.createType(Type.INT),
-                    TypeFactory.createType(Type.INT)},
-                new String[]{
-                    GraphSchema.ID,
-                    GraphSchema.CONNECTED_COMPONENT});
+        Metadata md = createMetadata();
 
         // Create a DiskBufferDriver to store the centrality indices.
         DiskBufferDriver connectedComponentsDriver =
@@ -161,22 +152,37 @@ public class GraphConnectivityUtilities extends GraphAnalysis {
             while (connectedComponentIterator.hasNext()) {
                 connectedComponentsDriver.addValues(
                         new Value[]{
-                            // Node ID
-                            ValueFactory.createValue(
-                            connectedComponentIterator.next()),
-                            // Component number
-                            ValueFactory.createValue(connectedComponentNumber)
-                        });
+                    // Node ID
+                    ValueFactory.createValue(
+                    connectedComponentIterator.next()),
+                    // Component number
+                    ValueFactory.createValue(connectedComponentNumber)
+                });
             }
             connectedComponentNumber++;
         }
 
         // CLEAN UP - Register the table.
         connectedComponentsDriver.writingFinished();
+        // TODO: To open or not to open?
         connectedComponentsDriver.open();
-        String newTableName = dsf.getSourceManager().getUniqueName(
-                GraphSchema.CONNECTED_COMPONENTS);
-        dsf.getSourceManager().register(newTableName, connectedComponentsDriver.
-                getFile());
+        return connectedComponentsDriver;
+    }
+
+    /**
+     * CreateS the metadata for the table that will hold an id for each vertex
+     * as well as an id for the connected component it lies in.
+     *
+     * @return Connected component metadata.
+     */
+    public static Metadata createMetadata() {
+        Metadata md = new DefaultMetadata(
+                new Type[]{
+            TypeFactory.createType(Type.INT),
+            TypeFactory.createType(Type.INT)},
+                new String[]{
+            GraphSchema.ID,
+            GraphSchema.CONNECTED_COMPONENT});
+        return md;
     }
 }

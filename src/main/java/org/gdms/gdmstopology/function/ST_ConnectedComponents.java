@@ -33,15 +33,17 @@
 package org.gdms.gdmstopology.function;
 
 import org.gdms.data.DataSourceFactory;
+import org.gdms.data.schema.Metadata;
 import org.gdms.data.values.Value;
 import org.gdms.driver.DataSet;
+import org.gdms.driver.DriverException;
 import org.gdms.gdmstopology.model.GraphEdge;
 import org.gdms.gdmstopology.process.GraphConnectivityUtilities;
 import org.gdms.sql.function.FunctionException;
 import org.gdms.sql.function.FunctionSignature;
 import org.gdms.sql.function.ScalarArgument;
-import org.gdms.sql.function.executor.AbstractExecutorFunction;
 import org.gdms.sql.function.executor.ExecutorFunctionSignature;
+import org.gdms.sql.function.table.AbstractTableFunction;
 import org.gdms.sql.function.table.TableArgument;
 import org.gdms.sql.function.table.TableDefinition;
 import org.jgrapht.alg.ConnectivityInspector;
@@ -76,7 +78,7 @@ import org.orbisgis.progress.ProgressMonitor;
  *
  * @author Adam Gouge
  */
-public class ST_ConnectedComponents extends AbstractExecutorFunction {
+public class ST_ConnectedComponents extends AbstractTableFunction {
 
     /**
      * The name of this function.
@@ -157,7 +159,7 @@ public class ST_ConnectedComponents extends AbstractExecutorFunction {
      *               calculation.
      */
     @Override
-    public void evaluate(
+    public DataSet evaluate(
             DataSourceFactory dsf,
             DataSet[] tables,
             Value[] values,
@@ -183,7 +185,7 @@ public class ST_ConnectedComponents extends AbstractExecutorFunction {
                     pm);
             // Record a new table listing all the vertices and to which
             // connected component they belong.
-            GraphConnectivityUtilities.
+            return GraphConnectivityUtilities.
                     registerConnectedComponents(dsf, inspector);
         } catch (Exception ex) {
             System.out.println(ex);
@@ -222,18 +224,6 @@ public class ST_ConnectedComponents extends AbstractExecutorFunction {
         return DESCRIPTION;
     }
 
-//    /**
-//     * Returns the {@link Metadata} of the result of this function without
-//     * executing the query.
-//     *
-//     * @param tables {@link Metadata} objects of the input tables.
-//     * @return The {@link Metadata} of the result.
-//     * @throws DriverException
-//     */
-//    @Override
-//    public Metadata getMetadata(Metadata[] tables) throws DriverException {
-//        return GraphMetadataFactory.createClosenessCentralityMetadata();
-//    }
     /**
      * Returns an array of all possible signatures of this function. Multiple
      * signatures arise from some arguments being optional.
@@ -247,10 +237,18 @@ public class ST_ConnectedComponents extends AbstractExecutorFunction {
     @Override
     public FunctionSignature[] getFunctionSignatures() {
         return new FunctionSignature[]{
-                    new ExecutorFunctionSignature(
-                    new TableArgument(TableDefinition.GEOMETRY),
-                    ScalarArgument.STRING,
-                    ScalarArgument.INT)
-                };
+            new ExecutorFunctionSignature(
+            new TableArgument(TableDefinition.GEOMETRY),
+            ScalarArgument.STRING,
+            ScalarArgument.INT)
+        };
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Metadata getMetadata(Metadata[] tables) throws DriverException {
+        return GraphConnectivityUtilities.createMetadata();
     }
 }
