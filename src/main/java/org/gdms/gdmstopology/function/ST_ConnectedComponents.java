@@ -194,10 +194,7 @@ public class ST_ConnectedComponents extends AbstractTableFunction {
     }
 
     /**
-     * Returns the name of this function. This name will be used in SQL
-     * statements.
-     *
-     * @return The name of this function.
+     * {@inheritDoc}
      */
     @Override
     public String getName() {
@@ -205,9 +202,7 @@ public class ST_ConnectedComponents extends AbstractTableFunction {
     }
 
     /**
-     * Returns an example query using this function.
-     *
-     * @return An example query using this function.
+     * {@inheritDoc}
      */
     @Override
     public String getSqlOrder() {
@@ -215,9 +210,7 @@ public class ST_ConnectedComponents extends AbstractTableFunction {
     }
 
     /**
-     * Returns a description of this function.
-     *
-     * @return A description of this function.
+     * {@inheritDoc}
      */
     @Override
     public String getDescription() {
@@ -225,14 +218,7 @@ public class ST_ConnectedComponents extends AbstractTableFunction {
     }
 
     /**
-     * Returns an array of all possible signatures of this function. Multiple
-     * signatures arise from some arguments being optional.
-     *
-     * <p> Possible signatures: <OL> <li>
-     * <code>(TABLE input_table, STRING 'weights_column', INT orientation)</code>
-     * </OL>
-     *
-     * @return An array of all possible signatures of this function.
+     * {@inheritDoc}
      */
     @Override
     public FunctionSignature[] getFunctionSignatures() {
