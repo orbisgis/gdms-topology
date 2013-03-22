@@ -33,6 +33,7 @@
 package org.gdms.gdmstopology.centrality;
 
 import com.graphhopper.sna.data.NodeBetweennessInfo;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -72,7 +73,12 @@ public abstract class GraphAnalyzer extends AbstractExecutorFunctionHelper {
      * Error message when the analyzer cannot be prepared.
      */
     protected static final String ANALYZER_PREP_ERROR =
-            "Could not prepare analyzer (problem with indices).";
+            "Could not prepare analyzer.";
+    /**
+     * Error message when the indices are incorrect.
+     */
+    protected static final String INDICES_ERROR =
+            "Problem with indices.";
     /**
      * A logger.
      */
@@ -123,7 +129,18 @@ public abstract class GraphAnalyzer extends AbstractExecutorFunctionHelper {
      */
     @Override
     protected Map computeAll() {
-        return prepareAnalyzer().computeAll();
+        try {
+            return prepareAnalyzer().computeAll();
+        } catch (InstantiationException ex) {
+            LOGGER.trace(ANALYZER_PREP_ERROR, ex);
+        } catch (IllegalAccessException ex) {
+            LOGGER.trace(ANALYZER_PREP_ERROR, ex);
+        } catch (IllegalArgumentException ex) {
+            LOGGER.trace(ANALYZER_PREP_ERROR, ex);
+        } catch (InvocationTargetException ex) {
+            LOGGER.trace(ANALYZER_PREP_ERROR, ex);
+        }
+        return null;
     }
 
     /**
