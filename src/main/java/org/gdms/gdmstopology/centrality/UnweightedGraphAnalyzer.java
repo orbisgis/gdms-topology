@@ -33,11 +33,13 @@
 package org.gdms.gdmstopology.centrality;
 
 import com.graphhopper.sna.progress.DefaultProgressMonitor;
+import java.lang.reflect.InvocationTargetException;
 import org.gdms.data.DataSourceFactory;
 import org.gdms.data.indexes.IndexException;
 import org.gdms.driver.DataSet;
 import org.gdms.driver.DriverException;
 import static org.gdms.gdmstopology.centrality.GraphAnalyzer.ANALYZER_PREP_ERROR;
+import static org.gdms.gdmstopology.centrality.GraphAnalyzer.LOGGER;
 import org.gdms.gdmstopology.graphcreator.UnweightedGraphCreator;
 import org.gdms.gdmstopology.model.GraphException;
 import org.gdms.gdmstopology.model.GraphSchema;
@@ -91,6 +93,16 @@ public class UnweightedGraphAnalyzer extends GraphAnalyzer {
                     .prepareGraph(),
                     new DefaultProgressMonitor());
         } catch (IndexException ex) {
+            LOGGER.trace(ANALYZER_PREP_ERROR + " " + INDICES_ERROR, ex);
+        } catch (NoSuchMethodException ex) {
+            LOGGER.trace(ANALYZER_PREP_ERROR, ex);
+        } catch (InstantiationException ex) {
+            LOGGER.trace(ANALYZER_PREP_ERROR, ex);
+        } catch (IllegalAccessException ex) {
+            LOGGER.trace(ANALYZER_PREP_ERROR, ex);
+        } catch (IllegalArgumentException ex) {
+            LOGGER.trace(ANALYZER_PREP_ERROR, ex);
+        } catch (InvocationTargetException ex) {
             LOGGER.trace(ANALYZER_PREP_ERROR, ex);
         }
         return null;
