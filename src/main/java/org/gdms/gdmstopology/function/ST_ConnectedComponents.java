@@ -61,14 +61,17 @@ import org.orbisgis.progress.ProgressMonitor;
  *
  * <p> Example usage: <center>
  * <code>
- * SELECT * FROM ST_ConnectedComponents(input_table[, orientation]);
+ * SELECT * FROM ST_ConnectedComponents(input_table, 'weights_column'
+ * [, orientation]);
  * </code> </center>
  *
- * <p> Required parameter: <ul> <li>
+ * <p> Required parameters: <ul> <li>
  * <code>input_table</code> - the input table. Specifically, this is the
  * <code>output_table_prefix.edges</code> table produced by {@link ST_Graph},
  * except that an additional column specifying the weight of each edge must be
- * added. </ul>
+ * added.
+ * <li>
+ * <code>'weights_column'</code> - the weights column.</ul>
  * <p> Optional parameter: <ul> <li>
  * <code>orientation</code> - an integer specifying the orientation of the
  * graph: <ul> <li> 1 if the graph is directed, <li> 2 if it is directed and we
@@ -89,7 +92,8 @@ public class ST_ConnectedComponents extends AbstractTableFunction {
      */
     private static final String SQL_ORDER =
             "SELECT * FROM ST_ConnectedComponents("
-            + "input_table"
+            + "input_table, "
+            + "'weights_column'"
             + "[, orientation]);";
     /**
      * Short description of this function.
@@ -106,14 +110,17 @@ public class ST_ConnectedComponents extends AbstractTableFunction {
             + "which lists all the vertices and to which "
             + "connected component they belong. "
             + "<p> "
-            + "Required parameter: "
+            + "Required parameters: "
             + "<ul> "
             + "<li> "
             + "<code>input_table</code> - the input table. "
             + "Specifically, this is the "
             + "<code>output_table_prefix.edges</code> "
             + "table produced by "
-            + "<code>ST_Graph</code>. </ul>"
+            + "<code>ST_Graph</code>. "
+            + "<li> "
+            + "<code>'weights_column'</code> - the name of the weights "
+            + "column. </ul>"
             + "<p> "
             + "Optional parameter: "
             + "<ul> "
@@ -169,14 +176,17 @@ public class ST_ConnectedComponents extends AbstractTableFunction {
         try {
             // Recover the DataSet.
             final DataSet dataSet = tables[0];
+            // Set the weights column name.
+            final String weightsColumn = values[0].getAsString();
             // Get the orientation
-            parseOptionalArgument(values[0]);
+            parseOptionalArgument(values[1]);
             // Create the ConnectivityInspector.
             ConnectivityInspector<Integer, GraphEdge> inspector =
                     GraphConnectivityUtilities.
                     getConnectivityInspector(
                     dsf,
                     dataSet,
+                    weightsColumn,
                     orientation,
                     pm);
             // Record a new table listing all the vertices and to which
@@ -245,11 +255,13 @@ public class ST_ConnectedComponents extends AbstractTableFunction {
             // No orientation specified.
             new TableFunctionSignature(
             TableDefinition.ANY,
-            TableArgument.GEOMETRY),
+            TableArgument.GEOMETRY,
+            ScalarArgument.STRING),
             // Specify orientation.
             new TableFunctionSignature(
             TableDefinition.ANY,
             TableArgument.GEOMETRY,
+            ScalarArgument.STRING,
             ScalarArgument.INT)
         };
     }

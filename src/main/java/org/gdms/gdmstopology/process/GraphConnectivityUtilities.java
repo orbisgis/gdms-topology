@@ -82,6 +82,7 @@ public class GraphConnectivityUtilities extends GraphAnalysis {
     public static ConnectivityInspector<Integer, GraphEdge> getConnectivityInspector(
             DataSourceFactory dsf,
             DataSet dataSet,
+            String weightColumnName,
             int graphType,
             ProgressMonitor pm) throws DriverException,
             GraphException {
@@ -89,16 +90,19 @@ public class GraphConnectivityUtilities extends GraphAnalysis {
         if (graphType == GraphSchema.DIRECT) {
             DWMultigraphDataSource dWMultigraphDataSource =
                     new DWMultigraphDataSource(dsf, dataSet, pm);
+            dWMultigraphDataSource.setWeightFieldIndex(weightColumnName);
             return new ConnectivityInspector(dWMultigraphDataSource);
         } else if (graphType == GraphSchema.DIRECT_REVERSED) {
             DWMultigraphDataSource dWMultigraphDataSource =
                     new DWMultigraphDataSource(dsf, dataSet, pm);
+            dWMultigraphDataSource.setWeightFieldIndex(weightColumnName);
             EdgeReversedGraphDataSource edgeReversedGraph =
                     new EdgeReversedGraphDataSource(dWMultigraphDataSource);
             return new ConnectivityInspector(edgeReversedGraph);
         } else if (graphType == GraphSchema.UNDIRECT) {
             WMultigraphDataSource wMultigraphDataSource =
                     new WMultigraphDataSource(dsf, dataSet, pm);
+            wMultigraphDataSource.setWeightFieldIndex(weightColumnName);
             return new ConnectivityInspector(wMultigraphDataSource);
         } else {
             throw new GraphException("Only three types of graphs "
