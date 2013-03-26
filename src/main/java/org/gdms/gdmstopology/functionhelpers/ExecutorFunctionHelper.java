@@ -30,7 +30,7 @@
  * For more information, please consult: <http://wwwc.orbisgis.org/> or contact
  * directly: info_at_orbisgis.org
  */
-package org.gdms.gdmstopology.centrality;
+package org.gdms.gdmstopology.functionhelpers;
 
 import java.util.Map;
 import org.gdms.data.DataSourceFactory;

@@ -32,6 +32,7 @@
  */
 package org.gdms.gdmstopology.centrality;
 
+import org.gdms.gdmstopology.functionhelpers.ExecutorFunctionHelper;
 import com.graphhopper.sna.data.NodeBetweennessInfo;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Iterator;
@@ -49,7 +50,6 @@ import org.gdms.data.values.ValueFactory;
 import org.gdms.driver.DataSet;
 import org.gdms.driver.DiskBufferDriver;
 import org.gdms.driver.DriverException;
-import static org.gdms.gdmstopology.centrality.ExecutorFunctionHelper.STORAGE_ERROR;
 import org.gdms.gdmstopology.model.GraphSchema;
 import org.orbisgis.progress.ProgressMonitor;
 
