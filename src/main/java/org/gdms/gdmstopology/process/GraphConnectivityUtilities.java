@@ -59,7 +59,7 @@ import org.orbisgis.progress.ProgressMonitor;
  *
  * @author Adam Gouge
  */
-public class GraphConnectivityUtilities extends GraphAnalysis {
+public class GraphConnectivityUtilities {
 
     /**
      * Returns a JGraphT {@link ConnectivityInspector} on a given graph.
