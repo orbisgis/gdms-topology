@@ -47,7 +47,7 @@ import org.orbisgis.progress.ProgressMonitor;
  *
  * @author Adam Gouge
  */
-public abstract class AbstractExecutorFunctionHelper {
+public abstract class ExecutorFunctionHelper {
 
     /**
      * Used to parse the data set.
@@ -64,13 +64,13 @@ public abstract class AbstractExecutorFunctionHelper {
             "Can't store values in driver.";
 
     /**
-     * Constructs a new {@link AbstractExecutorFunctionHelper}.
+     * Constructs a new {@link ExecutorFunctionHelper}.
      *
      * @param dsf The {@link DataSourceFactory} used to parse the data set.
      * @param pm  The progress monitor used to track the progress of the
      *            calculation.
      */
-    public AbstractExecutorFunctionHelper(DataSourceFactory dsf,
+    public ExecutorFunctionHelper(DataSourceFactory dsf,
                                           ProgressMonitor pm) {
         this.dsf = dsf;
         this.pm = pm;

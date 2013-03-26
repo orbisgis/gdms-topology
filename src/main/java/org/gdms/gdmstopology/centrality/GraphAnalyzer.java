@@ -49,7 +49,7 @@ import org.gdms.data.values.ValueFactory;
 import org.gdms.driver.DataSet;
 import org.gdms.driver.DiskBufferDriver;
 import org.gdms.driver.DriverException;
-import static org.gdms.gdmstopology.centrality.AbstractExecutorFunctionHelper.STORAGE_ERROR;
+import static org.gdms.gdmstopology.centrality.ExecutorFunctionHelper.STORAGE_ERROR;
 import org.gdms.gdmstopology.model.GraphSchema;
 import org.orbisgis.progress.ProgressMonitor;
 
@@ -59,7 +59,7 @@ import org.orbisgis.progress.ProgressMonitor;
  *
  * @author Adam Gouge
  */
-public abstract class GraphAnalyzer extends AbstractExecutorFunctionHelper {
+public abstract class GraphAnalyzer extends ExecutorFunctionHelper {
 
     /**
      * The data set.
