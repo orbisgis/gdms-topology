@@ -47,16 +47,8 @@ import org.orbisgis.progress.ProgressMonitor;
  *
  * @author Adam Gouge
  */
-public abstract class ExecutorFunctionHelper {
+public abstract class ExecutorFunctionHelper extends FunctionHelper {
 
-    /**
-     * Used to parse the data set.
-     */
-    protected final DataSourceFactory dsf;
-    /**
-     * Progress monitor.
-     */
-    protected final ProgressMonitor pm;
     /**
      * Error returned when there is a problem storing the results in a driver.
      */
@@ -64,16 +56,15 @@ public abstract class ExecutorFunctionHelper {
             "Can't store values in driver.";
 
     /**
-     * Constructs a new {@link ExecutorFunctionHelper}.
+     * Constructor.
      *
      * @param dsf The {@link DataSourceFactory} used to parse the data set.
      * @param pm  The progress monitor used to track the progress of the
      *            calculation.
      */
     public ExecutorFunctionHelper(DataSourceFactory dsf,
-                                          ProgressMonitor pm) {
-        this.dsf = dsf;
-        this.pm = pm;
+                                  ProgressMonitor pm) {
+        super(dsf, pm);
     }
 
     /**
@@ -114,73 +105,6 @@ public abstract class ExecutorFunctionHelper {
 
         // Write it to a table.
         writeToTable(driver, outputTablePrefix);
-    }
-
-    /**
-     * Computes and returns the results.
-     *
-     * @return The results.
-     */
-    protected abstract Map computeAll();
-
-    /**
-     * Creates and returns a {@link DiskBufferDriver} after storing the results
-     * inside.
-     *
-     * @param results The results to be stored.
-     *
-     * @return The {@link DiskBufferDriver} holding the results.
-     *
-     * @throws DriverException
-     */
-    private DiskBufferDriver createDriver(Map results)
-            throws DriverException {
-
-        final Metadata metadata = createMetadata();
-
-        DiskBufferDriver driver = new DiskBufferDriver(dsf, metadata);
-
-        storeResultsInDriver(results, driver);
-
-        cleanUp(driver, pm);
-
-        return driver;
-    }
-
-    /**
-     * Creates the metadata for the results.
-     *
-     * @return The metadata.
-     */
-    protected abstract Metadata createMetadata();
-
-    /**
-     * Stores the results in a {@link DiskBufferDriver}.
-     *
-     * @param results The results.
-     * @param driver  The driver.
-     *
-     * @throws DriverException
-     */
-    protected abstract void storeResultsInDriver(Map results,
-                                                 DiskBufferDriver driver);
-
-    /**
-     * Cleans up.
-     *
-     * @param driver The driver.
-     * @param pm     The progress monitor.
-     *
-     * @throws DriverException
-     */
-    private void cleanUp(DiskBufferDriver driver, ProgressMonitor pm)
-            throws DriverException {
-        // We are done writing.
-        driver.writingFinished();
-        // The task is done.
-        pm.endTask();
-        // So close the DiskBufferDriver.
-        driver.close();
     }
 
     /**
