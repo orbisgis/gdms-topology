@@ -32,8 +32,8 @@
  */
 package org.gdms.gdmstopology.centrality;
 
+import org.gdms.gdmstopology.functionhelpers.ExecutorFunctionHelper;
 import com.graphhopper.sna.data.NodeBetweennessInfo;
-import java.lang.reflect.InvocationTargetException;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -49,7 +49,6 @@ import org.gdms.data.values.ValueFactory;
 import org.gdms.driver.DataSet;
 import org.gdms.driver.DiskBufferDriver;
 import org.gdms.driver.DriverException;
-import static org.gdms.gdmstopology.centrality.AbstractExecutorFunctionHelper.STORAGE_ERROR;
 import org.gdms.gdmstopology.model.GraphSchema;
 import org.orbisgis.progress.ProgressMonitor;
 
@@ -59,7 +58,7 @@ import org.orbisgis.progress.ProgressMonitor;
  *
  * @author Adam Gouge
  */
-public abstract class GraphAnalyzer extends AbstractExecutorFunctionHelper {
+public abstract class GraphAnalyzer extends ExecutorFunctionHelper {
 
     /**
      * The data set.
@@ -112,35 +111,9 @@ public abstract class GraphAnalyzer extends AbstractExecutorFunctionHelper {
         this.orientation = orientation;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected String getOutputTableSuffix() {
         return GraphSchema.GRAPH_ANALYSIS;
-    }
-
-    /**
-     * Computes and returns the results.
-     *
-     * @return The results.
-     *
-     * @see GraphAnalyzer#prepareAnalyzer()
-     */
-    @Override
-    protected Map computeAll() {
-        try {
-            return prepareAnalyzer().computeAll();
-        } catch (InstantiationException ex) {
-            LOGGER.trace(ANALYZER_PREP_ERROR, ex);
-        } catch (IllegalAccessException ex) {
-            LOGGER.trace(ANALYZER_PREP_ERROR, ex);
-        } catch (IllegalArgumentException ex) {
-            LOGGER.trace(ANALYZER_PREP_ERROR, ex);
-        } catch (InvocationTargetException ex) {
-            LOGGER.trace(ANALYZER_PREP_ERROR, ex);
-        }
-        return null;
     }
 
     /**
@@ -150,9 +123,6 @@ public abstract class GraphAnalyzer extends AbstractExecutorFunctionHelper {
      */
     protected abstract com.graphhopper.sna.centrality.GraphAnalyzer prepareAnalyzer();
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected Metadata createMetadata() {
         return new DefaultMetadata(
@@ -166,38 +136,45 @@ public abstract class GraphAnalyzer extends AbstractExecutorFunctionHelper {
             GraphSchema.CLOSENESS_CENTRALITY});
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    protected void storeResultsInDriver(
-            Map results,
+    protected void computeAndStoreResults(
             DiskBufferDriver driver) {
 
-        Set<Integer> keySet = results.keySet();
-        Iterator<Integer> it = keySet.iterator();
-
+        Map results = null;
         try {
-            while (it.hasNext()) {
+            results = prepareAnalyzer().computeAll();
+        } catch (Exception ex) {
+            LOGGER.trace(ANALYZER_PREP_ERROR, ex);
+        }
 
-                final int node = it.next();
-                final NodeBetweennessInfo nodeNBInfo =
-                        (NodeBetweennessInfo) results.get(node);
+        if (results != null) {
+            Set<Integer> keySet = results.keySet();
+            Iterator<Integer> it = keySet.iterator();
 
-                Value[] valuesToAdd =
-                        new Value[]{
-                    // ID
-                    ValueFactory.createValue(node),
-                    // Betweenness
-                    ValueFactory.createValue(nodeNBInfo.getBetweenness()),
-                    // Closeness
-                    ValueFactory.createValue(nodeNBInfo.getCloseness())
-                };
+            try {
+                while (it.hasNext()) {
 
-                driver.addValues(valuesToAdd);
+                    final int node = it.next();
+                    final NodeBetweennessInfo nodeNBInfo =
+                            (NodeBetweennessInfo) results.get(node);
+
+                    Value[] valuesToAdd =
+                            new Value[]{
+                        // ID
+                        ValueFactory.createValue(node),
+                        // Betweenness
+                        ValueFactory.createValue(nodeNBInfo.getBetweenness()),
+                        // Closeness
+                        ValueFactory.createValue(nodeNBInfo.getCloseness())
+                    };
+
+                    driver.addValues(valuesToAdd);
+                }
+            } catch (DriverException ex) {
+                LOGGER.trace(STORAGE_ERROR, ex);
             }
-        } catch (DriverException ex) {
-            LOGGER.trace(STORAGE_ERROR, ex);
+        } else {
+            LOGGER.trace("Null analyzer.");
         }
     }
 }
