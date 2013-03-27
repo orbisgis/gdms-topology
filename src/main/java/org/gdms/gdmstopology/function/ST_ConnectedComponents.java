@@ -177,7 +177,9 @@ public class ST_ConnectedComponents extends AbstractTableFunction {
             // Set the weights column name.
             final String weightsColumn = values[0].getAsString();
             // Get the orientation
-            parseOptionalArgument(values[1]);
+            if (values.length > 1) {
+                parseOptionalArgument(values[1]);
+            }
             // Return a new table listing all the vertices and to which
             // connected component they belong.
             return new GraphConnectivityInspector(
