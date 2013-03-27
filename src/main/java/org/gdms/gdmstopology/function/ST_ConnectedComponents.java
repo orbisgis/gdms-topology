@@ -38,10 +38,9 @@ import org.gdms.data.types.Type;
 import org.gdms.data.values.Value;
 import org.gdms.driver.DataSet;
 import org.gdms.driver.DriverException;
-import org.gdms.gdmstopology.model.GraphEdge;
 import org.gdms.gdmstopology.model.GraphSchema;
 import org.gdms.gdmstopology.parse.GraphFunctionParser;
-import org.gdms.gdmstopology.process.GraphConnectivityUtilities;
+import org.gdms.gdmstopology.process.GraphConnectivityInspector;
 import org.gdms.sql.function.FunctionException;
 import org.gdms.sql.function.FunctionSignature;
 import org.gdms.sql.function.ScalarArgument;
@@ -49,7 +48,6 @@ import org.gdms.sql.function.table.AbstractTableFunction;
 import org.gdms.sql.function.table.TableArgument;
 import org.gdms.sql.function.table.TableDefinition;
 import org.gdms.sql.function.table.TableFunctionSignature;
-import org.jgrapht.alg.ConnectivityInspector;
 import org.orbisgis.progress.ProgressMonitor;
 
 /**
@@ -180,19 +178,14 @@ public class ST_ConnectedComponents extends AbstractTableFunction {
             final String weightsColumn = values[0].getAsString();
             // Get the orientation
             parseOptionalArgument(values[1]);
-            // Create the ConnectivityInspector.
-            ConnectivityInspector<Integer, GraphEdge> inspector =
-                    GraphConnectivityUtilities.
-                    getConnectivityInspector(
-                    dsf,
-                    dataSet,
-                    weightsColumn,
-                    orientation,
-                    pm);
-            // Record a new table listing all the vertices and to which
+            // Return a new table listing all the vertices and to which
             // connected component they belong.
-            return GraphConnectivityUtilities.
-                    registerConnectedComponents(dsf, inspector);
+            return new GraphConnectivityInspector(
+                    dsf,
+                    pm,
+                    dataSet,
+                    orientation,
+                    weightsColumn).doWork();
         } catch (Exception ex) {
             System.out.println(ex);
             throw new FunctionException(EVALUATE_ERROR, ex);
@@ -271,6 +264,6 @@ public class ST_ConnectedComponents extends AbstractTableFunction {
      */
     @Override
     public Metadata getMetadata(Metadata[] tables) throws DriverException {
-        return GraphConnectivityUtilities.createMetadata();
+        return GraphConnectivityInspector.MD;
     }
 }
