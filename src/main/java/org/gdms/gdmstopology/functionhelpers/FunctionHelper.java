@@ -32,7 +32,6 @@
  */
 package org.gdms.gdmstopology.functionhelpers;
 
-import java.util.Map;
 import org.gdms.data.DataSourceFactory;
 import org.gdms.data.schema.Metadata;
 import org.gdms.driver.DiskBufferDriver;
@@ -41,8 +40,6 @@ import org.orbisgis.progress.ProgressMonitor;
 
 /**
  * A helper class to store the results calculated by an SQL function.
- *
- * We assume that the results are stored in a {@link Map}.
  *
  * @author Adam Gouge
  */
@@ -56,6 +53,11 @@ public abstract class FunctionHelper {
      * Progress monitor.
      */
     protected final ProgressMonitor pm;
+    /**
+     * Error returned when there is a problem storing the results in a driver.
+     */
+    protected static final String STORAGE_ERROR =
+            "Can't store values in driver.";
 
     /**
      * Constructor.
@@ -71,30 +73,19 @@ public abstract class FunctionHelper {
     }
 
     /**
-     * Computes and returns the results.
-     *
-     * @return The results.
-     */
-    protected abstract Map computeAll();
-
-    /**
-     * Creates and returns a {@link DiskBufferDriver} after storing the results
-     * inside.
-     *
-     * @param results The results to be stored.
+     * Computes and stores results in a newly created {@link DiskBufferDriver}
+     * and cleans up.
      *
      * @return The {@link DiskBufferDriver} holding the results.
      *
      * @throws DriverException
      */
-    protected DiskBufferDriver createDriver(Map results)
-            throws DriverException {
+    public DiskBufferDriver doWork() throws DriverException {
 
-        final Metadata metadata = createMetadata();
+        DiskBufferDriver driver =
+                new DiskBufferDriver(dsf, createMetadata());
 
-        DiskBufferDriver driver = new DiskBufferDriver(dsf, metadata);
-
-        storeResultsInDriver(results, driver);
+        computeAndStoreResults(driver);
 
         cleanUp(driver, pm);
 
@@ -109,14 +100,12 @@ public abstract class FunctionHelper {
     protected abstract Metadata createMetadata();
 
     /**
-     * Stores the results in a {@link DiskBufferDriver}.
+     * Computes and stores the results in a {@link DiskBufferDriver}.
      *
-     * @param results The results.
-     * @param driver  The driver.
+     * @param driver The driver.
      *
      */
-    protected abstract void storeResultsInDriver(Map results,
-                                                 DiskBufferDriver driver);
+    protected abstract void computeAndStoreResults(DiskBufferDriver driver);
 
     /**
      * Cleans up.
@@ -132,7 +121,7 @@ public abstract class FunctionHelper {
         driver.writingFinished();
         // The task is done.
         pm.endTask();
-        // So close the DiskBufferDriver.
-        driver.close();
+        // Open the DiskBufferDriver.
+        driver.open();
     }
 }

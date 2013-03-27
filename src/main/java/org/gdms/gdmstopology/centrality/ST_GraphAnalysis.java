@@ -253,7 +253,7 @@ public class ST_GraphAnalysis extends AbstractExecutorFunction {
                 : // Weighted graph
                 new WeightedGraphAnalyzer(
                 dsf, dataSet, pm, orientation, weightsColumn);
-        analyzer.doAnalysis(outputTablePrefix);
+        analyzer.doWork(outputTablePrefix);
     }
 
     /**
@@ -401,6 +401,6 @@ public class ST_GraphAnalysis extends AbstractExecutorFunction {
                     TableArgument.GEOMETRY,
                     weight,
                     ScalarArgument.INT,
-                    ScalarArgument.STRING),};
+                    ScalarArgument.STRING)};
     }
 }

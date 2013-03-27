@@ -48,12 +48,6 @@ import org.orbisgis.progress.ProgressMonitor;
 public abstract class ExecutorFunctionHelper extends FunctionHelper {
 
     /**
-     * Error returned when there is a problem storing the results in a driver.
-     */
-    protected static final String STORAGE_ERROR =
-            "Can't store values in driver.";
-
-    /**
      * Constructor.
      *
      * @param dsf The {@link DataSourceFactory} used to parse the data set.
@@ -73,28 +67,10 @@ public abstract class ExecutorFunctionHelper extends FunctionHelper {
      *
      * @throws DriverException
      */
-    public void doAnalysis(String outputTablePrefix)
+    public void doWork(String outputTablePrefix)
             throws DriverException {
-        storeResults(computeAll(), outputTablePrefix);
-    }
-
-    /**
-     * Stores the given results in a {@link DiskBufferDriver} and writes them to
-     * a table.
-     *
-     * @param results           The results.
-     * @param outputTablePrefix The output table prefix.
-     *
-     * @throws DriverException
-     */
-    public void storeResults(Map results, String outputTablePrefix)
-            throws DriverException {
-
-        // Get the DiskBufferDriver to store.
-        DiskBufferDriver driver = createDriver(results);
-
-        // Write it to a table.
-        writeToTable(driver, outputTablePrefix);
+        // Write the DiskBufferDriver containing the results to a table.
+        writeToTable(doWork(), outputTablePrefix);
     }
 
     /**
