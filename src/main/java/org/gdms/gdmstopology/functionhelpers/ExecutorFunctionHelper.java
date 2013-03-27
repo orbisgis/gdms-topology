@@ -34,16 +34,14 @@ package org.gdms.gdmstopology.functionhelpers;
 
 import java.util.Map;
 import org.gdms.data.DataSourceFactory;
-import org.gdms.data.schema.Metadata;
 import org.gdms.driver.DiskBufferDriver;
 import org.gdms.driver.DriverException;
 import org.orbisgis.progress.ProgressMonitor;
 
 /**
- * A helper class to store the results calculated by an
- * {@link org.gdms.sql.function.executor.AbstractExecutorFunction}.
+ * A helper class to store the results calculated by an executor function.
  *
- * We assume that the results are returned as a {@link Map}.
+ * We assume that the results are stored in a {@link Map}.
  *
  * @author Adam Gouge
  */
@@ -68,15 +66,6 @@ public abstract class ExecutorFunctionHelper extends FunctionHelper {
     }
 
     /**
-     * Returns the suffix that will be appended to the output table name.
-     *
-     * @return The suffix that will be appended to the output table name.
-     *
-     * @see #writeToTable(org.gdms.driver.DiskBufferDriver, java.lang.String)
-     */
-    protected abstract String getOutputTableSuffix();
-
-    /**
      * Computes and stores the results in a {@link DiskBufferDriver} and writes
      * them to a table.
      *
@@ -93,6 +82,7 @@ public abstract class ExecutorFunctionHelper extends FunctionHelper {
      * Stores the given results in a {@link DiskBufferDriver} and writes them to
      * a table.
      *
+     * @param results           The results.
      * @param outputTablePrefix The output table prefix.
      *
      * @throws DriverException
@@ -131,4 +121,13 @@ public abstract class ExecutorFunctionHelper extends FunctionHelper {
                 driver.getFile());
         return outputTableName;
     }
+
+    /**
+     * Returns the suffix that will be appended to the output table name.
+     *
+     * @return The suffix that will be appended to the output table name.
+     *
+     * @see #writeToTable(org.gdms.driver.DiskBufferDriver, java.lang.String)
+     */
+    protected abstract String getOutputTableSuffix();
 }

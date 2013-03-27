@@ -40,6 +40,9 @@ import org.gdms.driver.DriverException;
 import org.orbisgis.progress.ProgressMonitor;
 
 /**
+ * A helper class to store the results calculated by an SQL function.
+ *
+ * We assume that the results are stored in a {@link Map}.
  *
  * @author Adam Gouge
  */
@@ -111,7 +114,6 @@ public abstract class FunctionHelper {
      * @param results The results.
      * @param driver  The driver.
      *
-     * @throws DriverException
      */
     protected abstract void storeResultsInDriver(Map results,
                                                  DiskBufferDriver driver);
