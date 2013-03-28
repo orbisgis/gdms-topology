@@ -34,11 +34,9 @@ package org.gdms.gdmstopology.centrality;
 
 import org.gdms.data.DataSourceFactory;
 import org.gdms.data.schema.Metadata;
-import org.gdms.data.types.Type;
 import org.gdms.data.values.Value;
 import org.gdms.driver.DataSet;
 import org.gdms.driver.DriverException;
-import org.gdms.gdmstopology.model.GraphSchema;
 import org.gdms.gdmstopology.parse.GraphFunctionParser;
 import org.gdms.sql.function.FunctionException;
 import org.gdms.sql.function.FunctionSignature;
@@ -69,8 +67,7 @@ public class ST_StrahlerStreamOrder extends AbstractTableFunction {
     private static final String SQL_ORDER =
             "SELECT * FROM ST_StrahlerStreamOrder("
             + "input_table, "
-            + "root_node"
-            + "[, orientation]);";
+            + "root_node;";
     /**
      * Short description of this function.
      */
@@ -95,22 +92,7 @@ public class ST_StrahlerStreamOrder extends AbstractTableFunction {
             + "<code>ST_Graph</code>. "
             + "<li> "
             + "<code>root_node</code> - an integer specifying the id of the "
-            + "root node of the tree. </ul>"
-            + "<p> "
-            + "Optional parameter: "
-            + "<ul> "
-            + "<li> "
-            + "<code>orientation</code> - "
-            + "an integer specifying the orientation of the graph: "
-            + "<ul> "
-            + "<li> 1 if the graph is directed, "
-            + "<li> 2 if it is directed and we wish to reverse the "
-            + "orientation of the edges, "
-            + "<li> 3 if the graph is undirected. "
-            + "</ul> " // end orientation list
-            + "If no orientation is specified, we assume the graph is"
-            + "directed. "
-            + "</ul> "; // end required parameters list
+            + "root node of the tree. </ul>";
     /**
      * Description of this function.
      */
@@ -121,11 +103,6 @@ public class ST_StrahlerStreamOrder extends AbstractTableFunction {
      * The root node.
      */
     private int rootNode;
-    // OPTIONAL ARGUMENT
-    /**
-     * Specifies the orientation of the graph (default: directed).
-     */
-    private int orientation = GraphSchema.DIRECT;
     /**
      * An error message to be displayed when {@link #evaluate(
      * org.gdms.data.DataSourceFactory,
@@ -145,40 +122,13 @@ public class ST_StrahlerStreamOrder extends AbstractTableFunction {
             final DataSet dataSet = tables[0];
             // Get the root node.
             rootNode = GraphFunctionParser.parseSource(values[0]);
-            // Get the orientation
-            if (values.length > 1) {
-                parseOptionalArgument(values[1]);
-            }
             // Return a new table listing all the vertices and to which
             // connected component they belong.
-            return new StrahlerAnalyzer(dsf, pm, dataSet, orientation, rootNode)
+            return new StrahlerAnalyzer(dsf, pm, dataSet, rootNode)
                     .doWork();
         } catch (Exception ex) {
             System.out.println(ex);
             throw new FunctionException(EVALUATE_ERROR, ex);
-        }
-    }
-
-    /**
-     * Parse the optional function argument at the given index.
-     *
-     * @param values Array containing the other arguments.
-     * @param index  The index.
-     *
-     * @throws FunctionException
-     */
-    private void parseOptionalArgument(Value value) throws
-            FunctionException {
-        final int slotType = value.getType();
-        if (slotType == Type.INT) {
-            orientation = GraphFunctionParser.parseOrientation(value);
-            if (!GraphFunctionParser.validOrientation(orientation)) {
-                throw new FunctionException(
-                        "Please enter a valid orientation: 1, 2 or 3.");
-            }
-        } else {
-            throw new FunctionException(
-                    "Please enter an integer orientation.");
         }
     }
 
@@ -212,16 +162,10 @@ public class ST_StrahlerStreamOrder extends AbstractTableFunction {
     @Override
     public FunctionSignature[] getFunctionSignatures() {
         return new FunctionSignature[]{
-            // No orientation specified.
+            // input_table, root_node
             new TableFunctionSignature(
             TableDefinition.ANY,
             TableArgument.GEOMETRY,
-            ScalarArgument.INT),
-            // Specify orientation.
-            new TableFunctionSignature(
-            TableDefinition.ANY,
-            TableArgument.GEOMETRY,
-            ScalarArgument.INT,
             ScalarArgument.INT)
         };
     }

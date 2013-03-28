@@ -65,10 +65,6 @@ public class StrahlerAnalyzer extends TableFunctionHelper {
      */
     protected final DataSet dataSet;
     /**
-     * Orientation.
-     */
-    protected final int orientation;
-    /**
      * Root node.
      */
     protected final int rootNode;
@@ -106,11 +102,9 @@ public class StrahlerAnalyzer extends TableFunctionHelper {
     public StrahlerAnalyzer(DataSourceFactory dsf,
                             ProgressMonitor pm,
                             DataSet dataSet,
-                            int orientation,
                             int rootNode) {
         super(dsf, pm);
         this.dataSet = dataSet;
-        this.orientation = orientation;
         this.rootNode = rootNode;
     }
 
@@ -154,7 +148,7 @@ public class StrahlerAnalyzer extends TableFunctionHelper {
     private Map<Integer, StrahlerInfo> computeResults() {
         Graph graph = null;
         try {
-            graph = new UnweightedGraphCreator(dataSet, orientation)
+            graph = new UnweightedGraphCreator(dataSet, GraphSchema.UNDIRECT)
                     .prepareGraph();
         } catch (IndexException ex) {
             LOGGER.trace("Couldn't prepare graph.", ex);
