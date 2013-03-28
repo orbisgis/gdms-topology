@@ -134,7 +134,7 @@ public class ST_StrahlerStreamOrder extends AbstractTableFunction {
      * org.orbisgis.progress.ProgressMonitor) evaluate} fails.
      */
     private static final String EVALUATE_ERROR =
-            "Cannot compute the connected components.";
+            "Cannot compute the Strahler stream order.";
 
     @Override
     public DataSet evaluate(DataSourceFactory dsf, DataSet[] tables,
