@@ -207,13 +207,11 @@ public class ST_Strahler extends AbstractTableFunction {
             // No orientation specified.
             new TableFunctionSignature(
             TableDefinition.ANY,
-            TableArgument.GEOMETRY,
-            ScalarArgument.STRING),
+            TableArgument.GEOMETRY),
             // Specify orientation.
             new TableFunctionSignature(
             TableDefinition.ANY,
             TableArgument.GEOMETRY,
-            ScalarArgument.STRING,
             ScalarArgument.INT)
         };
     }
