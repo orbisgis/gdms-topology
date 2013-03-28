@@ -33,18 +33,21 @@
 package org.gdms.gdmstopology.function;
 
 import org.gdms.data.DataSourceFactory;
+import org.gdms.data.schema.Metadata;
+import org.gdms.data.types.Type;
 import org.gdms.data.values.Value;
 import org.gdms.driver.DataSet;
-import org.gdms.gdmstopology.model.GraphEdge;
-import org.gdms.gdmstopology.process.GraphConnectivityUtilities;
+import org.gdms.driver.DriverException;
+import org.gdms.gdmstopology.model.GraphSchema;
+import org.gdms.gdmstopology.parse.GraphFunctionParser;
+import org.gdms.gdmstopology.process.GraphConnectivityInspector;
 import org.gdms.sql.function.FunctionException;
 import org.gdms.sql.function.FunctionSignature;
 import org.gdms.sql.function.ScalarArgument;
-import org.gdms.sql.function.executor.AbstractExecutorFunction;
-import org.gdms.sql.function.executor.ExecutorFunctionSignature;
+import org.gdms.sql.function.table.AbstractTableFunction;
 import org.gdms.sql.function.table.TableArgument;
 import org.gdms.sql.function.table.TableDefinition;
-import org.jgrapht.alg.ConnectivityInspector;
+import org.gdms.sql.function.table.TableFunctionSignature;
 import org.orbisgis.progress.ProgressMonitor;
 
 /**
@@ -56,18 +59,18 @@ import org.orbisgis.progress.ProgressMonitor;
  *
  * <p> Example usage: <center>
  * <code>
- * EXECUTE ST_ConnectedComponents(input_table,
- * 'weights_column',
- * orientation);
+ * SELECT * FROM ST_ConnectedComponents(input_table, 'weights_column'
+ * [, orientation]);
  * </code> </center>
  *
  * <p> Required parameters: <ul> <li>
  * <code>input_table</code> - the input table. Specifically, this is the
  * <code>output_table_prefix.edges</code> table produced by {@link ST_Graph},
  * except that an additional column specifying the weight of each edge must be
- * added. <li>
- * <code>'weights_column'</code> - a string specifying the name of the column of
- * the input table that gives the weight of each edge. <li>
+ * added.
+ * <li>
+ * <code>'weights_column'</code> - the weights column.</ul>
+ * <p> Optional parameter: <ul> <li>
  * <code>orientation</code> - an integer specifying the orientation of the
  * graph: <ul> <li> 1 if the graph is directed, <li> 2 if it is directed and we
  * wish to reverse the orientation of the edges, <li> 3 if the graph is
@@ -76,7 +79,7 @@ import org.orbisgis.progress.ProgressMonitor;
  *
  * @author Adam Gouge
  */
-public class ST_ConnectedComponents extends AbstractExecutorFunction {
+public class ST_ConnectedComponents extends AbstractTableFunction {
 
     /**
      * The name of this function.
@@ -86,10 +89,10 @@ public class ST_ConnectedComponents extends AbstractExecutorFunction {
      * The SQL order of this function.
      */
     private static final String SQL_ORDER =
-            "EXECUTE ST_ConnectedComponents("
+            "SELECT * FROM ST_ConnectedComponents("
             + "input_table, "
-            + "'weights_column', "
-            + "orientation);";
+            + "'weights_column'"
+            + "[, orientation]);";
     /**
      * Short description of this function.
      */
@@ -112,13 +115,13 @@ public class ST_ConnectedComponents extends AbstractExecutorFunction {
             + "Specifically, this is the "
             + "<code>output_table_prefix.edges</code> "
             + "table produced by "
-            + "<code>ST_Graph</code>, "
-            + "except that an additional column specifying the weight "
-            + "of each edge must be added. "
+            + "<code>ST_Graph</code>. "
             + "<li> "
-            + "<code>'weights_column'</code> - "
-            + "a string specifying the name of the column of the input "
-            + "table that gives the weight of each edge. "
+            + "<code>'weights_column'</code> - the name of the weights "
+            + "column. </ul>"
+            + "<p> "
+            + "Optional parameter: "
+            + "<ul> "
             + "<li> "
             + "<code>orientation</code> - "
             + "an integer specifying the orientation of the graph: "
@@ -136,6 +139,11 @@ public class ST_ConnectedComponents extends AbstractExecutorFunction {
      */
     private static final String DESCRIPTION =
             SHORT_DESCRIPTION + LONG_DESCRIPTION;
+    // OPTIONAL ARGUMENT
+    /**
+     * Specifies the orientation of the graph (default: directed).
+     */
+    private int orientation = GraphSchema.DIRECT;
     /**
      * An error message to be displayed when {@link #evaluate(
      * org.gdms.data.DataSourceFactory,
@@ -157,7 +165,7 @@ public class ST_ConnectedComponents extends AbstractExecutorFunction {
      *               calculation.
      */
     @Override
-    public void evaluate(
+    public DataSet evaluate(
             DataSourceFactory dsf,
             DataSet[] tables,
             Value[] values,
@@ -167,24 +175,19 @@ public class ST_ConnectedComponents extends AbstractExecutorFunction {
             // Recover the DataSet.
             final DataSet dataSet = tables[0];
             // Set the weights column name.
-            String weightsColumn = values[0].getAsString();
-            // Set the output table prefix.
-//            String outputTablePrefix = values[1].getAsString();
+            final String weightsColumn = values[0].getAsString();
             // Get the orientation
-            int orientation = values[1].getAsInt();
-            // Create the ConnectivityInspector.
-            ConnectivityInspector<Integer, GraphEdge> inspector =
-                    GraphConnectivityUtilities.
-                    getConnectivityInspector(
-                    dsf,
-                    dataSet,
-                    weightsColumn,
-                    orientation,
-                    pm);
-            // Record a new table listing all the vertices and to which
+            if (values.length > 1) {
+                parseOptionalArgument(values[1]);
+            }
+            // Return a new table listing all the vertices and to which
             // connected component they belong.
-            GraphConnectivityUtilities.
-                    registerConnectedComponents(dsf, inspector);
+            return new GraphConnectivityInspector(
+                    dsf,
+                    pm,
+                    dataSet,
+                    orientation,
+                    weightsColumn).doWork();
         } catch (Exception ex) {
             System.out.println(ex);
             throw new FunctionException(EVALUATE_ERROR, ex);
@@ -192,10 +195,30 @@ public class ST_ConnectedComponents extends AbstractExecutorFunction {
     }
 
     /**
-     * Returns the name of this function. This name will be used in SQL
-     * statements.
+     * Parse the optional function argument at the given index.
      *
-     * @return The name of this function.
+     * @param values Array containing the other arguments.
+     * @param index  The index.
+     *
+     * @throws FunctionException
+     */
+    private void parseOptionalArgument(Value value) throws
+            FunctionException {
+        final int slotType = value.getType();
+        if (slotType == Type.INT) {
+            orientation = GraphFunctionParser.parseOrientation(value);
+            if (!GraphFunctionParser.validOrientation(orientation)) {
+                throw new FunctionException(
+                        "Please enter a valid orientation: 1, 2 or 3.");
+            }
+        } else {
+            throw new FunctionException(
+                    "Please enter an integer orientation.");
+        }
+    }
+
+    /**
+     * {@inheritDoc}
      */
     @Override
     public String getName() {
@@ -203,9 +226,7 @@ public class ST_ConnectedComponents extends AbstractExecutorFunction {
     }
 
     /**
-     * Returns an example query using this function.
-     *
-     * @return An example query using this function.
+     * {@inheritDoc}
      */
     @Override
     public String getSqlOrder() {
@@ -213,44 +234,38 @@ public class ST_ConnectedComponents extends AbstractExecutorFunction {
     }
 
     /**
-     * Returns a description of this function.
-     *
-     * @return A description of this function.
+     * {@inheritDoc}
      */
     @Override
     public String getDescription() {
         return DESCRIPTION;
     }
 
-//    /**
-//     * Returns the {@link Metadata} of the result of this function without
-//     * executing the query.
-//     *
-//     * @param tables {@link Metadata} objects of the input tables.
-//     * @return The {@link Metadata} of the result.
-//     * @throws DriverException
-//     */
-//    @Override
-//    public Metadata getMetadata(Metadata[] tables) throws DriverException {
-//        return GraphMetadataFactory.createClosenessCentralityMetadata();
-//    }
     /**
-     * Returns an array of all possible signatures of this function. Multiple
-     * signatures arise from some arguments being optional.
-     *
-     * <p> Possible signatures: <OL> <li>
-     * <code>(TABLE input_table, STRING 'weights_column', INT orientation)</code>
-     * </OL>
-     *
-     * @return An array of all possible signatures of this function.
+     * {@inheritDoc}
      */
     @Override
     public FunctionSignature[] getFunctionSignatures() {
         return new FunctionSignature[]{
-                    new ExecutorFunctionSignature(
-                    new TableArgument(TableDefinition.GEOMETRY),
-                    ScalarArgument.STRING,
-                    ScalarArgument.INT)
-                };
+            // No orientation specified.
+            new TableFunctionSignature(
+            TableDefinition.ANY,
+            TableArgument.GEOMETRY,
+            ScalarArgument.STRING),
+            // Specify orientation.
+            new TableFunctionSignature(
+            TableDefinition.ANY,
+            TableArgument.GEOMETRY,
+            ScalarArgument.STRING,
+            ScalarArgument.INT)
+        };
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Metadata getMetadata(Metadata[] tables) throws DriverException {
+        return GraphConnectivityInspector.MD;
     }
 }
