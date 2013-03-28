@@ -57,17 +57,17 @@ import org.orbisgis.progress.ProgressMonitor;
  *
  * @author Adam Gouge
  */
-public class ST_Strahler extends AbstractTableFunction {
+public class ST_StrahlerStreamOrder extends AbstractTableFunction {
 
     /**
      * The name of this function.
      */
-    private static final String NAME = "ST_StrahlerNumbers";
+    private static final String NAME = "ST_StrahlerStreamOrder";
     /**
      * The SQL order of this function.
      */
     private static final String SQL_ORDER =
-            "SELECT * FROM ST_StrahlerNumbers("
+            "SELECT * FROM ST_StrahlerStreamOrder("
             + "input_table, "
             + "root_node"
             + "[, orientation]);";
