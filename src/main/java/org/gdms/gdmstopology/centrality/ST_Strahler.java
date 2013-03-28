@@ -69,6 +69,7 @@ public class ST_Strahler extends AbstractTableFunction {
     private static final String SQL_ORDER =
             "SELECT * FROM ST_StrahlerNumbers("
             + "input_table, "
+            + "root_node"
             + "[, orientation]);";
     /**
      * Short description of this function.
@@ -81,7 +82,7 @@ public class ST_Strahler extends AbstractTableFunction {
     private static final String LONG_DESCRIPTION =
             "<p> "
             + "Creates a new table "
-            + "which lists all the vertices and their respective "
+            + "which lists all the vertices of a tree and their respective "
             + "Strahler numbers. "
             + "<p> "
             + "Required parameter: "
@@ -92,6 +93,8 @@ public class ST_Strahler extends AbstractTableFunction {
             + "<code>output_table_prefix.edges</code> "
             + "table produced by "
             + "<code>ST_Graph</code>. "
+            + "<li> "
+            + "<code>root_node</code> - the root node of the tree. </ul>"
             + "<p> "
             + "Optional parameter: "
             + "<ul> "
@@ -211,11 +214,13 @@ public class ST_Strahler extends AbstractTableFunction {
             // No orientation specified.
             new TableFunctionSignature(
             TableDefinition.ANY,
-            TableArgument.GEOMETRY),
+            TableArgument.GEOMETRY,
+            ScalarArgument.INT),
             // Specify orientation.
             new TableFunctionSignature(
             TableDefinition.ANY,
             TableArgument.GEOMETRY,
+            ScalarArgument.INT,
             ScalarArgument.INT)
         };
     }
