@@ -77,7 +77,7 @@ public class StrahlerAnalyzer extends TableFunctionHelper {
         TypeFactory.createType(Type.INT)},
             new String[]{
         GraphSchema.ID,
-        GraphSchema.CONNECTED_COMPONENT});
+        GraphSchema.STRAHLER_NUMBER});
     /**
      * A logger.
      */
