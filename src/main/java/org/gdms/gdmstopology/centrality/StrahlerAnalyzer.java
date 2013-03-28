@@ -36,14 +36,18 @@ import com.graphhopper.sna.centrality.DFSForStrahler;
 import com.graphhopper.sna.data.StrahlerInfo;
 import com.graphhopper.storage.Graph;
 import java.util.Map;
+import java.util.Map.Entry;
 import org.gdms.data.DataSourceFactory;
 import org.gdms.data.indexes.IndexException;
 import org.gdms.data.schema.DefaultMetadata;
 import org.gdms.data.schema.Metadata;
 import org.gdms.data.types.Type;
 import org.gdms.data.types.TypeFactory;
+import org.gdms.data.values.Value;
+import org.gdms.data.values.ValueFactory;
 import org.gdms.driver.DataSet;
 import org.gdms.driver.DiskBufferDriver;
+import org.gdms.driver.DriverException;
 import org.gdms.gdmstopology.functionhelpers.TableFunctionHelper;
 import org.gdms.gdmstopology.graphcreator.UnweightedGraphCreator;
 import org.gdms.gdmstopology.model.GraphSchema;
@@ -117,12 +121,43 @@ public class StrahlerAnalyzer extends TableFunctionHelper {
 
     @Override
     protected void computeAndStoreResults(DiskBufferDriver driver) {
+
+        Map<Integer, StrahlerInfo> results = computeResults();
+
+        if (results != null) {
+            try {
+                for (Entry<Integer, StrahlerInfo> e : results.entrySet()) {
+                    Integer node = e.getKey();
+                    int strahlerNumber = e.getValue().getStrahlerNumber();
+
+                    Value[] valuesToAdd =
+                            new Value[]{
+                        // ID
+                        ValueFactory.createValue(node),
+                        // Strahler number
+                        ValueFactory.createValue(strahlerNumber)
+                    };
+
+                    driver.addValues(valuesToAdd);
+                }
+            } catch (DriverException ex) {
+                LOGGER.trace(STORAGE_ERROR, ex);
+            }
+        }
+    }
+
+    /**
+     * Compute the Strahler numbers.
+     *
+     * @return The results map.
+     */
+    private Map<Integer, StrahlerInfo> computeResults() {
         Graph graph = null;
         try {
             graph = new UnweightedGraphCreator(dataSet, orientation)
                     .prepareGraph();
         } catch (IndexException ex) {
-            LOGGER.trace("", ex);
+            LOGGER.trace("Couldn't prepare graph.", ex);
         }
         DFSForStrahler dfs = null;
         try {
@@ -130,15 +165,12 @@ public class StrahlerAnalyzer extends TableFunctionHelper {
                                      StrahlerInfo.class,
                                      rootNode);
         } catch (Exception ex) {
-            LOGGER.trace("", ex);
+            LOGGER.trace("Couldn't instantiate DFSForStrahler.", ex);
         }
-
         Map<Integer, StrahlerInfo> results = null;
         if (dfs != null) {
             results = dfs.calculate();
         }
-        if (results != null) {
-            // TODO: Store results here.
-        }
+        return results;
     }
 }
