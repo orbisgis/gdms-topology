@@ -50,6 +50,7 @@ import org.gdms.gdmstopology.model.GraphSchema;
 import org.orbisgis.progress.ProgressMonitor;
 
 /**
+ * Helper class to calculate the Strahler numbers of the nodes of a given tree.
  *
  * @author Adam Gouge
  */

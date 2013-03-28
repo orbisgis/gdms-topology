@@ -50,6 +50,10 @@ import org.gdms.sql.function.table.TableFunctionSignature;
 import org.orbisgis.progress.ProgressMonitor;
 
 /**
+ * SQL function to calculate the Strahler numbers of the nodes of a given tree.
+ *
+ * <p> We do not check that the given input graph is in fact a tree. The user
+ * must specify the root node.
  *
  * @author Adam Gouge
  */
