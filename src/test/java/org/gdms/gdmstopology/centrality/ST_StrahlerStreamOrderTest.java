@@ -56,7 +56,9 @@ import static org.junit.Assert.*;
 public class ST_StrahlerStreamOrderTest extends TopologySetupTest {
 
     /**
-     * Test file.
+     * Test file: part of a river network extracted from the
+     * <a href="http://professionnels.ign.fr/bdcarthage">
+     * BD Carthage</a> database.
      */
     protected String TEST_HYDRO = "test_hydro";
     /**
