@@ -83,10 +83,7 @@ public class ST_StrahlerStreamOrderTest extends TopologySetupTest {
     }
 
     @Test
-    public void testST_StrahlerStreamOrder() throws NoSuchTableException,
-            DataSourceCreationException,
-            DriverException,
-            FunctionException {
+    public void testST_StrahlerStreamOrder() throws Exception {
         ST_StrahlerStreamOrder fn = new ST_StrahlerStreamOrder();
         DataSource ds = dsf.getDataSource(TEST_HYDRO + DOT_EDGES);
         ds.open();
