@@ -35,6 +35,7 @@ package org.gdms.gdmstopology.process;
 import com.graphhopper.routing.DijkstraBidirectionRef;
 import com.graphhopper.routing.Path;
 import com.graphhopper.routing.util.CarFlagEncoder;
+import com.graphhopper.sna.centrality.GeneralizedGraphAnalyzer;
 import com.graphhopper.storage.Graph;
 import com.graphhopper.util.EdgeIterator;
 import com.graphhopper.util.GHUtility;
@@ -163,7 +164,7 @@ public class GraphPathCalculator {
      * @return A shortest path.
      */
     private static Path getPath(Graph graph, int source, int target) {
-        DijkstraBidirectionRef algorithm = 
+        DijkstraBidirectionRef algorithm =
                 new DijkstraBidirectionRef(graph, new CarFlagEncoder());
         long start = System.currentTimeMillis();
         Path path = algorithm.calcPath(source, target);
@@ -226,26 +227,26 @@ public class GraphPathCalculator {
     public static Metadata createShortestPathMetadata() {
         Metadata md = new DefaultMetadata(
                 new Type[]{
-                    //                    TypeFactory.createType(
-                    //                    Type.GEOMETRY,
-                    //                    new Constraint[]{
-                    //                        new GeometryDimensionConstraint(
-                    //                        GeometryDimensionConstraint.DIMENSION_CURVE)
-                    //                    }),
-                    //                    TypeFactory.createType(Type.INT),
-                    TypeFactory.createType(Type.INT),
-                    TypeFactory.createType(Type.INT),
-                    TypeFactory.createType(Type.INT),
-                    TypeFactory.createType(Type.DOUBLE)
-                },
+            //                    TypeFactory.createType(
+            //                    Type.GEOMETRY,
+            //                    new Constraint[]{
+            //                        new GeometryDimensionConstraint(
+            //                        GeometryDimensionConstraint.DIMENSION_CURVE)
+            //                    }),
+            //                    TypeFactory.createType(Type.INT),
+            TypeFactory.createType(Type.INT),
+            TypeFactory.createType(Type.INT),
+            TypeFactory.createType(Type.INT),
+            TypeFactory.createType(Type.DOUBLE)
+        },
                 new String[]{
-                    //                    "the_geom",
-                    //                    GraphSchema.ID,
-                    GraphSchema.PATH_ID,
-                    GraphSchema.START_NODE,
-                    GraphSchema.END_NODE,
-                    GraphSchema.WEIGHT
-                });
+            //                    "the_geom",
+            //                    GraphSchema.ID,
+            GraphSchema.PATH_ID,
+            GraphSchema.START_NODE,
+            GraphSchema.END_NODE,
+            GraphSchema.WEIGHT
+        });
         return md;
     }
 
@@ -299,19 +300,19 @@ public class GraphPathCalculator {
                     + ", weight: " + edgeLength + " ... ");
             driver.addValues(
                     new Value[]{
-                        // the_geom
-                        //                        ValueFactory.createNullValue(),
-                        //                        // The row ID of the edge in the data source.
-                        //                        ValueFactory.createValue(currentEdge.getRowId()),
-                        // An id for this edge in the shortest path.
-                        ValueFactory.createValue(pathEdgeID),
-                        // Start node
-                        ValueFactory.createValue(current),
-                        // End node
-                        ValueFactory.createValue(next),
-                        // Weight
-                        ValueFactory.createValue(edgeLength)
-                    });
+                // the_geom
+                //                        ValueFactory.createNullValue(),
+                //                        // The row ID of the edge in the data source.
+                //                        ValueFactory.createValue(currentEdge.getRowId()),
+                // An id for this edge in the shortest path.
+                ValueFactory.createValue(pathEdgeID),
+                // Start node
+                ValueFactory.createValue(current),
+                // End node
+                ValueFactory.createValue(next),
+                // Weight
+                ValueFactory.createValue(edgeLength)
+            });
             System.out.println("DONE!");
             current = next;
             pathEdgeID++;
@@ -338,10 +339,11 @@ public class GraphPathCalculator {
             int source,
             int target) {
         // Obtain the smallest weight for this edge.
-        EdgeIterator outgoingEdges = GHUtility.getCarOutgoing(graph, source);
+        EdgeIterator outgoingEdges =
+                GeneralizedGraphAnalyzer.outgoingEdges(graph, source);
         double smallestDistance = Double.MAX_VALUE;
         while (outgoingEdges.next()) {
-            if (outgoingEdges.node() == target) {
+            if (outgoingEdges.adjNode() == target) {
                 if (outgoingEdges.distance() < smallestDistance) {
                     smallestDistance = outgoingEdges.distance();
                 }
