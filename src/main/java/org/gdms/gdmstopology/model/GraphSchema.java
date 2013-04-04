@@ -137,6 +137,10 @@ public final class GraphSchema {
      * Specifies a connected component.
      */
     public static final String CONNECTED_COMPONENT = "connected_component";
+    /**
+     * Specifies the Strahler number of a node.
+     */
+    public static final String STRAHLER_NUMBER = "strahler_number";
 
     /**
      * Empty constructor.

@@ -32,6 +32,7 @@
  */
 package org.gdms.gdmstopology.graphcreator;
 
+import com.graphhopper.sna.centrality.GeneralizedGraphAnalyzer;
 import com.graphhopper.storage.Graph;
 import com.graphhopper.util.EdgeIterator;
 import com.graphhopper.util.GHUtility;
@@ -97,14 +98,16 @@ public abstract class GraphCreatorTest extends TopologySetupTest {
      */
     private void printAllEdges(Graph graph) {
         for (int i = 0; i < graph.nodes(); i++) {
-            EdgeIterator incoming = GHUtility.getCarIncoming(graph, i);
+            EdgeIterator incoming =
+                    GeneralizedGraphAnalyzer.outgoingEdges(graph, i);
             while (incoming.next()) {
-                System.out.print(i + " <- " + incoming.node()
+                System.out.print(i + " <- " + incoming.adjNode()
                         + " (" + incoming.distance() + "); ");
             }
-            EdgeIterator outgoing = GHUtility.getCarOutgoing(graph, i);
+            EdgeIterator outgoing =
+                    GeneralizedGraphAnalyzer.outgoingEdges(graph, i);
             while (outgoing.next()) {
-                System.out.print(i + " -> " + outgoing.node()
+                System.out.print(i + " -> " + outgoing.adjNode()
                         + " (" + outgoing.distance() + "); ");
             }
             System.out.println("");

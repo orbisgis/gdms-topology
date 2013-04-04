@@ -32,6 +32,7 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 import org.gdms.gdmstopology.function.ST_BlockIdentity;
 import org.gdms.gdmstopology.centrality.ST_GraphAnalysis;
+import org.gdms.gdmstopology.centrality.ST_StrahlerStreamOrder;
 import org.gdms.gdmstopology.function.ST_ConnectedComponents;
 import org.gdms.gdmstopology.function.ST_FindReachableEdges;
 import org.gdms.gdmstopology.function.ST_Graph;
@@ -70,6 +71,7 @@ public class Activator implements BundleActivator {
         reg(new ST_SubGraphStatistics());
         reg(new ST_ConnectedComponents());
         reg(new ST_GraphAnalysis());
+        reg(new ST_StrahlerStreamOrder());
     }
     private void reg(Function gdmsFunc) {
         // Dict for visual hint for service list 
