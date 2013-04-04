@@ -149,10 +149,8 @@ public abstract class GraphAnalyzer<T extends NodeBetweennessInfo>
 
         if (results != null) {
             try {
-                for (Iterator<Integer> it = results.keySet().iterator();
-                        it.hasNext();) {
+                for (Integer node : results.keySet()) {
 
-                    final int node = it.next();
                     final T nodeNBInfo = results.get(node);
 
                     Value[] valuesToAdd =

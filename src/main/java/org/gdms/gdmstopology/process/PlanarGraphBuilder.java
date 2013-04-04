@@ -143,8 +143,7 @@ public class PlanarGraphBuilder {
                 int i = 1;
 
                 Value[] values = new Value[edgesFieldsCount];
-                for (Iterator it = edges.iterator(); it.hasNext();) {
-                        Geometry geom = (Geometry) it.next();
+                for (Geometry geom : (Collection<Geometry>) edges) {
                         values[0] = ValueFactory.createValue(geom);
                         values[1] = ValueFactory.createValue(i);
                         i++;
@@ -235,8 +234,7 @@ public class PlanarGraphBuilder {
 
 
                 int no = 1;
-                for (Iterator it = polygons.iterator(); it.hasNext();) {
-                        Geometry face = (Geometry) it.next();
+                for (Geometry face : (Collection<Geometry>) polygons) {
                         face.normalize(); // add on 2007-08-11
                         faceDriver.addValues(new Value[]{ValueFactory.createValue(face),
                                         ValueFactory.createValue(new Integer(no++))});

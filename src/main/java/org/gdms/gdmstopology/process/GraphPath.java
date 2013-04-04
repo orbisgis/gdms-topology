@@ -321,10 +321,8 @@ public class GraphPath extends GraphAnalysis {
         HashSet<Integer> visitedSources = new HashSet<Integer>();
         int count = 0;
         pm.startTask("Processing input nodes", 100);
-        for (Iterator<Value[]> it = nodes.iterator();
-                it.hasNext();) {
-            Value[] values = it.next();
-            int source = values[SOURCE_FIELD_INDEX].getAsInt();
+        for (Value[] row : nodes) {
+            int source = row[SOURCE_FIELD_INDEX].getAsInt();
             HashMap<Integer, Integer> targets = null;
             if (count >= 100 && count % 100 == 0) {
                 if (pm.isCancelled()) {
@@ -410,9 +408,7 @@ public class GraphPath extends GraphAnalysis {
         HashSet<Integer> visitedSources = new HashSet<Integer>();
         int count = 0;
         pm.startTask("Compute distance from nodes", 100);
-        for (Iterator<Value[]> it = nodes.iterator();
-                it.hasNext();) {
-            Value[] values = it.next();
+        for (Value[] row : nodes) {
             if (count >= 100 && count % 100 == 0) {
                 if (pm.isCancelled()) {
                     break;
@@ -420,7 +416,7 @@ public class GraphPath extends GraphAnalysis {
             }
             count++;
 
-            int source = values[SOURCE_FIELD_INDEX].getAsInt();
+            int source = row[SOURCE_FIELD_INDEX].getAsInt();
             HashMap<Integer, Integer> targets = null;
             if (!visitedSources.contains(source)) {
                 cl = new ClosestFirstIterator<Integer, GraphEdge>(graph, source);

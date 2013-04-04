@@ -33,7 +33,6 @@
 package org.gdms.gdmstopology.model;
 
 import com.vividsolutions.jts.geom.Geometry;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;

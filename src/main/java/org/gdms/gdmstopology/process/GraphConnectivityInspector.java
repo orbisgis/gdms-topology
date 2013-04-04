@@ -186,26 +186,21 @@ public class GraphConnectivityInspector extends TableFunctionHelper {
             int connectedComponentNumber = 1;
 
             // Record the connected components in the DiskBufferDriver.
-            for (Iterator<Set<Integer>> it =
-                    inspector.connectedSets().iterator();
-                    it.hasNext();) {
+            for (Set<Integer> set : inspector.connectedSets()) {
                 try {
-                    for (Iterator<Integer> cc =
-                            it.next().iterator();
-                            cc.hasNext();) {
+                    for (Integer node : set) {
                         driver.addValues(
                                 new Value[]{
                             // Node ID
-                            ValueFactory.createValue(
-                            cc.next()),
+                            ValueFactory.createValue(node),
                             // Component number
                             ValueFactory.createValue(connectedComponentNumber)
                         });
                     }
+                    connectedComponentNumber++;
                 } catch (Exception ex) {
                     LOGGER.trace(STORAGE_ERROR, ex);
                 }
-                connectedComponentNumber++;
             }
         } else {
             LOGGER.trace("Null inspector.");

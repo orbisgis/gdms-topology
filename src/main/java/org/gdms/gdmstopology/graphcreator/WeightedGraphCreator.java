@@ -79,9 +79,7 @@ public class WeightedGraphCreator extends GraphCreator {
                                      int startNodeIndex,
                                      int endNodeIndex,
                                      int weightFieldIndex) {
-        for (Iterator<Value[]> it = dataSet.iterator();
-                it.hasNext();) {
-            Value[] row = it.next();
+        for (Value[] row : dataSet) {
             graph.edge(row[startNodeIndex].getAsInt(),
                        row[endNodeIndex].getAsInt(),
                        row[weightFieldIndex].getAsDouble(),
@@ -97,9 +95,7 @@ public class WeightedGraphCreator extends GraphCreator {
                                        int startNodeIndex,
                                        int endNodeIndex,
                                        int weightFieldIndex) {
-        for (Iterator<Value[]> it = dataSet.iterator();
-                it.hasNext();) {
-            Value[] row = it.next();
+        for (Value[] row : dataSet) {
             graph.edge(row[startNodeIndex].getAsInt(),
                        row[endNodeIndex].getAsInt(),
                        row[weightFieldIndex].getAsDouble(),
