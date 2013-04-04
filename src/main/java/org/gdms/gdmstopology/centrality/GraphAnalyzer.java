@@ -36,7 +36,6 @@ import org.gdms.gdmstopology.functionhelpers.ExecutorFunctionHelper;
 import com.graphhopper.sna.data.NodeBetweennessInfo;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.gdms.data.DataSourceFactory;
@@ -149,11 +148,9 @@ public abstract class GraphAnalyzer<T extends NodeBetweennessInfo>
         }
 
         if (results != null) {
-            Set<Integer> keySet = results.keySet();
-            Iterator<Integer> it = keySet.iterator();
-
             try {
-                while (it.hasNext()) {
+                for (Iterator<Integer> it = results.keySet().iterator();
+                        it.hasNext();) {
 
                     final int node = it.next();
                     final T nodeNBInfo = results.get(node);

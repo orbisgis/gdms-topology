@@ -108,6 +108,7 @@ public class RandomGraphCreator {
     public static Graph<Integer, DefaultEdge> createRandomConnectedWeightedMultigraph(
             int numNodes, int numEdges) {
         int count = 1;
+        // TODO: Infinite loop.
         while (true) {
             // Generate a random graph
             Graph<Integer, DefaultEdge> graph = createRandomWeightedMultigraph(

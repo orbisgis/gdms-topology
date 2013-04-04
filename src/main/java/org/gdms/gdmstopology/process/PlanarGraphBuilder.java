@@ -271,9 +271,10 @@ public class PlanarGraphBuilder {
                                 MINUS_ONE);
                         sdsEdges.setInt(i, rigthFaceIndex,
                                 MINUS_ONE);
-                        Iterator<Integer> iterator = query(sdsFaces, g1.getEnvelopeInternal());
+                        for (Iterator<Integer> iterator =
+                                query(sdsFaces, g1.getEnvelopeInternal());
+                                iterator.hasNext();) {
 
-                        while (iterator.hasNext()) {
                                 Integer index = iterator.next();
                                 Geometry g = sdsFaces.getGeometry(index);
                                 Value val = ValueFactory.createValue(index + 1);

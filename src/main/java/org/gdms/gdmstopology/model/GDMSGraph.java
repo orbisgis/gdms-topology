@@ -113,10 +113,11 @@ public final class GDMSGraph
     /**
      * Constructs a (JGraphT) graph from an existing {@link DataSet}.
      *
-     * @param dsf The {@link DataSourceFactory} used to parse the data set.
+     * @param dsf     The {@link DataSourceFactory} used to parse the data set.
      * @param dataSet The data set.
-     * @param pm The progress monitor used to track the progress of the index
-     * initialization.
+     * @param pm      The progress monitor used to track the progress of the
+     *                index initialization.
+     *
      * @throws DriverException
      */
     public GDMSGraph(
@@ -147,15 +148,15 @@ public final class GDMSGraph
                 if (!dsf.getIndexManager().isIndexed(
                         dataSet,
                         new String[]{
-                            GraphSchema.START_NODE,
-                            GraphSchema.END_NODE
-                        })) {
+                    GraphSchema.START_NODE,
+                    GraphSchema.END_NODE
+                })) {
                     dsf.getIndexManager().buildIndex(
                             dataSet,
                             new String[]{
-                                GraphSchema.START_NODE,
-                                GraphSchema.END_NODE
-                            },
+                        GraphSchema.START_NODE,
+                        GraphSchema.END_NODE
+                    },
                             pm);
                 }
                 // If there is no index on the start node, then build one.
@@ -226,6 +227,7 @@ public final class GDMSGraph
      * for arbitrary weights in shortest path calculations.
      *
      * @param fieldName The name of the field that contains the weight value.
+     *
      * @throws DriverException
      */
     // TODO: Explain why this is separate from the other fields.
@@ -292,22 +294,23 @@ public final class GDMSGraph
      * {@link java.util.Collections.EMPTY_SET}.
      *
      * @param startVertex The start vertex.
-     * @param endVertex The end vertex.
+     * @param endVertex   The end vertex.
+     *
      * @return The set of {@link GraphEdge}s from the start vertex to the end
-     * vertex or {@link java.util.Collections.EMPTY_SET} if no such edges exist.
+     *         vertex or {@link java.util.Collections.EMPTY_SET} if no such
+     *         edges exist.
      */
     @Override
     public Set<GraphEdge> getAllEdges(
             Integer startVertex,
             Integer endVertex) {
         try {
-            // Obtain an Iterator.
-            Iterator<Integer> queryResult =
-                    getMultiIndexIterator(startVertex, endVertex);
             // Initialize a set to hold the edges.
             HashSet<GraphEdge> edges = new HashSet<GraphEdge>();
             // Add new GraphEdges to the set.
-            while (queryResult.hasNext()) {
+            for (Iterator<Integer> queryResult =
+                    getMultiIndexIterator(startVertex, endVertex);
+                    queryResult.hasNext();) {
                 Integer rowId = queryResult.next();
                 edges.add(
                         new GraphEdge(
@@ -329,10 +332,11 @@ public final class GDMSGraph
      * vertex to a given end vertex exists in the data set.
      *
      * @param startVertex The start vertex.
-     * @param endVertex The end vertex.
+     * @param endVertex   The end vertex.
+     *
      * @return A (new) {@link GraphEdge} object from the given start vertex to
-     * the given end vertex if such an edge exists in the data set; {@code null}
-     * otherwise.
+     *         the given end vertex if such an edge exists in the data set;
+     *         {@code null} otherwise.
      */
     @Override
     public GraphEdge getEdge(Integer startVertex, Integer endVertex) {
@@ -355,7 +359,7 @@ public final class GDMSGraph
      * {@link GraphEdge} class.
      *
      * @return A new {@link ClassBasedEdgeFactory} based on the
-     * {@link GraphEdge} class.
+     *         {@link GraphEdge} class.
      */
     @Override
     public EdgeFactory<Integer, GraphEdge> getEdgeFactory() {
@@ -367,7 +371,8 @@ public final class GDMSGraph
      * SUPPORTED!).
      *
      * @param startVertex The start vertex.
-     * @param endVertex The end vertex.
+     * @param endVertex   The end vertex.
+     *
      * @return The newly added GraphEdge.
      */
     // TODO: Implement this.
@@ -381,8 +386,9 @@ public final class GDMSGraph
      * vertex (NOT YET SUPPORTED!).
      *
      * @param startVertex The start vertex.
-     * @param endVertex The end vertex.
-     * @param e The GraphEdge to add.
+     * @param endVertex   The end vertex.
+     * @param e           The GraphEdge to add.
+     *
      * @return True if the edge was successfully added.
      */
     // TODO: Implement this.
@@ -395,6 +401,7 @@ public final class GDMSGraph
      * Adds a vertex to the graph (NOT YET SUPPORTED!).
      *
      * @param vertex The vertex to add.
+     *
      * @return {@code true} if the vertex was successfully added.
      */
     // TODO: Implement this.
@@ -408,16 +415,15 @@ public final class GDMSGraph
      * vertex to a given end vertex.
      *
      * @param startVertex The start vertex.
-     * @param endVertex The end vertex.
+     * @param endVertex   The end vertex.
+     *
      * @return {@code true} if and only if there exists an edge from the start
-     * vertex to the end vertex.
+     *         vertex to the end vertex.
      */
     @Override
     public boolean containsEdge(Integer startVertex, Integer endVertex) {
         try {
-            Iterator<Integer> queryResult =
-                    getMultiIndexIterator(startVertex, endVertex);
-            return queryResult.hasNext();
+            return getMultiIndexIterator(startVertex, endVertex).hasNext();
         } catch (DriverException ex) {
         }
         return false;
@@ -427,8 +433,9 @@ public final class GDMSGraph
      * Returns {@code true} if the data set contains a given {@link GraphEdge}.
      *
      * @param graphEdge The {@link GraphEdge}.
+     *
      * @return {@code true} if and only if the {@link GraphEdge} is contained in
-     * the data set.
+     *         the data set.
      */
     @Override
     public boolean containsEdge(GraphEdge graphEdge) {
@@ -441,8 +448,9 @@ public final class GDMSGraph
      * Returns {@code true} if the data set contains a given vertex.
      *
      * @param vertex The vertex.
+     *
      * @return {@code true} if and only if the vertex is contained in the data
-     * set.
+     *         set.
      */
     @Override
     public boolean containsVertex(Integer vertex) {
@@ -485,8 +493,9 @@ public final class GDMSGraph
      * the empty set if no edges touch the vertex.
      *
      * @param vertex The vertex to be examined.
+     *
      * @return The edges touching this vertex, or the empty set if no edges
-     * touch this vertex.
+     *         touch this vertex.
      */
     @Override
     public Set<GraphEdge> edgesOf(Integer vertex) {
@@ -494,10 +503,10 @@ public final class GDMSGraph
         HashSet<GraphEdge> edgesOf = new HashSet<GraphEdge>();
         try {
             // Recover the edges that start at the given vertex.
-            Iterator<Integer> queryResult = getIndexIterator(
+            for (Iterator<Integer> queryResult = getIndexIterator(
                     GraphSchema.START_NODE,
                     vertex);
-            while (queryResult.hasNext()) {
+                    queryResult.hasNext();) {
                 Integer rowId = queryResult.next();
                 Integer dest = getTargetVertex(rowId);
                 edgesOf.add(
@@ -509,10 +518,10 @@ public final class GDMSGraph
             }
 
             // Recover the edges that end at the given vertex.
-            queryResult = getIndexIterator(
+            for (Iterator<Integer> queryResult = getIndexIterator(
                     GraphSchema.END_NODE,
                     vertex);
-            while (queryResult.hasNext()) {
+                    queryResult.hasNext();) {
                 Integer rowId = queryResult.next();
                 Integer source = getSourceVertex(rowId);
                 edgesOf.add(
@@ -536,7 +545,8 @@ public final class GDMSGraph
      * end vertex (NOT YET SUPPORTED!).
      *
      * @param startVertex The start vertex.
-     * @param endVertex The end vertex.
+     * @param endVertex   The end vertex.
+     *
      * @return The GraphEdge that was removed.
      */
     // TODO: Implement this.
@@ -551,8 +561,9 @@ public final class GDMSGraph
      * Removes the specified edge from the graph (NOT YET SUPPORTED!).
      *
      * @param graphEdge The {@link GraphEdge} to be removed.
+     *
      * @return {@code true} if and only if the graph contained the specified
-     * edge.
+     *         edge.
      */
     // TODO: Implement this.
     @Override
@@ -565,8 +576,9 @@ public final class GDMSGraph
      * that touch it if it is present (NOT YET SUPPORTED!).
      *
      * @param vertex The vertex to be removed.
+     *
      * @return {@code true} if and only if the graph contained the specified
-     * vertex.
+     *         vertex.
      */
     @Override
     public boolean removeVertex(Integer vertex) {
@@ -613,6 +625,7 @@ public final class GDMSGraph
      * @see org.gdms.gdmstopology.model.GraphEdge#getSource()
      *
      * @param graphEdge The {@link GraphEdge}.
+     *
      * @return The source vertex.
      */
     @Override
@@ -626,6 +639,7 @@ public final class GDMSGraph
      * @see org.gdms.gdmstopology.model.GraphEdge#getTarget()
      *
      * @param graphEdge The {@link GraphEdge}.
+     *
      * @return The target vertex.
      */
     @Override
@@ -639,6 +653,7 @@ public final class GDMSGraph
      * @see org.gdms.gdmstopology.model.GraphEdge#getWeight()
      *
      * @param graphEdge The {@link GraphEdge}.
+     *
      * @return The weight.
      */
     @Override
@@ -650,6 +665,7 @@ public final class GDMSGraph
      * Returns the {@link Set} of edges that end at a given vertex.
      *
      * @param vertex The vertex.
+     *
      * @return The set of incoming edges.
      */
     public Set<GraphEdge> incomingEdgesOf(Integer vertex) {
@@ -690,6 +706,7 @@ public final class GDMSGraph
      * Returns the {@link Set} of edges that start at a given vertex.
      *
      * @param vertex The vertex.
+     *
      * @return The set of outgoing edges.
      */
     public Set<GraphEdge> outgoingEdgesOf(Integer vertex) {
@@ -712,9 +729,9 @@ public final class GDMSGraph
                     // this edge to the set of outgoing edges.
                     outgoingEdges.add(
                             new GraphEdge(vertex,
-                            targetVertex,
-                            getWeightVertex(rowId),
-                            rowId));
+                                          targetVertex,
+                                          getWeightVertex(rowId),
+                                          rowId));
                 }
                 // Return the set of outgoing edges.
                 return outgoingEdges;
@@ -731,7 +748,9 @@ public final class GDMSGraph
      *
      * @param fieldToQuery The desired field to query.
      * @param valueToQuery The desired value to query.
+     *
      * @return An iterator on the indices.
+     *
      * @throws DriverException
      */
     public Iterator<Integer> getIndexIterator(
@@ -749,8 +768,10 @@ public final class GDMSGraph
      * given start node and end at a given end node.
      *
      * @param startNode The start node.
-     * @param endNode The end node.
+     * @param endNode   The end node.
+     *
      * @return An iterator on the indices.
+     *
      * @throws DriverException
      */
     public Iterator<Integer> getMultiIndexIterator(
@@ -759,13 +780,13 @@ public final class GDMSGraph
             throws DriverException {
         DefaultAlphaQuery defaultAlphaQuery = new DefaultAlphaQuery(
                 new String[]{
-                    GraphSchema.START_NODE,
-                    GraphSchema.END_NODE
-                },
+            GraphSchema.START_NODE,
+            GraphSchema.END_NODE
+        },
                 ValueFactory.createValue(new Value[]{
-                    ValueFactory.createValue(startNode),
-                    ValueFactory.createValue(endNode)
-                }));
+            ValueFactory.createValue(startNode),
+            ValueFactory.createValue(endNode)
+        }));
         return dataSet.queryIndex(
                 dsf,
                 defaultAlphaQuery);
@@ -776,7 +797,9 @@ public final class GDMSGraph
      * dataset.
      *
      * @param rowId The row id.
+     *
      * @return The source vertex of the given edge.
+     *
      * @throws DriverException
      */
     private int getSourceVertex(long rowId)
@@ -791,7 +814,9 @@ public final class GDMSGraph
      * dataset.
      *
      * @param rowId The row id.
+     *
      * @return The target vertex of the given edge.
+     *
      * @throws DriverException
      */
     private int getTargetVertex(long rowId)
@@ -805,7 +830,9 @@ public final class GDMSGraph
      * Returns the weight of an edge defined by its row id in the dataset.
      *
      * @param rowId The row id.
+     *
      * @return The weight of the given edge.
+     *
      * @throws DriverException
      */
     private double getWeightVertex(long rowId) throws DriverException {
@@ -819,15 +846,16 @@ public final class GDMSGraph
      * to the vertex).
      *
      * @param vertex The vertex.
+     *
      * @return The indegree of the vertex.
      */
     public int inDegreeOf(Integer vertex) {
         try {
-            Iterator<Integer> queryResult = getIndexIterator(
+            int counter = 0;
+            for (Iterator<Integer> queryResult = getIndexIterator(
                     GraphSchema.END_NODE,
                     vertex);
-            int counter = 0;
-            while (queryResult.hasNext()) {
+                    queryResult.hasNext();) {
                 queryResult.next();
                 counter++;
             }
@@ -842,15 +870,16 @@ public final class GDMSGraph
      * to the vertex).
      *
      * @param vertex The vertex.
+     *
      * @return The outdegree of the vertex.
      */
     public int outDegreeOf(Integer vertex) {
         try {
-            Iterator<Integer> queryResult = getIndexIterator(
+            int counter = 0;
+            for (Iterator<Integer> queryResult = getIndexIterator(
                     GraphSchema.START_NODE,
                     vertex);
-            int counter = 0;
-            while (queryResult.hasNext()) {
+                    queryResult.hasNext();) {
                 queryResult.next();
                 counter++;
             }
@@ -865,6 +894,7 @@ public final class GDMSGraph
      * of the vertex).
      *
      * @param vertex The vertex.
+     *
      * @return The degree of the vertex.
      */
     public int degreeOf(Integer vertex) {
@@ -894,7 +924,9 @@ public final class GDMSGraph
      * dataset at the given index.
      *
      * @param index The index value.
+     *
      * @return The new {@link GraphEdge} from the given index.
+     *
      * @throws DriverException
      */
     public GraphEdge getGraphEdge(long index) throws DriverException {

@@ -506,8 +506,6 @@ public class GraphAnalysisTest extends TopologySetupTest {
                 new NullProgressMonitor());
         assertTrue(result.getRowCount() == 1);
 
-        DataSourceIterator iter = ds.iterator();
-
         HashSet<Integer> pathList = new HashSet<Integer>();
         pathList.add(1);
         pathList.add(3);
@@ -515,8 +513,9 @@ public class GraphAnalysisTest extends TopologySetupTest {
         pathList.add(6);
 
         double sum = 0;
-        while (iter.hasNext()) {
-            Value[] values = iter.next();
+        for (DataSourceIterator it = ds.iterator();
+                it.hasNext();) {
+            Value[] values = it.next();
             if (pathList.contains(values[1].getAsInt())) {
                 sum += values[0].getAsGeometry().getLength();
             }
@@ -558,15 +557,16 @@ public class GraphAnalysisTest extends TopologySetupTest {
         targets.add(5);
         targets.add(4);
 
-        ClosestFirstIterator<Integer, DefaultEdge> cl = new ClosestFirstIterator<Integer, DefaultEdge>(g, sourceNode);
-
-        while (cl.hasNext()) {
+        for (ClosestFirstIterator<Integer, DefaultEdge> cl = 
+                new ClosestFirstIterator<Integer, DefaultEdge>(g, sourceNode);
+                cl.hasNext();) {
             int vertex = cl.next();
             if (vertex != sourceNode) {
                 if (targets.contains(vertex)) {
                     int v = vertex;
                     int k = 0;
                     StringBuffer sb = new StringBuffer();
+                    // TODO: Infinite loop.
                     while (true) {
                         DefaultEdge edge = cl.getSpanningTreeEdge(v);
                         if (edge == null) {

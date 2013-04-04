@@ -73,7 +73,7 @@ public abstract class TopologySetupTest {
     /**
      * The resources folder.
      */
-    private static final String resourcesFolder =
+    protected static final String resourcesFolder =
             "src/test/resources/org/gdms/gdmstopology/";
     /**
      * Temporary folder for saving results.

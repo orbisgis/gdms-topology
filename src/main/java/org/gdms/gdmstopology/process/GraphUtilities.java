@@ -116,12 +116,12 @@ public class GraphUtilities extends GraphAnalysis {
                 }
 
                 DiskBufferDriver diskBufferDriver = new DiskBufferDriver(dsf, GraphMetadataFactory.createReachableEdgesMetadata());
-                ClosestFirstIterator<Integer, GraphEdge> cl = new ClosestFirstIterator<Integer, GraphEdge>(
-                        graph, source);
                 int count = 0;
                 pm.startTask("Find reachable edges", 100);
 
-                while (cl.hasNext()) {
+                for (ClosestFirstIterator<Integer, GraphEdge> cl =
+                        new ClosestFirstIterator<Integer, GraphEdge>(graph, source);
+                        cl.hasNext();) {
                         if (count >= 100 && count % 100 == 0) {
                                 if (pm.isCancelled()) {
                                         break;
@@ -198,22 +198,23 @@ public class GraphUtilities extends GraphAnalysis {
                 DataSet nodes, double radius, ProgressMonitor pm) throws DriverException, GraphException {
 
                 if (checkSourceColumn(nodes)) {
-                        Iterator<Value[]> it = nodes.iterator();
                         DiskBufferDriver diskBufferDriver = new DiskBufferDriver(dsf, GraphMetadataFactory.createMReachableEdgesMetadata());
 
-                        while (it.hasNext()) {
+                        for (Iterator<Value[]> it = nodes.iterator();
+                                it.hasNext();) {
                                 Value[] values = it.next();
                                 int source = values[SOURCE_FIELD_INDEX].getAsInt();
                                 if (!graph.containsVertex(source)) {
                                         throw new GraphException(
                                                 "The graph must contain the source vertex");
                                 }
-                                ClosestFirstIterator<Integer, GraphEdge> cl = new ClosestFirstIterator<Integer, GraphEdge>(
-                                        graph, source);
+
                                 int count = 0;
                                 pm.startTask("Find reachable edges", 100);
 
-                                while (cl.hasNext()) {
+                                for (ClosestFirstIterator<Integer, GraphEdge> cl =
+                                        new ClosestFirstIterator<Integer, GraphEdge>(graph, source);
+                                        cl.hasNext();) {
                                         if (count >= 100 && count % 100 == 0) {
                                                 if (pm.isCancelled()) {
                                                         break;

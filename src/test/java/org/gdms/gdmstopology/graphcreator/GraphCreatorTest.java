@@ -35,7 +35,6 @@ package org.gdms.gdmstopology.graphcreator;
 import com.graphhopper.sna.centrality.GeneralizedGraphAnalyzer;
 import com.graphhopper.storage.Graph;
 import com.graphhopper.util.EdgeIterator;
-import com.graphhopper.util.GHUtility;
 import org.gdms.data.DataSource;
 import org.gdms.data.DataSourceCreationException;
 import org.gdms.data.NoSuchTableException;
@@ -98,15 +97,15 @@ public abstract class GraphCreatorTest extends TopologySetupTest {
      */
     private void printAllEdges(Graph graph) {
         for (int i = 0; i < graph.nodes(); i++) {
-            EdgeIterator incoming =
+            for (EdgeIterator incoming =
                     GeneralizedGraphAnalyzer.outgoingEdges(graph, i);
-            while (incoming.next()) {
+                    incoming.next();) {
                 System.out.print(i + " <- " + incoming.adjNode()
                         + " (" + incoming.distance() + "); ");
             }
-            EdgeIterator outgoing =
+            for (EdgeIterator outgoing =
                     GeneralizedGraphAnalyzer.outgoingEdges(graph, i);
-            while (outgoing.next()) {
+                    outgoing.next();) {
                 System.out.print(i + " -> " + outgoing.adjNode()
                         + " (" + outgoing.distance() + "); ");
             }
