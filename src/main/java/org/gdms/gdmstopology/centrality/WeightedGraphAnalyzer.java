@@ -34,7 +34,6 @@ package org.gdms.gdmstopology.centrality;
 
 import com.graphhopper.sna.data.WeightedNodeBetweennessInfo;
 import com.graphhopper.sna.progress.DefaultProgressMonitor;
-import java.lang.reflect.InvocationTargetException;
 import org.gdms.data.DataSourceFactory;
 import org.gdms.data.indexes.IndexException;
 import org.gdms.driver.DataSet;
