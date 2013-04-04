@@ -96,15 +96,7 @@ public class UnweightedGraphAnalyzer
                     new DefaultProgressMonitor());
         } catch (IndexException ex) {
             LOGGER.trace(ANALYZER_PREP_ERROR + " " + INDICES_ERROR, ex);
-        } catch (NoSuchMethodException ex) {
-            LOGGER.trace(ANALYZER_PREP_ERROR, ex);
-        } catch (InstantiationException ex) {
-            LOGGER.trace(ANALYZER_PREP_ERROR, ex);
-        } catch (IllegalAccessException ex) {
-            LOGGER.trace(ANALYZER_PREP_ERROR, ex);
-        } catch (IllegalArgumentException ex) {
-            LOGGER.trace(ANALYZER_PREP_ERROR, ex);
-        } catch (InvocationTargetException ex) {
+        } catch (Exception ex) {
             LOGGER.trace(ANALYZER_PREP_ERROR, ex);
         }
         return null;
