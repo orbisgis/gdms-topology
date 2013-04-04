@@ -32,6 +32,7 @@
  */
 package org.gdms.gdmstopology.centrality;
 
+import com.graphhopper.sna.data.WeightedNodeBetweennessInfo;
 import com.graphhopper.sna.progress.DefaultProgressMonitor;
 import java.lang.reflect.InvocationTargetException;
 import org.gdms.data.DataSourceFactory;
@@ -50,7 +51,8 @@ import org.orbisgis.progress.ProgressMonitor;
  *
  * @author Adam Gouge
  */
-public class WeightedGraphAnalyzer extends GraphAnalyzer {
+public class WeightedGraphAnalyzer
+        extends GraphAnalyzer<WeightedNodeBetweennessInfo> {
 
     /**
      * The name of the weight column.
