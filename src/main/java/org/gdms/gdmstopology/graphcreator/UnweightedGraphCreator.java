@@ -79,9 +79,9 @@ public class UnweightedGraphCreator extends GraphCreator {
                                      int endNodeIndex,
                                      int weightFieldIndex) {
         // The weightFieldIndex is ignored.
-        Iterator<Value[]> iterator = dataSet.iterator();
-        while (iterator.hasNext()) {
-            Value[] row = iterator.next();
+        for (Iterator<Value[]> it = dataSet.iterator();
+                it.hasNext();) {
+            Value[] row = it.next();
             graph.edge(row[startNodeIndex].getAsInt(),
                        row[endNodeIndex].getAsInt(),
                        ALL_WEIGHTS_ONE,
@@ -98,9 +98,9 @@ public class UnweightedGraphCreator extends GraphCreator {
                                        int endNodeIndex,
                                        int weightFieldIndex) {
         // The weightFieldIndex is ignored.
-        Iterator<Value[]> iterator = dataSet.iterator();
-        while (iterator.hasNext()) {
-            Value[] row = iterator.next();
+        for (Iterator<Value[]> it = dataSet.iterator();
+                it.hasNext();) {
+            Value[] row = it.next();
             graph.edge(row[startNodeIndex].getAsInt(),
                        row[endNodeIndex].getAsInt(),
                        ALL_WEIGHTS_ONE,

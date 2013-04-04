@@ -177,14 +177,13 @@ public class NetworkGraphBuilder {
             // Create a DiskBufferDriver for the edges table.
             DiskBufferDriver edgesDriver = new DiskBufferDriver(dsf.getResultFile("gdms"), edgeMedata);
 
-            // Get an iterator on the DataSet.
-            Iterator<Value[]> it = dataSet.iterator();
             int gidNode = 1;
             pm.startTask("Create the graph", 100);
 
             int count = 0;
             // Go through the DataSet.
-            while (it.hasNext()) {
+            for (Iterator<Value[]> it = dataSet.iterator();
+                    it.hasNext();) {
                 // Obtain a row.
                 Value[] values = it.next();
                 // See if the task has been cancelled.
