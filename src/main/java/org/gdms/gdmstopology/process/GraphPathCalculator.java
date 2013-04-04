@@ -282,40 +282,40 @@ public class GraphPathCalculator {
 
         long start = System.currentTimeMillis();
 
-        TIntList nodeList = path.calcNodes();
-        TIntIterator nodeListIt = nodeList.iterator();
-        if (!nodeListIt.hasNext()) {
-            System.out.println("The path is empty!!");
-        }
-        int current = nodeListIt.next();
         int next;
         int pathEdgeID = 1;
-        while (nodeListIt.hasNext()) {
-            next = nodeListIt.next();
-            // Get the smallest edge distance.
-            double edgeLength =
-                    getSmallestEdgeDistance(graph, current, next);
-            // Store this path edge.
-            System.out.print("Adding " + current + " -> " + next
-                    + ", weight: " + edgeLength + " ... ");
-            driver.addValues(
-                    new Value[]{
-                // the_geom
-                //                        ValueFactory.createNullValue(),
-                //                        // The row ID of the edge in the data source.
-                //                        ValueFactory.createValue(currentEdge.getRowId()),
-                // An id for this edge in the shortest path.
-                ValueFactory.createValue(pathEdgeID),
-                // Start node
-                ValueFactory.createValue(current),
-                // End node
-                ValueFactory.createValue(next),
-                // Weight
-                ValueFactory.createValue(edgeLength)
-            });
-            System.out.println("DONE!");
-            current = next;
-            pathEdgeID++;
+        TIntIterator nodeListIt = path.calcNodes().iterator();
+        if (nodeListIt.hasNext()) {
+            int current = nodeListIt.next();
+            while (nodeListIt.hasNext()) {
+                next = nodeListIt.next();
+                // Get the smallest edge distance.
+                double edgeLength =
+                        getSmallestEdgeDistance(graph, current, next);
+                // Store this path edge.
+                System.out.print("Adding " + current + " -> " + next
+                        + ", weight: " + edgeLength + " ... ");
+                driver.addValues(
+                        new Value[]{
+                    // the_geom
+                    //                        ValueFactory.createNullValue(),
+                    //                        // The row ID of the edge in the data source.
+                    //                        ValueFactory.createValue(currentEdge.getRowId()),
+                    // An id for this edge in the shortest path.
+                    ValueFactory.createValue(pathEdgeID),
+                    // Start node
+                    ValueFactory.createValue(current),
+                    // End node
+                    ValueFactory.createValue(next),
+                    // Weight
+                    ValueFactory.createValue(edgeLength)
+                });
+                System.out.println("DONE!");
+                current = next;
+                pathEdgeID++;
+            }
+        } else {
+            System.out.println("The path is empty!!");
         }
 
         long stop = System.currentTimeMillis();
@@ -338,11 +338,11 @@ public class GraphPathCalculator {
             Graph graph,
             int source,
             int target) {
-        // Obtain the smallest weight for this edge.
-        EdgeIterator outgoingEdges =
-                GeneralizedGraphAnalyzer.outgoingEdges(graph, source);
         double smallestDistance = Double.MAX_VALUE;
-        while (outgoingEdges.next()) {
+        // Obtain the smallest weight for this edge.
+        for (EdgeIterator outgoingEdges =
+                GeneralizedGraphAnalyzer.outgoingEdges(graph, source);
+                outgoingEdges.next();) {
             if (outgoingEdges.adjNode() == target) {
                 if (outgoingEdges.distance() < smallestDistance) {
                     smallestDistance = outgoingEdges.distance();

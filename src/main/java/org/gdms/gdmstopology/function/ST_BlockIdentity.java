@@ -124,16 +124,17 @@ public class ST_BlockIdentity extends AbstractTableFunction {
     /**
      * Evaluates the function.
      *
-     * @param dsf The {@link DataSourceFactory} used to parse the data set.
+     * @param dsf    The {@link DataSourceFactory} used to parse the data set.
      * @param tables The input table.
      * @param values Array containing the optional arguments.
-     * @param pm The progress monitor used to track the progress of the graph
-     * construction.
+     * @param pm     The progress monitor used to track the progress of the
+     *               graph construction.
+     *
      * @throws FunctionException
      */
     @Override
     public DataSet evaluate(DataSourceFactory dsf, DataSet[] tables,
-            Value[] values, ProgressMonitor pm) throws
+                            Value[] values, ProgressMonitor pm) throws
             FunctionException {
         dataSet = tables[0];
         //We need to read our source.                
@@ -176,7 +177,8 @@ public class ST_BlockIdentity extends AbstractTableFunction {
                 // results
                 DefaultMetadata met = new DefaultMetadata();
                 for (int i = 0; i < fieldIds.length; i++) {
-                    met.addField(fieldNames[i], metadata.getFieldType(fieldIds[i]));
+                    met.addField(fieldNames[i], metadata.getFieldType(
+                            fieldIds[i]));
                 }
                 met.addField("block_id", TypeFactory.createType(Type.LONG));
 
@@ -195,8 +197,8 @@ public class ST_BlockIdentity extends AbstractTableFunction {
                     aggregateNeighbours(dsf, start, block);
 
                     // writes the block
-                    Iterator<Integer> it = block.iterator();
-                    while (it.hasNext()) {
+                    for (Iterator<Integer> it = block.iterator();
+                            it.hasNext();) {
                         final Integer next = it.next();
                         Value[] res = new Value[fieldIds.length + 1];
                         for (int i = 0; i < fieldIds.length; i++) {
@@ -217,7 +219,8 @@ public class ST_BlockIdentity extends AbstractTableFunction {
                 diskBufferDriver.open();
                 return diskBufferDriver;
             } else {
-                throw new FunctionException("The table doesn't contain the geometry field " + geomField);
+                throw new FunctionException(
+                        "The table doesn't contain the geometry field " + geomField);
             }
 
         } catch (DriverException ex) {
@@ -236,7 +239,8 @@ public class ST_BlockIdentity extends AbstractTableFunction {
         }
     }
 
-    private void aggregateNeighbours(DataSourceFactory dsf, int id, Set<Integer> agg) throws DriverException {
+    private void aggregateNeighbours(DataSourceFactory dsf, int id,
+                                     Set<Integer> agg) throws DriverException {
         int size = agg.size();
 
         Set<Integer> re = relativesOf(dsf, id, agg);
@@ -248,29 +252,36 @@ public class ST_BlockIdentity extends AbstractTableFunction {
             // blockSize has not changed, there is no more blocks to add
             return;
         } else {
-            Iterator<Integer> it = re.iterator();
-            while (it.hasNext()) {
+            for (Iterator<Integer> it = re.iterator();
+                    it.hasNext();) {
                 aggregateNeighbours(dsf, it.next(), agg);
             }
         }
     }
 
-    private Set<Integer> relativesOf(DataSourceFactory dsf, int id, Set<Integer> excluded) throws DriverException {
-        Geometry geom = dataSet.getFieldValue(id, geomFieldIndex).getAsGeometry();
+    private Set<Integer> relativesOf(DataSourceFactory dsf, int id,
+                                     Set<Integer> excluded) throws
+            DriverException {
+        Geometry geom = dataSet.getFieldValue(id, geomFieldIndex).
+                getAsGeometry();
 
         // query index
-        DefaultSpatialIndexQuery query = new DefaultSpatialIndexQuery(geomField, geom.getEnvelopeInternal());
-        Iterator<Integer> s = dataSet.queryIndex(dsf, query);
+        DefaultSpatialIndexQuery query = new DefaultSpatialIndexQuery(geomField,
+                                                                      geom.
+                getEnvelopeInternal());
 
         HashSet<Integer> h = new HashSet<Integer>();
-        while (s.hasNext()) {
+        for (Iterator<Integer> s = dataSet.queryIndex(dsf, query);
+                s.hasNext();) {
             int i = s.next();
 
             // i != id to prevent adding itself
             // !excluded.contains(i) to filter already added geometries
             //      (this is O(1) while the next test is far from it...)
             // test if both geoms are at 0 distance, i.e. touches
-            if (i != id && !excluded.contains(i) && DistanceOp.isWithinDistance(geom, dataSet.getFieldValue(i, geomFieldIndex).getAsGeometry(), 0)) {
+            if (i != id && !excluded.contains(i) && DistanceOp.isWithinDistance(
+                    geom, dataSet.getFieldValue(i, geomFieldIndex).
+                    getAsGeometry(), 0)) {
                 h.add(i);
             }
         }
@@ -312,7 +323,9 @@ public class ST_BlockIdentity extends AbstractTableFunction {
      * Hack to be able to inject into the map without a {@code CREATE TABLE}.
      *
      * @param tables Metadata objects of input tables.
+     *
      * @return The corresponding output metadata.
+     *
      * @throws DriverException
      */
     @Override
@@ -320,11 +333,11 @@ public class ST_BlockIdentity extends AbstractTableFunction {
         // Hack to be able to inject into the map without a CREATE TABLE
         return new DefaultMetadata(
                 new Type[]{
-                    TypeFactory.createType(Type.GEOMETRY)
-                },
+            TypeFactory.createType(Type.GEOMETRY)
+        },
                 new String[]{
-                    "the_geom"
-                });
+            "the_geom"
+        });
     }
 
     /**
@@ -340,17 +353,17 @@ public class ST_BlockIdentity extends AbstractTableFunction {
     @Override
     public FunctionSignature[] getFunctionSignatures() {
         return new FunctionSignature[]{
-                    // First signature.
-                    new TableFunctionSignature(
-                    TableDefinition.GEOMETRY,
-                    new TableArgument(TableDefinition.GEOMETRY),
-                    ScalarArgument.STRING),
-                    // Second signature.
-                    new TableFunctionSignature(
-                    TableDefinition.GEOMETRY,
-                    new TableArgument(TableDefinition.GEOMETRY),
-                    ScalarArgument.STRING,
-                    ScalarArgument.STRING)
-                };
+            // First signature.
+            new TableFunctionSignature(
+            TableDefinition.GEOMETRY,
+            new TableArgument(TableDefinition.GEOMETRY),
+            ScalarArgument.STRING),
+            // Second signature.
+            new TableFunctionSignature(
+            TableDefinition.GEOMETRY,
+            new TableArgument(TableDefinition.GEOMETRY),
+            ScalarArgument.STRING,
+            ScalarArgument.STRING)
+        };
     }
 }

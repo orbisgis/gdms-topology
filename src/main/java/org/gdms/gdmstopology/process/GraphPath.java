@@ -119,8 +119,6 @@ public class GraphPath extends GraphAnalysis {
         if (!graph.containsVertex(targetVertex)) {
             throw new GraphException("The graph must contain the target vertex");
         }
-        // An iterator to find the closest neighboring vertex.
-        ClosestFirstIterator<Integer, GraphEdge> cl = new ClosestFirstIterator<Integer, GraphEdge>(graph, sourceVertex, radius);
         // A DiskBufferDriver to store the shortest path.
         DiskBufferDriver diskBufferDriver = new DiskBufferDriver(dsf, GraphMetadataFactory.createEdgeMetadataShortestPath());
 
@@ -131,7 +129,10 @@ public class GraphPath extends GraphAnalysis {
         pm.startTask("Find shortest path", 100);
 
         // Go through the closest neighbors.
-        while (cl.hasNext()) {
+        for (ClosestFirstIterator<Integer, GraphEdge> cl 
+                = new ClosestFirstIterator<Integer, GraphEdge>(
+                graph, sourceVertex, radius);
+                cl.hasNext();) {
 
             // Check if the calculation has been canceled.
             if (count >= 100 && count % 100 == 0) {
@@ -154,6 +155,7 @@ public class GraphPath extends GraphAnalysis {
                 // their order in the shortest path.
                 int edgeID = 0;
 
+                // TODO: Infinite loop.
                 while (true) {
                     // Get the last edge in the shortest known path between 
                     // the source vertex and the current vertex. Note that
@@ -242,13 +244,14 @@ public class GraphPath extends GraphAnalysis {
                     "The graph must contain the target vertex");
         }
 
-        DiskBufferDriver diskBufferDriver = new DiskBufferDriver(dsf, GraphMetadataFactory.createDistancesMetadataGraph());
-
-        ClosestFirstIterator<Integer, GraphEdge> cl = new ClosestFirstIterator<Integer, GraphEdge>(graph, sourceVertex, radius);
+        DiskBufferDriver diskBufferDriver = new DiskBufferDriver(dsf, GraphMetadataFactory.createDistancesMetadataGraph());        
 
         int count = 0;
         pm.startTask("Calculate distances path", 100);
-        while (cl.hasNext()) {
+        for (ClosestFirstIterator<Integer, GraphEdge> cl 
+                = new ClosestFirstIterator<Integer, GraphEdge>(
+                graph, sourceVertex, radius);
+                cl.hasNext();) {
             if (count >= 100 && count % 100 == 0) {
                 if (pm.isCancelled()) {
                     break;
@@ -313,12 +316,13 @@ public class GraphPath extends GraphAnalysis {
         initIndex(dsf, nodes, pm);
         DiskBufferDriver diskBufferDriver = new DiskBufferDriver(dsf, GraphMetadataFactory.createEdgeMetadataShortestPath());
 
-        Iterator<Value[]> it = nodes.iterator();
+        
         ClosestFirstIterator<Integer, GraphEdge> cl = null;
         HashSet<Integer> visitedSources = new HashSet<Integer>();
         int count = 0;
         pm.startTask("Processing input nodes", 100);
-        while (it.hasNext()) {
+        for (Iterator<Value[]> it = nodes.iterator();
+                it.hasNext();) {
             Value[] values = it.next();
             int source = values[SOURCE_FIELD_INDEX].getAsInt();
             HashMap<Integer, Integer> targets = null;
@@ -343,6 +347,7 @@ public class GraphPath extends GraphAnalysis {
                         int v = vertex;
                         int idNodes = targets.get(vertex);
                         int k = 0;
+                        // TODO: Infinite loop.
                         while (true) {
                             GraphEdge edge = cl.getSpanningTreeEdge(v);
                             if (edge == null) {
@@ -401,12 +406,12 @@ public class GraphPath extends GraphAnalysis {
         initIndex(dsf, nodes, new NullProgressMonitor());
         DiskBufferDriver diskBufferDriver = new DiskBufferDriver(dsf, GraphMetadataFactory.createDistancesMetadataGraph());
 
-        Iterator<Value[]> it = nodes.iterator();
         ClosestFirstIterator<Integer, GraphEdge> cl = null;
         HashSet<Integer> visitedSources = new HashSet<Integer>();
         int count = 0;
         pm.startTask("Compute distance from nodes", 100);
-        while (it.hasNext()) {
+        for (Iterator<Value[]> it = nodes.iterator();
+                it.hasNext();) {
             Value[] values = it.next();
             if (count >= 100 && count % 100 == 0) {
                 if (pm.isCancelled()) {
@@ -432,6 +437,7 @@ public class GraphPath extends GraphAnalysis {
                         int idNodes = targets.get(vertex);
                         int k = 0;
                         double sum = 0;
+                        // TODO: Infinite loop.
                         while (true) {
                             GraphEdge edge = cl.getSpanningTreeEdge(v);
                             if (edge == null) {
@@ -625,9 +631,10 @@ public class GraphPath extends GraphAnalysis {
     public static HashMap<Integer, Integer> getTargets(DataSourceFactory dsf, DataSet nodes, Integer valueToQuery) throws DriverException {
         DefaultAlphaQuery defaultAlphaQuery = new DefaultAlphaQuery(
                 GraphSchema.SOURCE_NODE, ValueFactory.createValue(valueToQuery));
-        Iterator<Integer> iterator = nodes.queryIndex(dsf, defaultAlphaQuery);
         HashMap<Integer, Integer> targets = new HashMap<Integer, Integer>();
-        while (iterator.hasNext()) {
+        for (Iterator<Integer> iterator = 
+                nodes.queryIndex(dsf, defaultAlphaQuery);
+                iterator.hasNext();) {
             Integer integer = iterator.next();
             targets.put(nodes.getInt(integer, TARGET_FIELD_INDEX), nodes.getInt(integer, ID_FIELD_INDEX));
         }

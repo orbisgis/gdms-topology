@@ -182,28 +182,22 @@ public class GraphConnectivityInspector extends TableFunctionHelper {
         }
 
         if (inspector != null) {
-            // Recover the list of connected components.
-            List<Set<Integer>> connectedComponentsList =
-                    inspector.connectedSets();
-            // Get an iterator on the list.
-            Iterator<Set<Integer>> it = connectedComponentsList.iterator();
+
+            int connectedComponentNumber = 1;
 
             // Record the connected components in the DiskBufferDriver.
-            int connectedComponentNumber = 1;
-            while (it.hasNext()) {
-                // Get the next connected component
-                Set<Integer> connectedComponent =
-                        it.next();
-                // Get an iterator on this component.
-                Iterator<Integer> connectedComponentIterator =
-                        connectedComponent.iterator();
+            for (Iterator<Set<Integer>> it =
+                    inspector.connectedSets().iterator();
+                    it.hasNext();) {
                 try {
-                    while (connectedComponentIterator.hasNext()) {
+                    for (Iterator<Integer> cc =
+                            it.next().iterator();
+                            cc.hasNext();) {
                         driver.addValues(
                                 new Value[]{
                             // Node ID
                             ValueFactory.createValue(
-                            connectedComponentIterator.next()),
+                            cc.next()),
                             // Component number
                             ValueFactory.createValue(connectedComponentNumber)
                         });
