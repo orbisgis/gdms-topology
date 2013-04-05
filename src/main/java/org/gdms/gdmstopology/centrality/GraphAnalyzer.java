@@ -57,7 +57,8 @@ import org.orbisgis.progress.ProgressMonitor;
  *
  * @author Adam Gouge
  */
-public abstract class GraphAnalyzer extends ExecutorFunctionHelper {
+public abstract class GraphAnalyzer<T extends NodeBetweennessInfo>
+        extends ExecutorFunctionHelper {
 
     /**
      * The data set.
@@ -120,7 +121,7 @@ public abstract class GraphAnalyzer extends ExecutorFunctionHelper {
      *
      * @return The graph analyzer.
      */
-    protected abstract com.graphhopper.sna.centrality.GraphAnalyzer prepareAnalyzer();
+    protected abstract com.graphhopper.sna.centrality.GraphAnalyzer<T, ?> prepareAnalyzer();
 
     @Override
     protected Metadata createMetadata() {
@@ -139,7 +140,7 @@ public abstract class GraphAnalyzer extends ExecutorFunctionHelper {
     protected void computeAndStoreResults(
             DiskBufferDriver driver) {
 
-        Map results = null;
+        Map<Integer, T> results = null;
         try {
             results = prepareAnalyzer().computeAll();
         } catch (Exception ex) {
@@ -148,12 +149,9 @@ public abstract class GraphAnalyzer extends ExecutorFunctionHelper {
 
         if (results != null) {
             try {
-                for (Iterator<Integer> it = results.keySet().iterator();
-                        it.hasNext();) {
+                for (Integer node : results.keySet()) {
 
-                    final int node = it.next();
-                    final NodeBetweennessInfo nodeNBInfo =
-                            (NodeBetweennessInfo) results.get(node);
+                    final T nodeNBInfo = results.get(node);
 
                     Value[] valuesToAdd =
                             new Value[]{

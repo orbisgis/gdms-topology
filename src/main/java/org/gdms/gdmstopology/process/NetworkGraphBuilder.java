@@ -182,10 +182,7 @@ public class NetworkGraphBuilder {
 
             int count = 0;
             // Go through the DataSet.
-            for (Iterator<Value[]> it = dataSet.iterator();
-                    it.hasNext();) {
-                // Obtain a row.
-                Value[] values = it.next();
+            for (Value[] row : dataSet) {
                 // See if the task has been cancelled.
                 if (count >= 100 && count % 100 == 0) {
                     if (pm.isCancelled()) {
@@ -195,12 +192,12 @@ public class NetworkGraphBuilder {
                 // Prepare the new row which will be the old row with new values appended.
                 final Value[] newValues = new Value[fieldsCount];
                 // Copy over the old values.
-                System.arraycopy(values, 0, newValues, 0,
+                System.arraycopy(row, 0, newValues, 0,
                         srcFieldsCount);
                 // Add an id.
                 newValues[idIndex] = ValueFactory.createValue(count + 1);
                 // Get the geometry.
-                Geometry geom = values[geomFieldIndex].getAsGeometry();
+                Geometry geom = row[geomFieldIndex].getAsGeometry();
                 // Get the length of the geometry.
                 double length = geom.getLength();
                 // Whether or not to expand ... // TODO

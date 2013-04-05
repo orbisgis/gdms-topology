@@ -32,8 +32,8 @@
  */
 package org.gdms.gdmstopology.centrality;
 
+import com.graphhopper.sna.data.UnweightedNodeBetweennessInfo;
 import com.graphhopper.sna.progress.DefaultProgressMonitor;
-import java.lang.reflect.InvocationTargetException;
 import org.gdms.data.DataSourceFactory;
 import org.gdms.data.indexes.IndexException;
 import org.gdms.driver.DataSet;
@@ -50,7 +50,8 @@ import org.orbisgis.progress.ProgressMonitor;
  *
  * @author Adam Gouge
  */
-public class UnweightedGraphAnalyzer extends GraphAnalyzer {
+public class UnweightedGraphAnalyzer
+        extends GraphAnalyzer<UnweightedNodeBetweennessInfo> {
 
     /**
      * Constructs a new {@link UnweightedGraphAnalyzer}.
@@ -94,15 +95,7 @@ public class UnweightedGraphAnalyzer extends GraphAnalyzer {
                     new DefaultProgressMonitor());
         } catch (IndexException ex) {
             LOGGER.trace(ANALYZER_PREP_ERROR + " " + INDICES_ERROR, ex);
-        } catch (NoSuchMethodException ex) {
-            LOGGER.trace(ANALYZER_PREP_ERROR, ex);
-        } catch (InstantiationException ex) {
-            LOGGER.trace(ANALYZER_PREP_ERROR, ex);
-        } catch (IllegalAccessException ex) {
-            LOGGER.trace(ANALYZER_PREP_ERROR, ex);
-        } catch (IllegalArgumentException ex) {
-            LOGGER.trace(ANALYZER_PREP_ERROR, ex);
-        } catch (InvocationTargetException ex) {
+        } catch (Exception ex) {
             LOGGER.trace(ANALYZER_PREP_ERROR, ex);
         }
         return null;

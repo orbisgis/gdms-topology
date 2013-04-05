@@ -197,9 +197,7 @@ public class ST_BlockIdentity extends AbstractTableFunction {
                     aggregateNeighbours(dsf, start, block);
 
                     // writes the block
-                    for (Iterator<Integer> it = block.iterator();
-                            it.hasNext();) {
-                        final Integer next = it.next();
+                    for (Integer next : block) {
                         Value[] res = new Value[fieldIds.length + 1];
                         for (int i = 0; i < fieldIds.length; i++) {
                             res[i] = dataSet.getFieldValue(next, fieldIds[i]);
@@ -252,9 +250,8 @@ public class ST_BlockIdentity extends AbstractTableFunction {
             // blockSize has not changed, there is no more blocks to add
             return;
         } else {
-            for (Iterator<Integer> it = re.iterator();
-                    it.hasNext();) {
-                aggregateNeighbours(dsf, it.next(), agg);
+            for (Integer next : re) {
+                aggregateNeighbours(dsf, next, agg);
             }
         }
     }

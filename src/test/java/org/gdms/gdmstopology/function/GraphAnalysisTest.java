@@ -513,11 +513,9 @@ public class GraphAnalysisTest extends TopologySetupTest {
         pathList.add(6);
 
         double sum = 0;
-        for (DataSourceIterator it = ds.iterator();
-                it.hasNext();) {
-            Value[] values = it.next();
-            if (pathList.contains(values[1].getAsInt())) {
-                sum += values[0].getAsGeometry().getLength();
+        for (Value[] row : ds) {
+            if (pathList.contains(row[1].getAsInt())) {
+                sum += row[0].getAsGeometry().getLength();
             }
         }
         assertEquals(result.getDouble(0, 1), sum, 0.000001);

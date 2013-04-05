@@ -200,10 +200,8 @@ public class GraphUtilities extends GraphAnalysis {
                 if (checkSourceColumn(nodes)) {
                         DiskBufferDriver diskBufferDriver = new DiskBufferDriver(dsf, GraphMetadataFactory.createMReachableEdgesMetadata());
 
-                        for (Iterator<Value[]> it = nodes.iterator();
-                                it.hasNext();) {
-                                Value[] values = it.next();
-                                int source = values[SOURCE_FIELD_INDEX].getAsInt();
+                        for (Value[] row : nodes) {
+                                int source = row[SOURCE_FIELD_INDEX].getAsInt();
                                 if (!graph.containsVertex(source)) {
                                         throw new GraphException(
                                                 "The graph must contain the source vertex");
