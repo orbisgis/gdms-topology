@@ -149,7 +149,7 @@ public abstract class GraphCreator {
         // GRAPH CREATION
         // Initialize the graph.
         GraphStorage graph = new GraphStorage(new RAMDirectory());
-        graph.createNew(ALLOCATE_GRAPH_SPACE);
+        graph.create(ALLOCATE_GRAPH_SPACE);
         try {
             // Add the edges according to the given graph type.
             loadEdges(graph, orientation,
