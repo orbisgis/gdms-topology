@@ -95,9 +95,9 @@ public class WeightedGraphAnalyzer
      * {@inheritDoc}
      */
     @Override
-    protected com.graphhopper.sna.centrality.WeightedGraphAnalyzer prepareAnalyzer() {
+    protected com.graphhopper.sna.analyzers.WeightedGraphAnalyzer prepareAnalyzer() {
         try {
-            return new com.graphhopper.sna.centrality.WeightedGraphAnalyzer(
+            return new com.graphhopper.sna.analyzers.WeightedGraphAnalyzer(
                     new WeightedGraphCreator(dataSet, orientation,
                                              weightColumnName)
                     .prepareGraph(),

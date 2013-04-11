@@ -35,7 +35,7 @@ package org.gdms.gdmstopology.process;
 import com.graphhopper.routing.DijkstraBidirectionRef;
 import com.graphhopper.routing.Path;
 import com.graphhopper.routing.util.CarFlagEncoder;
-import com.graphhopper.sna.centrality.GeneralizedGraphAnalyzer;
+import com.graphhopper.sna.analyzers.GeneralizedGraphAnalyzer;
 import com.graphhopper.storage.Graph;
 import com.graphhopper.util.EdgeIterator;
 import gnu.trove.iterator.TIntIterator;

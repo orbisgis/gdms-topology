@@ -121,7 +121,7 @@ public abstract class GraphAnalyzer<T extends NodeBetweennessInfo>
      *
      * @return The graph analyzer.
      */
-    protected abstract com.graphhopper.sna.centrality.GraphAnalyzer<T, ?> prepareAnalyzer();
+    protected abstract com.graphhopper.sna.analyzers.GraphAnalyzer<T, ?> prepareAnalyzer();
 
     @Override
     protected Metadata createMetadata() {

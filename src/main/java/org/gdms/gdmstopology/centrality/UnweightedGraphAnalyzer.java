@@ -87,9 +87,9 @@ public class UnweightedGraphAnalyzer
      * {@inheritDoc}
      */
     @Override
-    protected com.graphhopper.sna.centrality.UnweightedGraphAnalyzer prepareAnalyzer() {
+    protected com.graphhopper.sna.analyzers.UnweightedGraphAnalyzer prepareAnalyzer() {
         try {
-            return new com.graphhopper.sna.centrality.UnweightedGraphAnalyzer(
+            return new com.graphhopper.sna.analyzers.UnweightedGraphAnalyzer(
                     new UnweightedGraphCreator(dataSet, orientation)
                     .prepareGraph(),
                     new DefaultProgressMonitor());

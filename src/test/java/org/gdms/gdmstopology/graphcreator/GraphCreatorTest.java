@@ -32,7 +32,7 @@
  */
 package org.gdms.gdmstopology.graphcreator;
 
-import com.graphhopper.sna.centrality.GeneralizedGraphAnalyzer;
+import com.graphhopper.sna.analyzers.GeneralizedGraphAnalyzer;
 import com.graphhopper.storage.Graph;
 import com.graphhopper.util.EdgeIterator;
 import org.gdms.data.DataSource;
