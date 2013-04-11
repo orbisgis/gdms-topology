@@ -32,7 +32,7 @@
  */
 package org.gdms.gdmstopology.centrality;
 
-import com.graphhopper.sna.centrality.DFSForStrahler;
+import com.graphhopper.sna.alg.DFSForStrahler;
 import com.graphhopper.sna.data.StrahlerInfo;
 import com.graphhopper.storage.Graph;
 import java.util.Map;
