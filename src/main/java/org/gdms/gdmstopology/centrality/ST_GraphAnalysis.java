@@ -241,11 +241,8 @@ public class ST_GraphAnalysis extends AbstractExecutorFunction {
     private void doAnalysisAccordingToUserInput(
             DataSourceFactory dsf,
             DataSet dataSet,
-            ProgressMonitor pm) throws GraphException,
-            DriverException,
-            IOException,
-            NoSuchTableException,
-            DataSourceCreationException {
+            ProgressMonitor pm)
+            throws DriverException, GraphException {
         GraphAnalyzer analyzer = (weightsColumn == null)
                 ? // Unweighted graph
                 new UnweightedGraphAnalyzer(
@@ -264,22 +261,13 @@ public class ST_GraphAnalysis extends AbstractExecutorFunction {
      *
      * @throws FunctionException
      */
-    private void parseOptionalArgument(Value[] values, int index) throws
-            FunctionException {
+    private void parseOptionalArgument(Value[] values, int index) {
         final int slotType = values[index].getType();
         if (slotType == Type.INT) {
             orientation = GraphFunctionParser.parseOrientation(values[index]);
-            if (!GraphFunctionParser.validOrientation(orientation)) {
-                throw new FunctionException(
-                        "Please enter a valid orientation.");
-            }
         } else if (slotType == Type.STRING) {
             outputTablePrefix = OutputFunctionParser.
                     parseOutputTablePrefix(values[index]);
-        } else {
-            throw new FunctionException(
-                    "Enter a valid orientation and/or output "
-                    + "table prefix.");
         }
     }
 
@@ -290,7 +278,7 @@ public class ST_GraphAnalysis extends AbstractExecutorFunction {
      *
      * @throws FunctionException
      */
-    private void parseOptionalArguments(Value[] values) throws FunctionException {
+    private void parseOptionalArguments(Value[] values) {
         // Set default values.
         outputTablePrefix = OutputFunctionParser.DEFAULT_OUTPUT_TABLE_PREFIX;
         orientation = GraphSchema.DIRECT;
@@ -372,35 +360,35 @@ public class ST_GraphAnalysis extends AbstractExecutorFunction {
     private FunctionSignature[] possibleFunctionSignatures(
             ScalarArgument weight) {
         return new FunctionSignature[]{
-                    // (input_table, weight)
-                    new ExecutorFunctionSignature(
-                    TableArgument.GEOMETRY,
-                    weight),
-                    // (input_table, weight,
-                    //     'output_table_prefix')
-                    new ExecutorFunctionSignature(
-                    TableArgument.GEOMETRY,
-                    weight,
-                    ScalarArgument.STRING),
-                    // (input_table, weight,
-                    //     orientation)
-                    new ExecutorFunctionSignature(
-                    TableArgument.GEOMETRY,
-                    weight,
-                    ScalarArgument.INT),
-                    // (input_table, weight,
-                    //     'output_table_prefix', orientation)
-                    new ExecutorFunctionSignature(
-                    TableArgument.GEOMETRY,
-                    weight,
-                    ScalarArgument.STRING,
-                    ScalarArgument.INT),
-                    // (input_table, weight,
-                    //     orientation, 'output_table_prefix')
-                    new ExecutorFunctionSignature(
-                    TableArgument.GEOMETRY,
-                    weight,
-                    ScalarArgument.INT,
-                    ScalarArgument.STRING)};
+            // (input_table, weight)
+            new ExecutorFunctionSignature(
+            TableArgument.GEOMETRY,
+            weight),
+            // (input_table, weight,
+            //     'output_table_prefix')
+            new ExecutorFunctionSignature(
+            TableArgument.GEOMETRY,
+            weight,
+            ScalarArgument.STRING),
+            // (input_table, weight,
+            //     orientation)
+            new ExecutorFunctionSignature(
+            TableArgument.GEOMETRY,
+            weight,
+            ScalarArgument.INT),
+            // (input_table, weight,
+            //     'output_table_prefix', orientation)
+            new ExecutorFunctionSignature(
+            TableArgument.GEOMETRY,
+            weight,
+            ScalarArgument.STRING,
+            ScalarArgument.INT),
+            // (input_table, weight,
+            //     orientation, 'output_table_prefix')
+            new ExecutorFunctionSignature(
+            TableArgument.GEOMETRY,
+            weight,
+            ScalarArgument.INT,
+            ScalarArgument.STRING)};
     }
 }

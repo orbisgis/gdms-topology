@@ -32,6 +32,8 @@
  */
 package org.gdms.gdmstopology.centrality;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.gdms.data.DataSourceFactory;
 import org.gdms.data.schema.Metadata;
 import org.gdms.data.values.Value;
@@ -115,21 +117,14 @@ public class ST_StrahlerStreamOrder extends AbstractTableFunction {
 
     @Override
     public DataSet evaluate(DataSourceFactory dsf, DataSet[] tables,
-                            Value[] values, ProgressMonitor pm) throws
-            FunctionException {
-        try {
-            // Recover the DataSet.
-            final DataSet dataSet = tables[0];
-            // Get the root node.
-            rootNode = GraphFunctionParser.parseSource(values[0]);
-            // Return a new table listing all the vertices and to which
-            // connected component they belong.
-            return new StrahlerAnalyzer(dsf, pm, dataSet, rootNode)
-                    .doWork();
-        } catch (Exception ex) {
-            System.out.println(ex);
-            throw new FunctionException(EVALUATE_ERROR, ex);
-        }
+                            Value[] values, ProgressMonitor pm) {
+        // Recover the DataSet.
+        final DataSet dataSet = tables[0];
+        // Get the root node.
+        rootNode = GraphFunctionParser.parseSource(values[0]);
+        // Return a new table listing all the vertices and to which
+        // connected component they belong.
+        return new StrahlerAnalyzer(dsf, pm, dataSet, rootNode).doWork();
     }
 
     /**
