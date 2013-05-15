@@ -142,15 +142,23 @@ public class GraphCreator<V extends VId, E extends Edge> {
     public KeyedGraph<V, E> prepareGraph() {
         // Initialize the indices.
         initializeIndices();
-        // Create the graph.
         KeyedGraph<V, E> graph = null;
         try {
+            // Create the graph.
             graph = initializeGraph();
+
         } catch (NoSuchMethodException ex) {
-            LOGGER.trace("Problem initializing graph.", ex);
+            System.out.println("HERE");
+            LOGGER.fatal("Problem initializing graph.", ex);
         }
-        // Add the edges according to the given graph type.
-        loadEdges(graph);
+        if (graph != null) {
+            // Add the edges according to the given graph type.
+            loadEdges(graph);
+        } else {
+            throw new IllegalStateException(
+                    "Couldn't load edges since the graph was null.");
+        }
+
         return graph;
     }
 
