@@ -55,7 +55,7 @@ public class GraphFunctionParser {
      *
      * @throws FunctionException
      */
-    public static String parseWeight(Value value) throws FunctionException {
+    public static String parseWeight(Value value) {
         final int slotType = value.getType();
         // Make sure it is only initialized once.
         final String weights;
@@ -65,7 +65,7 @@ public class GraphFunctionParser {
                 System.out.println("Setting all weights equal to 1.");
                 weights = null;
             } else { // We only accept 1 or a string.
-                throw new FunctionException(
+                throw new IllegalArgumentException(
                         "Either enter 1 to set all weights equal to 1 "
                         + "or specify the name of the weight column.");
             }
@@ -76,7 +76,7 @@ public class GraphFunctionParser {
                     + "to be \'" + weights
                     + "\'.");
         } else {
-            throw new FunctionException(
+            throw new IllegalArgumentException(
                     "Either enter 1 to set all weights equal to 1 "
                     + "or specify the name of the weight column.");
         }
@@ -92,7 +92,7 @@ public class GraphFunctionParser {
      *
      * @throws FunctionException
      */
-    public static int parseOrientation(Value value) throws FunctionException {
+    public static int parseOrientation(Value value) {
         final int slotType = value.getType();
         if (slotType == Type.INT) {
             final int orientation = value.getAsInt();
@@ -107,7 +107,7 @@ public class GraphFunctionParser {
             }
             return orientation;
         } else {
-            throw new FunctionException(
+            throw new IllegalArgumentException(
                     "Please enter an integer orientation.");
         }
     }
@@ -140,13 +140,13 @@ public class GraphFunctionParser {
      *
      * @throws FunctionException
      */
-    private static int parseVertex(Value value) throws FunctionException {
+    private static int parseVertex(Value value) {
         final int slotType = value.getType();
         if (slotType == Type.INT) {
             final int vertex = value.getAsInt();
             return vertex;
         } else {
-            throw new FunctionException(
+            throw new IllegalArgumentException(
                     "Please enter an integer vertex.");
         }
     }
@@ -160,7 +160,7 @@ public class GraphFunctionParser {
      *
      * @throws FunctionException
      */
-    public static int parseSource(Value value) throws FunctionException {
+    public static int parseSource(Value value) {
         final int source = parseVertex(value);
         System.out.println("Setting the source "
                 + "to be " + source + ".");
@@ -176,7 +176,7 @@ public class GraphFunctionParser {
      *
      * @throws FunctionException
      */
-    public static int parseTarget(Value value) throws FunctionException {
+    public static int parseTarget(Value value) {
         final int target = parseVertex(value);
         System.out.println("Setting the target "
                 + "to be " + target + ".");
