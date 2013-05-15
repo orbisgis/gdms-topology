@@ -6,3 +6,4 @@ src/test/resources/org/gdms/gdmstopology/nantes_1.edges.shp
 src/test/resources/org/gdms/gdmstopology/nantes_1.edges.shx
 .idea/
 gdms-topology.iml
+*.bak
