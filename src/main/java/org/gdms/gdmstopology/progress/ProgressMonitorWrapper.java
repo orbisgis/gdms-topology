@@ -41,8 +41,7 @@ import org.orbisgis.progress.ProgressMonitor;
  * @author Adam Gouge
  */
 public class ProgressMonitorWrapper
-        implements
-        com.graphhopper.sna.progress.ProgressMonitor {
+        implements org.javanetworkanalyzer.progress.ProgressMonitor {
 
     /**
      * A private OrbisGIS progress monitor.
