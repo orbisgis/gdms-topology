@@ -32,17 +32,21 @@
  */
 package org.gdms.gdmstopology.graphcreator;
 
-import com.graphhopper.sna.analyzers.GeneralizedGraphAnalyzer;
-import com.graphhopper.storage.Graph;
-import com.graphhopper.util.EdgeIterator;
+import java.io.FileNotFoundException;
 import org.gdms.data.DataSource;
 import org.gdms.data.DataSourceCreationException;
 import org.gdms.data.NoSuchTableException;
-import org.gdms.data.indexes.IndexException;
 import org.gdms.driver.DriverException;
 import org.gdms.gdmstopology.TopologySetupTest;
-import org.gdms.gdmstopology.model.GraphSchema;
-import org.gdms.sql.function.FunctionException;
+import org.javanetworkanalyzer.data.VBetw;
+import org.javanetworkanalyzer.data.VUBetw;
+import org.javanetworkanalyzer.data.VWBetw;
+import org.javanetworkanalyzer.model.Edge;
+import org.javanetworkanalyzer.model.KeyedGraph;
+import static org.javanetworkanalyzer.graphcreators.GraphCreator.REVERSED;
+import static org.javanetworkanalyzer.graphcreators.GraphCreator.UNDIRECTED;
+import static org.javanetworkanalyzer.graphcreators.GraphCreator.DIRECTED;
+import org.javanetworkanalyzer.model.UndirectedG;
 import org.junit.Test;
 
 /**
@@ -50,130 +54,136 @@ import org.junit.Test;
  *
  * @author Adam Gouge
  */
-public abstract class GraphCreatorTest extends TopologySetupTest {
+public class Graph2DGraphCreatorTest extends TopologySetupTest {
 
+    private static final String WEIGHT = "length";
     /**
      * A switch to control whether or not we print out all edges when running
      * tests.
      */
     private static final boolean VERBOSE = false;
 
-    /**
-     * Instantiates an appropriate {@link GraphCreator} and prepares the graph.
-     *
-     * @param ds               The data source.
-     * @param orientation      The orientation.
-     * @param weightColumnName The weight column name.
-     *
-     * @throws NoSuchTableException
-     * @throws DataSourceCreationException
-     * @throws DriverException
-     * @throws FunctionException
-     */
-    public void testGraphCreator(DataSource ds, int orientation,
-                                 String weightColumnName)
-            throws
-            NoSuchTableException,
-            DataSourceCreationException,
-            DriverException,
-            FunctionException,
-            IndexException {
+    @Test
+    public void unweightedDirected() {
+        try {
+            System.out.println("\n***** 2D Unweighted Directed *****");
+            KeyedGraph<? extends VBetw, Edge> graph =
+                    load2DGraph(false, DIRECTED);
+            printEdges(graph);
+        } catch (Exception ex) {
+        }
+    }
 
-        GraphCreator creator = (weightColumnName == null)
-                ? new UnweightedGraphCreator(ds, orientation)
-                : new WeightedGraphCreator(ds, orientation, weightColumnName);
-        Graph graph = creator.prepareGraph();
+    @Test
+    public void unweightedReversed() {
+        try {
+            System.out.println("***** 2D Unweighted Reversed *****");
+            KeyedGraph<? extends VBetw, Edge> graph =
+                    load2DGraph(false, REVERSED);
+            printEdges(graph);
+        } catch (Exception ex) {
+        }
+    }
 
-        if (VERBOSE) {
-            System.out.println("\n Orientation: " + orientation);
-            printAllEdges(graph);
+    @Test
+    public void unweightedUndirected() {
+        try {
+            System.out.println("***** 2D Unweighted Undirected *****");
+            KeyedGraph<? extends VBetw, Edge> graph =
+                    load2DGraph(false, UNDIRECTED);
+            printEdges(graph);
+        } catch (Exception ex) {
+        }
+    }
+
+    @Test
+    public void weightedDirected() {
+        try {
+            System.out.println("***** 2D Weighted Directed *****");
+            KeyedGraph<? extends VBetw, Edge> graph =
+                    load2DGraph(true, DIRECTED);
+            printEdges(graph);
+        } catch (Exception ex) {
+        }
+    }
+
+    @Test
+    public void weightedReversed() {
+        try {
+            System.out.println("***** 2D Weighted Reversed *****");
+            KeyedGraph<? extends VBetw, Edge> graph =
+                    load2DGraph(true, REVERSED);
+            printEdges(graph);
+        } catch (Exception ex) {
+        }
+    }
+
+    @Test
+    public void weightedUndirected() {
+        try {
+            System.out.println("***** 2D Weighted Undirected *****");
+            KeyedGraph<? extends VBetw, Edge> graph =
+                    load2DGraph(true, UNDIRECTED);
+            printEdges(graph);
+        } catch (Exception ex) {
         }
     }
 
     /**
-     * Prints all edges of the given graph.
+     * Loads the 2D graph according to whether it is to be considered weighted
+     * and according to the given orientation.
      *
-     * @param graph
+     * @param weighted    {@code true} iff the graph is to be considered
+     *                    weighted.
+     * @param orientation The orientation.
+     *
+     * @return The graph.
+     *
+     * @throws FileNotFoundException
      */
-    private void printAllEdges(Graph graph) {
-        for (int i = 0; i < graph.nodes(); i++) {
-            for (EdgeIterator incoming =
-                    GeneralizedGraphAnalyzer.outgoingEdges(graph, i);
-                    incoming.next();) {
-                System.out.print(i + " <- " + incoming.adjNode()
-                        + " (" + incoming.distance() + "); ");
-            }
-            for (EdgeIterator outgoing =
-                    GeneralizedGraphAnalyzer.outgoingEdges(graph, i);
-                    outgoing.next();) {
-                System.out.print(i + " -> " + outgoing.adjNode()
-                        + " (" + outgoing.distance() + "); ");
+    private KeyedGraph<? extends VBetw, Edge> load2DGraph(
+            boolean weighted,
+            int orientation) throws FileNotFoundException,
+            NoSuchMethodException,
+            NoSuchTableException,
+            DataSourceCreationException,
+            DriverException {
+        DataSource ds = get2DGraphDataSource();
+        if (weighted) {
+            return new WeightedGraphCreator<VWBetw, Edge>(
+                    ds,
+                    orientation,
+                    VWBetw.class,
+                    Edge.class,
+                    WEIGHT).prepareGraph();
+        } else {
+            return new GraphCreator<VUBetw, Edge>(
+                    ds,
+                    orientation,
+                    VUBetw.class,
+                    Edge.class).prepareGraph();
+        }
+    }
+
+    /**
+     * Prints all edges of the graph.
+     *
+     * @param graph The graph.
+     */
+    private void printEdges(
+            KeyedGraph<? extends VBetw, Edge> graph) {
+        if (VERBOSE) {
+            for (Edge edge : graph.edgeSet()) {
+                String edgeString = graph.getEdgeSource(edge).getID() + " ";
+                if (graph instanceof UndirectedG) {
+                    edgeString += "<";
+                }
+                edgeString += "--> " + graph.getEdgeTarget(edge).getID()
+                        + " (" + graph.getEdgeWeight(edge) + ")";
+                System.out.println(edgeString);
             }
             System.out.println("");
         }
-    }
-
-    /**
-     * Tests creating a directed graph.
-     *
-     * @param ds               The data source.
-     * @param weightColumnName The weight column name.
-     *
-     * @throws NoSuchTableException
-     * @throws DataSourceCreationException
-     * @throws DriverException
-     * @throws FunctionException
-     */
-    public void testGraphCreatorDirected(DataSource ds,
-                                         String weightColumnName) throws
-            NoSuchTableException,
-            DataSourceCreationException,
-            DriverException,
-            FunctionException,
-            IndexException {
-        testGraphCreator(ds, GraphSchema.DIRECT, weightColumnName);
-    }
-
-    /**
-     * Tests creating a directed graph with edges reversed.
-     *
-     * @param ds               The data source.
-     * @param weightColumnName The weight column name.
-     *
-     * @throws NoSuchTableException
-     * @throws DataSourceCreationException
-     * @throws DriverException
-     * @throws FunctionException
-     */
-    public void testGraphCreatorReversed(DataSource ds,
-                                         String weightColumnName) throws
-            NoSuchTableException,
-            DataSourceCreationException,
-            DriverException,
-            FunctionException,
-            IndexException {
-        testGraphCreator(ds, GraphSchema.DIRECT_REVERSED, weightColumnName);
-    }
-
-    /**
-     * Tests creating an undirected graph.
-     *
-     * @param ds               The data source.
-     * @param weightColumnName The weight column name.
-     *
-     * @throws NoSuchTableException
-     * @throws DataSourceCreationException
-     * @throws DriverException
-     * @throws FunctionException
-     */
-    public void testGraphCreatorUndirected(DataSource ds,
-                                           String weightColumnName) throws
-            NoSuchTableException,
-            DataSourceCreationException,
-            DriverException,
-            FunctionException,
-            IndexException {
-        testGraphCreator(ds, GraphSchema.UNDIRECT, weightColumnName);
     }
 
     /**
@@ -185,61 +195,12 @@ public abstract class GraphCreatorTest extends TopologySetupTest {
      * @throws DataSourceCreationException
      * @throws DriverException
      */
-    public DataSource get2DGraphDataSource() throws
-            NoSuchTableException,
+    public DataSource get2DGraphDataSource()
+            throws NoSuchTableException,
             DataSourceCreationException,
             DriverException {
         DataSource ds = dsf.getDataSource(GRAPH2D_EDGES);
         ds.open();
         return ds;
     }
-
-    /**
-     * Tests creating the 2D directed graph.
-     *
-     * @throws NoSuchTableException
-     * @throws DataSourceCreationException
-     * @throws DriverException
-     * @throws FunctionException
-     */
-    @Test
-    public abstract void test2DGraphDirected() throws
-            NoSuchTableException,
-            DataSourceCreationException,
-            DriverException,
-            FunctionException,
-            IndexException;
-
-    /**
-     * Tests creating the 2D directed graph with edges reversed.
-     *
-     *
-     * @throws NoSuchTableException
-     * @throws DataSourceCreationException
-     * @throws DriverException
-     * @throws FunctionException
-     */
-    @Test
-    public abstract void test2DGraphReversed() throws
-            NoSuchTableException,
-            DataSourceCreationException,
-            DriverException,
-            FunctionException,
-            IndexException;
-
-    /**
-     * Tests creating the 2D undirected graph.
-     *
-     * @throws NoSuchTableException
-     * @throws DataSourceCreationException
-     * @throws DriverException
-     * @throws FunctionException
-     */
-    @Test
-    public abstract void test2DGraphUndirected() throws
-            NoSuchTableException,
-            DataSourceCreationException,
-            DriverException,
-            FunctionException,
-            IndexException;
 }

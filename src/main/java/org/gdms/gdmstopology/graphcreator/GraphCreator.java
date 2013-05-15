@@ -32,24 +32,30 @@
  */
 package org.gdms.gdmstopology.graphcreator;
 
-import com.graphhopper.storage.Graph;
-import com.graphhopper.storage.GraphStorage;
-import com.graphhopper.storage.RAMDirectory;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.gdms.data.indexes.IndexException;
 import org.gdms.data.schema.Metadata;
+import org.gdms.data.values.Value;
 import org.gdms.driver.DataSet;
 import org.gdms.driver.DriverException;
 import org.gdms.gdmstopology.model.GraphException;
 import org.gdms.gdmstopology.model.GraphSchema;
+import org.javanetworkanalyzer.data.VId;
+import static org.javanetworkanalyzer.graphcreators.GraphCreator.REVERSED;
+import static org.javanetworkanalyzer.graphcreators.GraphCreator.UNDIRECTED;
+import org.javanetworkanalyzer.model.DirectedPseudoG;
+import org.javanetworkanalyzer.model.Edge;
+import org.javanetworkanalyzer.model.KeyedGraph;
+import org.javanetworkanalyzer.model.PseudoG;
+import org.jgrapht.Graph;
 
 /**
  * Creates a graph with a specified orientation from the given {@link DataSet}.
  *
  * @author Adam Gouge
  */
-public abstract class GraphCreator {
+public class GraphCreator<V extends VId, E extends Edge> {
 
     /**
      * The data set.
@@ -59,6 +65,17 @@ public abstract class GraphCreator {
      * Orientation.
      */
     protected final int orientation;
+    /**
+     * Vertex class used for initializing the graph.
+     */
+    protected final Class<? extends V> vertexClass;
+    /**
+     * Edge class used for initializing the graph.
+     */
+    protected final Class<? extends E> edgeClass;
+    // Initialize all the indices to -1.
+    protected int startNodeIndex = -1;
+    protected int endNodeIndex = -1;
     /**
      * An error message given when a user inputs an erroneous graph orientation.
      */
@@ -89,7 +106,7 @@ public abstract class GraphCreator {
     /**
      * A logger.
      */
-    private static final Logger LOGGER;
+    protected static final Logger LOGGER;
 
     /**
      * Static block to set the logger level.
@@ -105,9 +122,14 @@ public abstract class GraphCreator {
      * @param dataSet The data set.
      *
      */
-    public GraphCreator(DataSet dataSet, int orientation) {
+    public GraphCreator(DataSet dataSet,
+                        int orientation,
+                        Class<? extends V> vertexClass,
+                        Class<? extends E> edgeClass) {
         this.dataSet = dataSet;
         this.orientation = orientation;
+        this.vertexClass = vertexClass;
+        this.edgeClass = edgeClass;
     }
 
     /**
@@ -117,55 +139,40 @@ public abstract class GraphCreator {
      *
      * @throws IndexException
      */
-    public Graph prepareGraph() throws IndexException {
-        // DATASET INFORMATION
-        // Get the weight column name.
-        String weightColumnName = getWeightColumnName();
-        // Initialize all the indices to -1.
-        int startNodeIndex = -1;
-        int endNodeIndex = -1;
-        int weightFieldIndex = -1;
-        // Recover the indices from the metadata.
+    public KeyedGraph<V, E> prepareGraph() {
+        // Initialize the indices.
+        initializeIndices();
+        // Create the graph.
+        KeyedGraph<V, E> graph = null;
         try {
-            // Recover the edge Metadata.
-            // TODO: Add a check to make sure the metadata was loaded correctly.
-            Metadata edgeMetadata = dataSet.getMetadata();
-
-            // Recover the indices of the start node and end node.
-            startNodeIndex = edgeMetadata.getFieldIndex(GraphSchema.START_NODE);
-            endNodeIndex = edgeMetadata.getFieldIndex(GraphSchema.END_NODE);
-            verifyIndex(startNodeIndex, GraphSchema.START_NODE);
-            verifyIndex(endNodeIndex, GraphSchema.END_NODE);
-
-            // Recover the weight field index if possible.
-            if (weightColumnName != null) {
-                weightFieldIndex = edgeMetadata.getFieldIndex(weightColumnName);
-                verifyIndex(weightFieldIndex, weightColumnName);
-            }
-        } catch (DriverException ex) {
-            LOGGER.trace(METADATA_ERROR, ex);
+            graph = initializeGraph();
+        } catch (NoSuchMethodException ex) {
+            LOGGER.trace("Problem initializing graph.", ex);
         }
-
-        // GRAPH CREATION
-        // Initialize the graph.
-        GraphStorage graph = new GraphStorage(new RAMDirectory());
-        graph.create(ALLOCATE_GRAPH_SPACE);
-        try {
-            // Add the edges according to the given graph type.
-            loadEdges(graph, orientation,
-                      startNodeIndex, endNodeIndex, weightFieldIndex);
-        } catch (GraphException ex) {
-            LOGGER.trace(EDGE_LOADING_ERROR, ex);
-        }
+        // Add the edges according to the given graph type.
+        loadEdges(graph);
         return graph;
     }
 
     /**
-     * Returns the weight column name, or {@code null} for unweighted graphs.
+     * Initializes a graph.
      *
-     * @return The weight column name.
+     * @return The newly initialized graph
+     *
+     * @throws NoSuchMethodException If the vertex class does not have a
+     *                               constructor with just an Integer parameter.
      */
-    protected abstract String getWeightColumnName();
+    protected KeyedGraph<V, E> initializeGraph() throws NoSuchMethodException {
+        KeyedGraph<V, E> graph;
+        if (orientation != UNDIRECTED) {
+            // Unweighted Directed or Reversed
+            graph = new DirectedPseudoG<V, E>(vertexClass, edgeClass);
+        } else {
+            // Unweighted Undirected
+            graph = new PseudoG<V, E>(vertexClass, edgeClass);
+        }
+        return graph;
+    }
 
     /**
      * Loads the graph edges with the appropriate orientation.
@@ -178,67 +185,39 @@ public abstract class GraphCreator {
      *
      * @throws GraphException
      */
-    private void loadEdges(Graph graph, int orientation,
-                           int startNodeIndex,
-                           int endNodeIndex,
-                           int weightFieldIndex) throws
-            GraphException {
-        if (orientation == GraphSchema.DIRECT) {
-            loadDirectedEdges(graph,
-                              startNodeIndex, endNodeIndex, weightFieldIndex);
-        } else if (orientation == GraphSchema.DIRECT_REVERSED) {
-            loadReversedEdges(graph,
-                              startNodeIndex, endNodeIndex, weightFieldIndex);
-        } else if (orientation == GraphSchema.UNDIRECT) {
-            loadUndirectedEdges(graph,
-                                startNodeIndex, endNodeIndex, weightFieldIndex);
-        } else {
-            throw new GraphException(GRAPH_TYPE_ERROR);
+    private KeyedGraph<V, E> loadEdges(KeyedGraph<V, E> graph) {
+        // Should we reverse the edge orientation?
+        boolean reverse = (orientation == REVERSED) ? true : false;
+        for (Value[] row : dataSet) {
+            loadEdge(row, graph, reverse);
         }
+        return graph;
     }
 
     /**
-     * Loads directed edges; the weight is decided by the implementation of this
-     * method.
+     * Loads an edge into the graph.
      *
-     * @param graph            The graph.
-     * @param startNodeIndex   The start node index.
-     * @param endNodeIndex     The end node index.
-     * @param weightFieldIndex The weight field index.
-     */
-    protected abstract void loadDirectedEdges(Graph graph,
-                                              int startNodeIndex,
-                                              int endNodeIndex,
-                                              int weightFieldIndex);
-
-    /**
-     * Loads directed edges with orientations reversed.
+     * @param row     The row from which to load the edge.
+     * @param graph   The graph to which the edges will be added.
+     * @param reverse {@code true} iff the edge orientation should be reversed.
      *
-     * @param graph            The graph.
-     * @param startNodeIndex   The start node index.
-     * @param endNodeIndex     The end node index.
-     * @param weightFieldIndex The weight field index.
+     * @return The newly loaded edge.
      */
-    private void loadReversedEdges(Graph graph,
-                                   int startNodeIndex,
-                                   int endNodeIndex,
-                                   int weightFieldIndex) {
-        loadDirectedEdges(graph, endNodeIndex, startNodeIndex, weightFieldIndex);
+    protected E loadEdge(Value[] row,
+                         KeyedGraph<V, E> graph,
+                         boolean reverse) {
+        // Add the edge to the graph.
+        E edge;
+        if (reverse) {
+            edge = graph.addEdge(row[endNodeIndex].getAsInt(),
+                                 row[startNodeIndex].getAsInt());
+        } else {
+            edge = graph.addEdge(row[startNodeIndex].getAsInt(),
+                                 row[endNodeIndex].getAsInt());
+        }
+        // And return it.
+        return edge;
     }
-
-    /**
-     * Loads undirected edges; the weight is decided by the implementation of
-     * this method.
-     *
-     * @param graph            The graph.
-     * @param startNodeIndex   The start node index.
-     * @param endNodeIndex     The end node index.
-     * @param weightFieldIndex The weight field index.
-     */
-    protected abstract void loadUndirectedEdges(Graph graph,
-                                                int startNodeIndex,
-                                                int endNodeIndex,
-                                                int weightFieldIndex);
 
     /**
      * Verifies that the given index is not equal to -1; if it is, then throws
@@ -249,11 +228,36 @@ public abstract class GraphCreator {
      *
      * @throws FunctionException
      */
-    private void verifyIndex(int index, String missingField) throws
+    protected void verifyIndex(int index, String missingField) throws
             IndexException {
         if (index == -1) {
             throw new IndexException(
                     MISSING_FIELD_ERROR + missingField + "\'.");
         }
+    }
+
+    /**
+     * Recovers the indices from the metadata.
+     *
+     * @param weightColumnName
+     */
+    protected Metadata initializeIndices() {
+        Metadata md = null;
+        try {
+            // Recover the edge Metadata.
+            // TODO: Add a check to make sure the metadata was loaded correctly.
+            md = dataSet.getMetadata();
+
+            // Recover the indices of the start node and end node.
+            startNodeIndex = md.getFieldIndex(GraphSchema.START_NODE);
+            verifyIndex(startNodeIndex, GraphSchema.START_NODE);
+            endNodeIndex = md.getFieldIndex(GraphSchema.END_NODE);
+            verifyIndex(endNodeIndex, GraphSchema.END_NODE);
+        } catch (DriverException ex) {
+            LOGGER.trace(METADATA_ERROR, ex);
+        } catch (IndexException ex) {
+            LOGGER.trace("Problem with indices.", ex);
+        }
+        return md;
     }
 }
