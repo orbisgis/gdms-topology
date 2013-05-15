@@ -33,8 +33,7 @@
 package org.gdms.gdmstopology.centrality;
 
 import org.gdms.gdmstopology.functionhelpers.ExecutorFunctionHelper;
-import com.graphhopper.sna.data.NodeBetweennessInfo;
-import java.util.Iterator;
+import org.javanetworkanalyzer.data.VBetw;
 import java.util.Map;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -49,6 +48,7 @@ import org.gdms.driver.DataSet;
 import org.gdms.driver.DiskBufferDriver;
 import org.gdms.driver.DriverException;
 import org.gdms.gdmstopology.model.GraphSchema;
+import org.javanetworkanalyzer.data.PathLengthData;
 import org.orbisgis.progress.ProgressMonitor;
 
 /**
@@ -57,7 +57,7 @@ import org.orbisgis.progress.ProgressMonitor;
  *
  * @author Adam Gouge
  */
-public abstract class GraphAnalyzer<T extends NodeBetweennessInfo>
+public abstract class GraphAnalyzer<T extends VBetw, E, S extends PathLengthData>
         extends ExecutorFunctionHelper {
 
     /**
@@ -121,7 +121,7 @@ public abstract class GraphAnalyzer<T extends NodeBetweennessInfo>
      *
      * @return The graph analyzer.
      */
-    protected abstract com.graphhopper.sna.analyzers.GraphAnalyzer<T, ?> prepareAnalyzer();
+    protected abstract org.javanetworkanalyzer.analyzers.GraphAnalyzer<T, E, S> prepareAnalyzer();
 
     @Override
     protected Metadata createMetadata() {
@@ -142,7 +142,8 @@ public abstract class GraphAnalyzer<T extends NodeBetweennessInfo>
 
         Map<Integer, T> results = null;
         try {
-            results = prepareAnalyzer().computeAll();
+            // TODO: We no longer return the results this way.
+            prepareAnalyzer().computeAll();
         } catch (Exception ex) {
             LOGGER.trace(ANALYZER_PREP_ERROR, ex);
         }
