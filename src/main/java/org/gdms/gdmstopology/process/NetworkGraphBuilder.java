@@ -85,7 +85,7 @@ public class NetworkGraphBuilder {
     /**
      *
      * @return if true is the graph is oriented coordinate the z value of the
-     * start and end coordinates
+     *         start and end coordinates
      */
     public boolean isZDirection() {
         return zDirection;
@@ -136,19 +136,27 @@ public class NetworkGraphBuilder {
      * method limits the overhead when the all nodes are ordered.
      *
      * @param sds
+     *
      * @throws DriverException
      * @throws IOException
      * @throws NonEditableDataSourceException
      */
-    public void buildGraph(DataSet dataSet) throws DriverException, IOException, NonEditableDataSourceException {
+    public void buildGraph(DataSet dataSet)
+            throws DriverException,
+            IOException,
+            NonEditableDataSourceException {
 
         // Get the geometry field index.
-        int geomFieldIndex = MetadataUtilities.getSpatialFieldIndex(dataSet.getMetadata());
+        int geomFieldIndex = MetadataUtilities.getSpatialFieldIndex(
+                dataSet.getMetadata());
 
         if (geomFieldIndex != -1) { // Make sure there is a geometry field.
 
             // Create a DiskBufferDriver for the nodes table.
-            DiskBufferDriver nodesDriver = new DiskBufferDriver(dsf.getResultFile("gdms"), GraphMetadataFactory.createNodesMetadataGraph());
+            DiskBufferDriver nodesDriver =
+                    new DiskBufferDriver(
+                    dsf.getResultFile("gdms"),
+                    GraphMetadataFactory.createNodesMetadataGraph());
 
             // Get the path of a new file in the temporary directory.
             String diskTreePath = dsf.getTempFile();
@@ -156,15 +164,20 @@ public class NetworkGraphBuilder {
             DiskRTree diskRTree = new DiskRTree();
             diskRTree.newIndex(new File(diskTreePath));
 
-            // Obtain the original metadata from the input table to which we will append the metadata for the edges.
-            DefaultMetadata edgeMedata = new DefaultMetadata(dataSet.getMetadata());
+            // Obtain the original metadata from the input table to which
+            // we will append the metadata for the edges.
+            DefaultMetadata edgeMedata =
+                    new DefaultMetadata(dataSet.getMetadata());
             // Count the number of fields in the input table.
             int srcFieldsCount = edgeMedata.getFieldCount();
 
             // Add fields to the metadata for the id, start_node, and end_node.
-            edgeMedata.addField(GraphSchema.ID, TypeFactory.createType(Type.INT));
-            edgeMedata.addField(GraphSchema.START_NODE, TypeFactory.createType(Type.INT));
-            edgeMedata.addField(GraphSchema.END_NODE, TypeFactory.createType(Type.INT));
+            edgeMedata.addField(GraphSchema.ID,
+                                TypeFactory.createType(Type.INT));
+            edgeMedata.addField(GraphSchema.START_NODE,
+                                TypeFactory.createType(Type.INT));
+            edgeMedata.addField(GraphSchema.END_NODE,
+                                TypeFactory.createType(Type.INT));
 
             // Count the number of fields in the edge metadata.
             int fieldsCount = edgeMedata.getFieldCount();
@@ -175,7 +188,8 @@ public class NetworkGraphBuilder {
             int finalIndex = srcFieldsCount + 2;
 
             // Create a DiskBufferDriver for the edges table.
-            DiskBufferDriver edgesDriver = new DiskBufferDriver(dsf.getResultFile("gdms"), edgeMedata);
+            DiskBufferDriver edgesDriver =
+                    new DiskBufferDriver(dsf.getResultFile("gdms"), edgeMedata);
 
             int gidNode = 1;
             pm.startTask("Create the graph", 100);
@@ -189,11 +203,12 @@ public class NetworkGraphBuilder {
                         break;
                     }
                 }
-                // Prepare the new row which will be the old row with new values appended.
+                // Prepare the new row which will be the old row with
+                // new values appended.
                 final Value[] newValues = new Value[fieldsCount];
                 // Copy over the old values.
                 System.arraycopy(row, 0, newValues, 0,
-                        srcFieldsCount);
+                                 srcFieldsCount);
                 // Add an id.
                 newValues[idIndex] = ValueFactory.createValue(count + 1);
                 // Get the geometry.
@@ -226,13 +241,13 @@ public class NetworkGraphBuilder {
                 }
                 // TODO
                 int[] gidsStart = diskRTree.query(startEnvelope);
-                
+
                 if (gidsStart.length == 0) {
                     newValues[initialIndex] =
                             ValueFactory.createValue(gidNode);
                     nodesDriver.addValues(new Value[]{
-                                ValueFactory.createValue(gf.createPoint(start)),
-                                ValueFactory.createValue(gidNode)});
+                        ValueFactory.createValue(gf.createPoint(start)),
+                        ValueFactory.createValue(gidNode)});
                     diskRTree.insert(startEnvelope, gidNode);
                     gidNode++;
                 } else {
@@ -248,8 +263,8 @@ public class NetworkGraphBuilder {
                     newValues[finalIndex] =
                             ValueFactory.createValue(gidNode);
                     nodesDriver.addValues(new Value[]{
-                                ValueFactory.createValue(gf.createPoint(end)),
-                                ValueFactory.createValue(gidNode)});
+                        ValueFactory.createValue(gf.createPoint(end)),
+                        ValueFactory.createValue(gidNode)});
                     diskRTree.insert(endEnvelope, gidNode);
                     gidNode++;
                 } else {
@@ -266,17 +281,22 @@ public class NetworkGraphBuilder {
 
 
             // The datasources will be registered as a schema
-            String ds_nodes_name = dsf.getSourceManager().getUniqueName(output_name + ".nodes");
-            dsf.getSourceManager().register(ds_nodes_name, nodesDriver.getFile());
+            String ds_nodes_name = dsf.getSourceManager().getUniqueName(
+                    output_name + ".nodes");
+            dsf.getSourceManager().
+                    register(ds_nodes_name, nodesDriver.getFile());
 
-            String ds_edges_name = dsf.getSourceManager().getUniqueName(output_name + ".edges");
-            dsf.getSourceManager().register(ds_edges_name, edgesDriver.getFile());
+            String ds_edges_name = dsf.getSourceManager().getUniqueName(
+                    output_name + ".edges");
+            dsf.getSourceManager().
+                    register(ds_edges_name, edgesDriver.getFile());
 
             //Remove the Rtree on disk
             new File(diskTreePath).delete();
             pm.endTask();
         } else {
-            throw new DriverException("The table must contains a geometry field");
+            throw new DriverException(
+                    "The table must contain a geometry field");
         }
     }
 }
