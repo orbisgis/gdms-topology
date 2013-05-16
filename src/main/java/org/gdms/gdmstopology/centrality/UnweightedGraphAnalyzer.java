@@ -32,17 +32,18 @@
  */
 package org.gdms.gdmstopology.centrality;
 
-import com.graphhopper.sna.data.UnweightedNodeBetweennessInfo;
-import com.graphhopper.sna.progress.DefaultProgressMonitor;
+import org.javanetworkanalyzer.data.VUBetw;
+import org.javanetworkanalyzer.progress.DefaultProgressMonitor;
 import org.gdms.data.DataSourceFactory;
-import org.gdms.data.indexes.IndexException;
 import org.gdms.driver.DataSet;
 import org.gdms.driver.DriverException;
 import static org.gdms.gdmstopology.centrality.GraphAnalyzer.ANALYZER_PREP_ERROR;
 import static org.gdms.gdmstopology.centrality.GraphAnalyzer.LOGGER;
-import org.gdms.gdmstopology.graphcreator.UnweightedGraphCreator;
+import org.gdms.gdmstopology.graphcreator.GraphCreator;
 import org.gdms.gdmstopology.model.GraphException;
 import org.gdms.gdmstopology.model.GraphSchema;
+import org.javanetworkanalyzer.data.UnweightedPathLengthData;
+import org.javanetworkanalyzer.model.Edge;
 import org.orbisgis.progress.ProgressMonitor;
 
 /**
@@ -51,7 +52,7 @@ import org.orbisgis.progress.ProgressMonitor;
  * @author Adam Gouge
  */
 public class UnweightedGraphAnalyzer
-        extends GraphAnalyzer<UnweightedNodeBetweennessInfo> {
+        extends GraphAnalyzer<VUBetw, Edge, UnweightedPathLengthData> {
 
     /**
      * Constructs a new {@link UnweightedGraphAnalyzer}.
@@ -87,14 +88,14 @@ public class UnweightedGraphAnalyzer
      * {@inheritDoc}
      */
     @Override
-    protected com.graphhopper.sna.centrality.UnweightedGraphAnalyzer prepareAnalyzer() {
+    protected org.javanetworkanalyzer.analyzers.UnweightedGraphAnalyzer<Edge> prepareAnalyzer() {
         try {
-            return new com.graphhopper.sna.centrality.UnweightedGraphAnalyzer(
-                    new UnweightedGraphCreator(dataSet, orientation)
-                    .prepareGraph(),
+            return new org.javanetworkanalyzer.analyzers.UnweightedGraphAnalyzer(
+                    new GraphCreator(dataSet,
+                                     orientation,
+                                     VUBetw.class,
+                                     Edge.class).prepareGraph(),
                     new DefaultProgressMonitor());
-        } catch (IndexException ex) {
-            LOGGER.trace(ANALYZER_PREP_ERROR + " " + INDICES_ERROR, ex);
         } catch (Exception ex) {
             LOGGER.trace(ANALYZER_PREP_ERROR, ex);
         }

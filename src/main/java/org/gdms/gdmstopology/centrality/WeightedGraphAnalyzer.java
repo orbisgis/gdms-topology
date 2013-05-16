@@ -32,8 +32,8 @@
  */
 package org.gdms.gdmstopology.centrality;
 
-import com.graphhopper.sna.data.WeightedNodeBetweennessInfo;
-import com.graphhopper.sna.progress.DefaultProgressMonitor;
+import org.javanetworkanalyzer.data.VWBetw;
+import org.javanetworkanalyzer.progress.DefaultProgressMonitor;
 import org.gdms.data.DataSourceFactory;
 import org.gdms.data.indexes.IndexException;
 import org.gdms.driver.DataSet;
@@ -43,6 +43,10 @@ import static org.gdms.gdmstopology.centrality.GraphAnalyzer.LOGGER;
 import org.gdms.gdmstopology.graphcreator.WeightedGraphCreator;
 import org.gdms.gdmstopology.model.GraphException;
 import org.gdms.gdmstopology.model.GraphSchema;
+import org.javanetworkanalyzer.data.UnweightedPathLengthData;
+import org.javanetworkanalyzer.data.VUBetw;
+import org.javanetworkanalyzer.data.WeightedPathLengthData;
+import org.javanetworkanalyzer.model.Edge;
 import org.orbisgis.progress.ProgressMonitor;
 
 /**
@@ -51,7 +55,7 @@ import org.orbisgis.progress.ProgressMonitor;
  * @author Adam Gouge
  */
 public class WeightedGraphAnalyzer
-        extends GraphAnalyzer<WeightedNodeBetweennessInfo> {
+        extends GraphAnalyzer<VWBetw, Edge, WeightedPathLengthData> {
 
     /**
      * The name of the weight column.
@@ -95,15 +99,15 @@ public class WeightedGraphAnalyzer
      * {@inheritDoc}
      */
     @Override
-    protected com.graphhopper.sna.centrality.WeightedGraphAnalyzer prepareAnalyzer() {
+    protected org.javanetworkanalyzer.analyzers.WeightedGraphAnalyzer<Edge> prepareAnalyzer() {
         try {
-            return new com.graphhopper.sna.centrality.WeightedGraphAnalyzer(
-                    new WeightedGraphCreator(dataSet, orientation,
-                                             weightColumnName)
-                    .prepareGraph(),
+            return new org.javanetworkanalyzer.analyzers.WeightedGraphAnalyzer(
+                    new WeightedGraphCreator(dataSet,
+                                             orientation,
+                                             VWBetw.class,
+                                             Edge.class,
+                                             weightColumnName).prepareGraph(),
                     new DefaultProgressMonitor());
-        } catch (IndexException ex) {
-            LOGGER.trace(ANALYZER_PREP_ERROR + " " + INDICES_ERROR, ex);
         } catch (Exception ex) {
             LOGGER.trace(ANALYZER_PREP_ERROR, ex);
         }

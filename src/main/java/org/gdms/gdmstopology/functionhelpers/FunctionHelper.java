@@ -37,6 +37,8 @@ import org.gdms.data.schema.Metadata;
 import org.gdms.driver.DiskBufferDriver;
 import org.gdms.driver.DriverException;
 import org.orbisgis.progress.ProgressMonitor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A helper class to store the results calculated by an SQL function.
@@ -58,6 +60,11 @@ public abstract class FunctionHelper {
      */
     protected static final String STORAGE_ERROR =
             "Can't store values in driver.";
+    /**
+     * A logger.
+     */
+    private static final Logger LOGGER =
+            LoggerFactory.getLogger(FunctionHelper.class);
 
     /**
      * Constructor.
@@ -80,10 +87,14 @@ public abstract class FunctionHelper {
      *
      * @throws DriverException
      */
-    public DiskBufferDriver doWork() throws DriverException {
+    public DiskBufferDriver doWork() {
 
-        DiskBufferDriver driver =
-                new DiskBufferDriver(dsf, createMetadata());
+        DiskBufferDriver driver = null;
+        try {
+            driver = new DiskBufferDriver(dsf, createMetadata());
+        } catch (DriverException ex) {
+            LOGGER.trace("Can't initialize DiskBufferDriver.", ex);
+        }
 
         computeAndStoreResults(driver);
 
@@ -115,13 +126,20 @@ public abstract class FunctionHelper {
      *
      * @throws DriverException
      */
-    private void cleanUp(DiskBufferDriver driver, ProgressMonitor pm)
-            throws DriverException {
-        // We are done writing.
-        driver.writingFinished();
+    private void cleanUp(DiskBufferDriver driver, ProgressMonitor pm) {
+        try {
+            // We are done writing.
+            driver.writingFinished();
+        } catch (DriverException ex) {
+            LOGGER.trace("Can't set writing finished.", ex);
+        }
         // The task is done.
         pm.endTask();
-        // Open the DiskBufferDriver.
-        driver.open();
+        try {
+            // Open the DiskBufferDriver.
+            driver.open();
+        } catch (DriverException ex) {
+            LOGGER.trace("Can't open the driver.", ex);
+        }
     }
 }

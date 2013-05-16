@@ -32,13 +32,9 @@
  */
 package org.gdms.gdmstopology.centrality;
 
-import com.graphhopper.sna.centrality.DFSForStrahler;
-import com.graphhopper.sna.data.StrahlerInfo;
-import com.graphhopper.storage.Graph;
-import java.util.Map;
-import java.util.Map.Entry;
+import org.javanetworkanalyzer.alg.DFSForStrahler;
+import org.javanetworkanalyzer.data.VStrahler;
 import org.gdms.data.DataSourceFactory;
-import org.gdms.data.indexes.IndexException;
 import org.gdms.data.schema.DefaultMetadata;
 import org.gdms.data.schema.Metadata;
 import org.gdms.data.types.Type;
@@ -49,9 +45,13 @@ import org.gdms.driver.DataSet;
 import org.gdms.driver.DiskBufferDriver;
 import org.gdms.driver.DriverException;
 import org.gdms.gdmstopology.functionhelpers.TableFunctionHelper;
-import org.gdms.gdmstopology.graphcreator.UnweightedGraphCreator;
+import org.gdms.gdmstopology.graphcreator.GraphCreator;
 import org.gdms.gdmstopology.model.GraphSchema;
+import org.javanetworkanalyzer.model.Edge;
+import org.javanetworkanalyzer.model.KeyedGraph;
 import org.orbisgis.progress.ProgressMonitor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Helper class to calculate the Strahler numbers of the nodes of a given tree.
@@ -79,18 +79,8 @@ public class StrahlerAnalyzer extends TableFunctionHelper {
             new String[]{
         GraphSchema.ID,
         GraphSchema.STRAHLER_NUMBER});
-    /**
-     * A logger.
-     */
-    protected static final org.apache.log4j.Logger LOGGER;
-
-    /**
-     * Static block to set the logger level.
-     */
-    static {
-        LOGGER = org.apache.log4j.Logger.getLogger(GraphAnalyzer.class);
-        LOGGER.setLevel(org.apache.log4j.Level.TRACE);
-    }
+    private static final Logger LOGGER =
+            LoggerFactory.getLogger(StrahlerAnalyzer.class);
 
     /**
      * Constructor.
@@ -115,56 +105,33 @@ public class StrahlerAnalyzer extends TableFunctionHelper {
 
     @Override
     protected void computeAndStoreResults(DiskBufferDriver driver) {
+        
+        // Prepare the graph.
+        KeyedGraph<VStrahler, Edge> graph =
+                new GraphCreator(dataSet,
+                                 GraphSchema.UNDIRECT,
+                                 VStrahler.class,
+                                 Edge.class).prepareGraph();
+        
+        // Compute the Strahler numbers.
+        new DFSForStrahler(graph).calculate(graph.getVertex(rootNode));
 
-        Map<Integer, StrahlerInfo> results = computeResults();
-
-        if (results != null) {
+        for (VStrahler node : graph.vertexSet()) {
+            int strahlerNumber = node.getStrahlerNumber();
+            Value[] valuesToAdd =
+                    new Value[]{
+                // ID
+                ValueFactory.createValue(node.getID()),
+                // Strahler number
+                ValueFactory.createValue(strahlerNumber)
+            };
             try {
-                for (Entry<Integer, StrahlerInfo> e : results.entrySet()) {
-                    Integer node = e.getKey();
-                    int strahlerNumber = e.getValue().getStrahlerNumber();
-
-                    Value[] valuesToAdd =
-                            new Value[]{
-                        // ID
-                        ValueFactory.createValue(node),
-                        // Strahler number
-                        ValueFactory.createValue(strahlerNumber)
-                    };
-
-                    driver.addValues(valuesToAdd);
-                }
+                driver.addValues(valuesToAdd);
             } catch (DriverException ex) {
-                LOGGER.trace(STORAGE_ERROR, ex);
+                LOGGER.trace("Problem storing S("
+                        + node.getID() + ")="
+                        + node.getStrahlerNumber(), ex);
             }
         }
-    }
-
-    /**
-     * Compute the Strahler numbers.
-     *
-     * @return The results map.
-     */
-    private Map<Integer, StrahlerInfo> computeResults() {
-        Graph graph = null;
-        try {
-            graph = new UnweightedGraphCreator(dataSet, GraphSchema.UNDIRECT)
-                    .prepareGraph();
-        } catch (IndexException ex) {
-            LOGGER.trace("Couldn't prepare graph.", ex);
-        }
-        DFSForStrahler dfs = null;
-        try {
-            dfs = new DFSForStrahler(graph,
-                                     StrahlerInfo.class,
-                                     rootNode);
-        } catch (Exception ex) {
-            LOGGER.trace("Couldn't instantiate DFSForStrahler.", ex);
-        }
-        Map<Integer, StrahlerInfo> results = null;
-        if (dfs != null) {
-            results = dfs.calculate();
-        }
-        return results;
     }
 }

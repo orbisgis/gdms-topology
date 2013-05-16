@@ -58,8 +58,7 @@ public class OutputFunctionParser {
      *
      * @throws FunctionException
      */
-    public static String parseOutputTablePrefix(Value value) throws
-            FunctionException {
+    public static String parseOutputTablePrefix(Value value) {
         final int slotType = value.getType();
         if (slotType == Type.STRING) {
             final String outputTablePrefix = value.getAsString();
@@ -68,7 +67,7 @@ public class OutputFunctionParser {
                     + "\'.");
             return outputTablePrefix;
         } else {
-            throw new FunctionException(
+            throw new IllegalArgumentException(
                     "Please enter a string output table prefix.");
         }
     }

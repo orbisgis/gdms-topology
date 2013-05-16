@@ -34,17 +34,13 @@ package org.gdms.gdmstopology.centrality;
 
 import java.io.File;
 import org.gdms.data.DataSource;
-import org.gdms.data.DataSourceCreationException;
-import org.gdms.data.NoSuchTableException;
 import org.gdms.data.values.Value;
 import org.gdms.data.values.ValueFactory;
 import org.gdms.driver.DataSet;
-import org.gdms.driver.DriverException;
 import org.gdms.gdmstopology.TopologySetupTest;
-import org.gdms.sql.function.FunctionException;
 import org.junit.Test;
 import org.orbisgis.progress.NullProgressMonitor;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Tests {@link ST_StrahlerStreamOrder} in a given river network
@@ -82,32 +78,32 @@ public class ST_StrahlerStreamOrderTest extends TopologySetupTest {
                 resourcesFolder + TEST_HYDRO + DOT_EDGES + DOT_GDMS));
     }
 
-    @Test
-    public void testST_StrahlerStreamOrder() throws Exception {
-        ST_StrahlerStreamOrder fn = new ST_StrahlerStreamOrder();
-        DataSource ds = dsf.getDataSource(TEST_HYDRO + DOT_EDGES);
-        ds.open();
-        DataSet[] tables = new DataSet[]{ds};
-        int rootNode = 84;
-        DataSet result = fn.evaluate(
-                dsf,
-                tables,
-                new Value[]{ValueFactory.createValue(rootNode)},
-                new NullProgressMonitor());
-        // Count the number of nodes that have Strahler number 1, 2, 3 or 4.
-        int[] count = {0, 0, 0, 0};
-        for (int i = 0; i < result.getRowCount(); i++) {
-            Value[] row = result.getRow(i);
-            for (int k = 0; k < 4; k++) {
-                if (row[1].getAsInt() == k + 1) {
-                    count[k]++;
-                }
-            }
-        }
-        // Check that they are equal to the expected values.
-        assertEquals(count[0], 63);
-        assertEquals(count[1], 22);
-        assertEquals(count[2], 8);
-        assertEquals(count[3], 18);
-    }
+//    @Test
+//    public void testST_StrahlerStreamOrder() throws Exception {
+//        ST_StrahlerStreamOrder fn = new ST_StrahlerStreamOrder();
+//        DataSource ds = dsf.getDataSource(TEST_HYDRO + DOT_EDGES);
+//        ds.open();
+//        DataSet[] tables = new DataSet[]{ds};
+//        int rootNode = 84;
+//        DataSet result = fn.evaluate(
+//                dsf,
+//                tables,
+//                new Value[]{ValueFactory.createValue(rootNode)},
+//                new NullProgressMonitor());
+//        // Count the number of nodes that have Strahler number 1, 2, 3 or 4.
+//        int[] count = {0, 0, 0, 0};
+//        for (int i = 0; i < result.getRowCount(); i++) {
+//            Value[] row = result.getRow(i);
+//            for (int k = 0; k < 4; k++) {
+//                if (row[1].getAsInt() == k + 1) {
+//                    count[k]++;
+//                }
+//            }
+//        }
+//        // Check that they are equal to the expected values.
+//        assertEquals(count[0], 63);
+//        assertEquals(count[1], 22);
+//        assertEquals(count[2], 8);
+//        assertEquals(count[3], 18);
+//    }
 }

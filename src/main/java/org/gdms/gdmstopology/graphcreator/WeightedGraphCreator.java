@@ -32,10 +32,21 @@
  */
 package org.gdms.gdmstopology.graphcreator;
 
-import com.graphhopper.storage.Graph;
-import java.util.Iterator;
+import org.gdms.data.indexes.IndexException;
+import org.gdms.data.schema.Metadata;
 import org.gdms.data.values.Value;
 import org.gdms.driver.DataSet;
+import org.gdms.driver.DriverException;
+import static org.gdms.gdmstopology.graphcreator.GraphCreator.METADATA_ERROR;
+import org.javanetworkanalyzer.data.VId;
+import static org.javanetworkanalyzer.graphcreators.GraphCreator.UNDIRECTED;
+import org.javanetworkanalyzer.model.DirectedWeightedPseudoG;
+import org.javanetworkanalyzer.model.Edge;
+import org.javanetworkanalyzer.model.KeyedGraph;
+import org.javanetworkanalyzer.model.WeightedKeyedGraph;
+import org.javanetworkanalyzer.model.WeightedPseudoG;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Creates a weighted graph with a specified orientation from the given
@@ -43,12 +54,16 @@ import org.gdms.driver.DataSet;
  *
  * @author Adam Gouge
  */
-public class WeightedGraphCreator extends GraphCreator {
+public class WeightedGraphCreator<V extends VId, E extends Edge>
+        extends GraphCreator<V, E> {
 
     /**
      * The name of the weight column.
      */
     private final String weightColumnName;
+    protected int weightFieldIndex = -1;
+    private static final Logger LOGGER =
+            LoggerFactory.getLogger(GraphCreator.class);
 
     /**
      * Constructs a new {@link WeightedGraphCreator}.
@@ -57,49 +72,65 @@ public class WeightedGraphCreator extends GraphCreator {
      * @param orientation The orientation.
      *
      */
-    public WeightedGraphCreator(DataSet dataSet, int orientation,
+    public WeightedGraphCreator(DataSet dataSet,
+                                int orientation,
+                                Class<? extends V> vertexClass,
+                                Class<? extends E> edgeClass,
                                 String weightColumnName) {
-        super(dataSet, orientation);
+        super(dataSet, orientation, vertexClass, edgeClass);
         this.weightColumnName = weightColumnName;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    protected String getWeightColumnName() {
-        return weightColumnName;
+    public WeightedKeyedGraph<V, E> prepareGraph() {
+        return (WeightedKeyedGraph<V, E>) super.prepareGraph();
     }
 
     /**
-     * {@inheritDoc}
+     * Recovers the indices from the metadata.
+     *
+     * @param weightColumnName
      */
     @Override
-    protected void loadDirectedEdges(Graph graph,
-                                     int startNodeIndex,
-                                     int endNodeIndex,
-                                     int weightFieldIndex) {
-        for (Value[] row : dataSet) {
-            graph.edge(row[startNodeIndex].getAsInt(),
-                       row[endNodeIndex].getAsInt(),
-                       row[weightFieldIndex].getAsDouble(),
-                       false);
+    protected Metadata initializeIndices() {
+        Metadata md = null;
+        try {
+            md = super.initializeIndices();
+            if (md != null) {
+                weightFieldIndex = md.getFieldIndex(
+                        weightColumnName);
+                verifyIndex(weightFieldIndex, weightColumnName);
+            } else {
+                throw new IllegalStateException(METADATA_ERROR);
+            }
+        } catch (IndexException ex) {
+            LOGGER.trace("Problem with indices.", ex);
+        } catch (DriverException ex) {
+            LOGGER.trace(METADATA_ERROR, ex);
         }
+        return md;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    protected void loadUndirectedEdges(Graph graph,
-                                       int startNodeIndex,
-                                       int endNodeIndex,
-                                       int weightFieldIndex) {
-        for (Value[] row : dataSet) {
-            graph.edge(row[startNodeIndex].getAsInt(),
-                       row[endNodeIndex].getAsInt(),
-                       row[weightFieldIndex].getAsDouble(),
-                       true);
+    protected KeyedGraph<V, E> initializeGraph() {
+        KeyedGraph<V, E> graph;
+        if (orientation != UNDIRECTED) {
+            // Weighted Directed or Reversed
+            graph = new DirectedWeightedPseudoG<V, E>(vertexClass, edgeClass);
+        } else {
+            // Weighted Undirected
+            graph = new WeightedPseudoG<V, E>(vertexClass, edgeClass);
         }
+        return graph;
+    }
+
+    @Override
+    protected E loadEdge(Value[] row,
+                         KeyedGraph<V, E> graph,
+                         boolean reverse) {
+        E edge = super.loadEdge(row, graph, reverse);
+        double weight = row[weightFieldIndex].getAsDouble();
+        edge.setWeight(weight);
+        return edge;
     }
 }
