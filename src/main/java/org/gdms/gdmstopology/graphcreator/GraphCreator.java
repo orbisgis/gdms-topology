@@ -32,8 +32,6 @@
  */
 package org.gdms.gdmstopology.graphcreator;
 
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 import org.gdms.data.indexes.IndexException;
 import org.gdms.data.schema.Metadata;
 import org.gdms.data.values.Value;
@@ -48,7 +46,8 @@ import org.javanetworkanalyzer.model.DirectedPseudoG;
 import org.javanetworkanalyzer.model.Edge;
 import org.javanetworkanalyzer.model.KeyedGraph;
 import org.javanetworkanalyzer.model.PseudoG;
-import org.jgrapht.Graph;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Creates a graph with a specified orientation from the given {@link DataSet}.
@@ -106,15 +105,8 @@ public class GraphCreator<V extends VId, E extends Edge> {
     /**
      * A logger.
      */
-    protected static final Logger LOGGER;
-
-    /**
-     * Static block to set the logger level.
-     */
-    static {
-        LOGGER = Logger.getLogger(GraphCreator.class);
-        LOGGER.setLevel(Level.TRACE);
-    }
+    private static final Logger LOGGER =
+            LoggerFactory.getLogger(GraphCreator.class);
 
     /**
      * Constructs a new {@link GraphCreator}.
@@ -142,15 +134,8 @@ public class GraphCreator<V extends VId, E extends Edge> {
     public KeyedGraph<V, E> prepareGraph() {
         // Initialize the indices.
         initializeIndices();
-        KeyedGraph<V, E> graph = null;
-        try {
-            // Create the graph.
-            graph = initializeGraph();
-
-        } catch (NoSuchMethodException ex) {
-            System.out.println("HERE");
-            LOGGER.fatal("Problem initializing graph.", ex);
-        }
+        // Create the graph.
+        KeyedGraph<V, E> graph = initializeGraph();
         if (graph != null) {
             // Add the edges according to the given graph type.
             loadEdges(graph);
@@ -158,7 +143,6 @@ public class GraphCreator<V extends VId, E extends Edge> {
             throw new IllegalStateException(
                     "Couldn't load edges since the graph was null.");
         }
-
         return graph;
     }
 
@@ -170,7 +154,7 @@ public class GraphCreator<V extends VId, E extends Edge> {
      * @throws NoSuchMethodException If the vertex class does not have a
      *                               constructor with just an Integer parameter.
      */
-    protected KeyedGraph<V, E> initializeGraph() throws NoSuchMethodException {
+    protected KeyedGraph<V, E> initializeGraph() {
         KeyedGraph<V, E> graph;
         if (orientation != UNDIRECTED) {
             // Unweighted Directed or Reversed
@@ -215,16 +199,13 @@ public class GraphCreator<V extends VId, E extends Edge> {
                          KeyedGraph<V, E> graph,
                          boolean reverse) {
         // Add the edge to the graph.
-        E edge;
         if (reverse) {
-            edge = graph.addEdge(row[endNodeIndex].getAsInt(),
+            return graph.addEdge(row[endNodeIndex].getAsInt(),
                                  row[startNodeIndex].getAsInt());
         } else {
-            edge = graph.addEdge(row[startNodeIndex].getAsInt(),
+            return graph.addEdge(row[startNodeIndex].getAsInt(),
                                  row[endNodeIndex].getAsInt());
         }
-        // And return it.
-        return edge;
     }
 
     /**

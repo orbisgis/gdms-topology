@@ -50,6 +50,8 @@ import org.gdms.gdmstopology.model.GraphSchema;
 import org.javanetworkanalyzer.model.Edge;
 import org.javanetworkanalyzer.model.KeyedGraph;
 import org.orbisgis.progress.ProgressMonitor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Helper class to calculate the Strahler numbers of the nodes of a given tree.
@@ -77,18 +79,8 @@ public class StrahlerAnalyzer extends TableFunctionHelper {
             new String[]{
         GraphSchema.ID,
         GraphSchema.STRAHLER_NUMBER});
-    /**
-     * A logger.
-     */
-    protected static final org.apache.log4j.Logger LOGGER;
-
-    /**
-     * Static block to set the logger level.
-     */
-    static {
-        LOGGER = org.apache.log4j.Logger.getLogger(GraphAnalyzer.class);
-        LOGGER.setLevel(org.apache.log4j.Level.TRACE);
-    }
+    private static final Logger LOGGER =
+            LoggerFactory.getLogger(StrahlerAnalyzer.class);
 
     /**
      * Constructor.
@@ -113,14 +105,16 @@ public class StrahlerAnalyzer extends TableFunctionHelper {
 
     @Override
     protected void computeAndStoreResults(DiskBufferDriver driver) {
-
-        // Compute the Strahler numbers.
+        
+        // Prepare the graph.
         KeyedGraph<VStrahler, Edge> graph =
                 new GraphCreator(dataSet,
                                  GraphSchema.UNDIRECT,
                                  VStrahler.class,
                                  Edge.class).prepareGraph();
-        new DFSForStrahler(graph).calculate();
+        
+        // Compute the Strahler numbers.
+        new DFSForStrahler(graph).calculate(graph.getVertex(rootNode));
 
         for (VStrahler node : graph.vertexSet()) {
             int strahlerNumber = node.getStrahlerNumber();

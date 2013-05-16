@@ -32,14 +32,13 @@
  */
 package org.gdms.gdmstopology.functionhelpers;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.gdms.data.DataSourceFactory;
 import org.gdms.data.schema.Metadata;
 import org.gdms.driver.DiskBufferDriver;
 import org.gdms.driver.DriverException;
-import org.gdms.gdmstopology.centrality.GraphAnalyzer;
 import org.orbisgis.progress.ProgressMonitor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A helper class to store the results calculated by an SQL function.
@@ -64,15 +63,8 @@ public abstract class FunctionHelper {
     /**
      * A logger.
      */
-    protected static final org.apache.log4j.Logger LOGGER;
-
-    /**
-     * Static block to set the logger level.
-     */
-    static {
-        LOGGER = org.apache.log4j.Logger.getLogger(GraphAnalyzer.class);
-        LOGGER.setLevel(org.apache.log4j.Level.TRACE);
-    }
+    private static final Logger LOGGER =
+            LoggerFactory.getLogger(FunctionHelper.class);
 
     /**
      * Constructor.

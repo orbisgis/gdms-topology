@@ -37,7 +37,6 @@ import org.gdms.data.schema.Metadata;
 import org.gdms.data.values.Value;
 import org.gdms.driver.DataSet;
 import org.gdms.driver.DriverException;
-import static org.gdms.gdmstopology.graphcreator.GraphCreator.LOGGER;
 import static org.gdms.gdmstopology.graphcreator.GraphCreator.METADATA_ERROR;
 import org.javanetworkanalyzer.data.VId;
 import static org.javanetworkanalyzer.graphcreators.GraphCreator.UNDIRECTED;
@@ -46,6 +45,8 @@ import org.javanetworkanalyzer.model.Edge;
 import org.javanetworkanalyzer.model.KeyedGraph;
 import org.javanetworkanalyzer.model.WeightedKeyedGraph;
 import org.javanetworkanalyzer.model.WeightedPseudoG;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Creates a weighted graph with a specified orientation from the given
@@ -61,6 +62,8 @@ public class WeightedGraphCreator<V extends VId, E extends Edge>
      */
     private final String weightColumnName;
     protected int weightFieldIndex = -1;
+    private static final Logger LOGGER =
+            LoggerFactory.getLogger(GraphCreator.class);
 
     /**
      * Constructs a new {@link WeightedGraphCreator}.
@@ -109,7 +112,7 @@ public class WeightedGraphCreator<V extends VId, E extends Edge>
     }
 
     @Override
-    protected KeyedGraph<V, E> initializeGraph() throws NoSuchMethodException {
+    protected KeyedGraph<V, E> initializeGraph() {
         KeyedGraph<V, E> graph;
         if (orientation != UNDIRECTED) {
             // Weighted Directed or Reversed
