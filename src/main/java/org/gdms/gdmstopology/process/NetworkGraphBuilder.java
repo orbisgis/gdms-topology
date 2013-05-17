@@ -91,15 +91,6 @@ public class NetworkGraphBuilder {
     }
 
     /**
-     *
-     * @return if true is the graph is oriented coordinate the z value of the
-     *         start and end coordinates
-     */
-    public boolean orientBySlope() {
-        return orientBySlope;
-    }
-
-    /**
      * Set if the graph must ne oriented according the z value of the start and
      * end coordinates
      *
@@ -116,14 +107,6 @@ public class NetworkGraphBuilder {
      */
     public void setDim3(boolean dim3) {
         this.dim3 = dim3;
-    }
-
-    /**
-     *
-     * @return if the z value of the coordinate must be used.
-     */
-    public boolean isDim3() {
-        return dim3;
     }
 
     /**
@@ -230,7 +213,7 @@ public class NetworkGraphBuilder {
                 Coordinate end = cc[cc.length - 1];
 
                 // Update the orientation by slope if necessary.
-                if (orientBySlope() && start.z < end.z) {
+                if (orientBySlope && start.z < end.z) {
                     Coordinate temp = start;
                     start = end;
                     end = temp;
