@@ -44,8 +44,6 @@ import org.gdms.data.indexes.rtree.DiskRTree;
 import org.gdms.data.schema.DefaultMetadata;
 import org.gdms.data.schema.Metadata;
 import org.gdms.data.schema.MetadataUtilities;
-import org.gdms.data.types.Type;
-import org.gdms.data.types.TypeFactory;
 import org.gdms.data.values.Value;
 import org.gdms.data.values.ValueFactory;
 import org.gdms.driver.DataSet;
@@ -170,9 +168,10 @@ public class NetworkGraphBuilder {
             Metadata originalMD = dataSet.getMetadata();
             // Count the number of fields in the input table.
             int srcFieldsCount = originalMD.getFieldCount();
-            
+
             // Create the edge metadata.
-            DefaultMetadata edgeMedata = createEdgeMetadata(originalMD);
+            DefaultMetadata edgeMedata =
+                    GraphMetadataFactory.createEdgeMetadata(originalMD);
             // Count the number of fields in the edge metadata.
             int fieldsCount = edgeMedata.getFieldCount();
 
@@ -305,29 +304,5 @@ public class NetworkGraphBuilder {
         //Remove the Rtree on disk
         new File(diskTreePath).delete();
         pm.endTask();
-    }
-
-    /**
-     * Create the edge metadata by appending id, start node and end node columns
-     * to the original metadata.
-     *
-     * @param originalMD Original metadata
-     *
-     * @return Metadata for edges
-     *
-     * @throws DriverException
-     */
-    private DefaultMetadata createEdgeMetadata(Metadata originalMD) throws
-            DriverException {
-        // Make a copy of the original metadata.
-        DefaultMetadata edgeMedata = new DefaultMetadata(originalMD);
-        // Add fields to the metadata for the id, start_node, and end_node.
-        edgeMedata.addField(GraphSchema.ID,
-                            TypeFactory.createType(Type.INT));
-        edgeMedata.addField(GraphSchema.START_NODE,
-                            TypeFactory.createType(Type.INT));
-        edgeMedata.addField(GraphSchema.END_NODE,
-                            TypeFactory.createType(Type.INT));
-        return edgeMedata;
     }
 }

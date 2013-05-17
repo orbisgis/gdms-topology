@@ -38,6 +38,7 @@ import org.gdms.data.types.Constraint;
 import org.gdms.data.types.GeometryDimensionConstraint;
 import org.gdms.data.types.Type;
 import org.gdms.data.types.TypeFactory;
+import org.gdms.driver.DriverException;
 
 /**
  * Contains methods used to create the metadata models used by various GDMS
@@ -68,11 +69,32 @@ public final class GraphMetadataFactory {
     public static Metadata createNodesMetadata() {
         return new DefaultMetadata(
                 new Type[]{
-                    TypeFactory.createType(Type.POINT),
-                    TypeFactory.createType(Type.INT)},
+            TypeFactory.createType(Type.POINT),
+            TypeFactory.createType(Type.INT)},
                 new String[]{
-                    "the_geom",
-                    GraphSchema.ID});
+            "the_geom",
+            GraphSchema.ID});
+    }
+
+    /**
+     * Creates the edge metadata by appending id, start node and end node
+     * columns to the original metadata.
+     *
+     * @param originalMD Original metadata
+     *
+     * @return Metadata for edges
+     *
+     * @throws DriverException
+     */
+    public static DefaultMetadata createEdgeMetadata(Metadata originalMD)
+            throws DriverException {
+        DefaultMetadata edgeMedata = new DefaultMetadata(originalMD);
+        edgeMedata.addField(GraphSchema.ID, TypeFactory.createType(Type.INT));
+        edgeMedata.addField(GraphSchema.START_NODE,
+                            TypeFactory.createType(Type.INT));
+        edgeMedata.addField(GraphSchema.END_NODE,
+                            TypeFactory.createType(Type.INT));
+        return edgeMedata;
     }
 
     /**
@@ -88,24 +110,24 @@ public final class GraphMetadataFactory {
     public static Metadata createEdgeMetadataShortestPath() {
         Metadata md = new DefaultMetadata(
                 new Type[]{
-                    TypeFactory.createType(
-                    Type.GEOMETRY,
-                    new Constraint[]{
-                        new GeometryDimensionConstraint(
-                        GeometryDimensionConstraint.DIMENSION_CURVE)
-                    }),
-                    TypeFactory.createType(Type.INT),
-                    TypeFactory.createType(Type.INT),
-                    TypeFactory.createType(Type.INT),
-                    TypeFactory.createType(Type.INT),
-                    TypeFactory.createType(Type.DOUBLE)},
+            TypeFactory.createType(
+            Type.GEOMETRY,
+            new Constraint[]{
+                new GeometryDimensionConstraint(
+                GeometryDimensionConstraint.DIMENSION_CURVE)
+            }),
+            TypeFactory.createType(Type.INT),
+            TypeFactory.createType(Type.INT),
+            TypeFactory.createType(Type.INT),
+            TypeFactory.createType(Type.INT),
+            TypeFactory.createType(Type.DOUBLE)},
                 new String[]{
-                    "the_geom",
-                    GraphSchema.ID,
-                    GraphSchema.PATH_ID,
-                    GraphSchema.START_NODE,
-                    GraphSchema.END_NODE,
-                    GraphSchema.WEIGHT});
+            "the_geom",
+            GraphSchema.ID,
+            GraphSchema.PATH_ID,
+            GraphSchema.START_NODE,
+            GraphSchema.END_NODE,
+            GraphSchema.WEIGHT});
         return md;
     }
 
@@ -121,11 +143,11 @@ public final class GraphMetadataFactory {
     public static Metadata createDistancesMetadata() {
         Metadata md = new DefaultMetadata(
                 new Type[]{
-                    TypeFactory.createType(Type.INT),
-                    TypeFactory.createType(Type.DOUBLE)},
+            TypeFactory.createType(Type.INT),
+            TypeFactory.createType(Type.DOUBLE)},
                 new String[]{
-                    GraphSchema.ID,
-                    GraphSchema.DISTANCE});
+            GraphSchema.ID,
+            GraphSchema.DISTANCE});
         return md;
     }
 
@@ -137,20 +159,20 @@ public final class GraphMetadataFactory {
      * (DOUBLE)]}.
      *
      * @return The metadata model used by the {@code ST_FindReachableEdges}
-     * function.
+     *         function.
      */
     public static Metadata createReachableEdgesMetadata() {
         return new DefaultMetadata(
                 new Type[]{
-                    TypeFactory.createType(Type.GEOMETRY),
-                    TypeFactory.createType(Type.INT),
-                    TypeFactory.createType(Type.DOUBLE),
-                    TypeFactory.createType(Type.DOUBLE)},
+            TypeFactory.createType(Type.GEOMETRY),
+            TypeFactory.createType(Type.INT),
+            TypeFactory.createType(Type.DOUBLE),
+            TypeFactory.createType(Type.DOUBLE)},
                 new String[]{
-                    "the_geom",
-                    GraphSchema.ID,
-                    GraphSchema.WEIGHT,
-                    GraphSchema.DISTANCE});
+            "the_geom",
+            GraphSchema.ID,
+            GraphSchema.WEIGHT,
+            GraphSchema.DISTANCE});
     }
 
     /**
@@ -161,22 +183,22 @@ public final class GraphMetadataFactory {
      * (DOUBLE), DISTANCE (DOUBLE)]}.
      *
      * @return The metadata model used by the {@code ST_MFindReachableEdges}
-     * function.
+     *         function.
      */
     public static Metadata createMReachableEdgesMetadata() {
         return new DefaultMetadata(
                 new Type[]{
-                    TypeFactory.createType(Type.GEOMETRY),
-                    TypeFactory.createType(Type.INT),
-                    TypeFactory.createType(Type.INT),
-                    TypeFactory.createType(Type.DOUBLE),
-                    TypeFactory.createType(Type.DOUBLE)},
+            TypeFactory.createType(Type.GEOMETRY),
+            TypeFactory.createType(Type.INT),
+            TypeFactory.createType(Type.INT),
+            TypeFactory.createType(Type.DOUBLE),
+            TypeFactory.createType(Type.DOUBLE)},
                 new String[]{
-                    "the_geom",
-                    GraphSchema.ID,
-                    GraphSchema.SOURCE_NODE,
-                    GraphSchema.WEIGHT,
-                    GraphSchema.DISTANCE});
+            "the_geom",
+            GraphSchema.ID,
+            GraphSchema.SOURCE_NODE,
+            GraphSchema.WEIGHT,
+            GraphSchema.DISTANCE});
     }
 
     /**
@@ -186,18 +208,18 @@ public final class GraphMetadataFactory {
      * <p> Format: {@code [ID (INT), count (INT), SUM (DOUBLE)]}.
      *
      * @return The metadata model used by the {@code ST_SubGraphStatistics}
-     * function.
+     *         function.
      */
     public static Metadata createSubGraphStatsMetadata() {
         Metadata md = new DefaultMetadata(
                 new Type[]{
-                    TypeFactory.createType(Type.INT),
-                    TypeFactory.createType(Type.INT),
-                    TypeFactory.createType(Type.DOUBLE)},
+            TypeFactory.createType(Type.INT),
+            TypeFactory.createType(Type.INT),
+            TypeFactory.createType(Type.DOUBLE)},
                 new String[]{
-                    GraphSchema.ID,
-                    "count",
-                    GraphSchema.SUM});
+            GraphSchema.ID,
+            "count",
+            GraphSchema.SUM});
         return md;
     }
 }
