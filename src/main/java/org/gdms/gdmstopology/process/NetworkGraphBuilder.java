@@ -232,8 +232,11 @@ public class NetworkGraphBuilder {
                         end = tmpStart;
                     }
                 }
-                gidNode = startNodeWork(start, diskRTree, newValues, startIndex,
-                                        gidNode, nodesDriver);
+
+                // Do start node work.
+                gidNode = expansionWork(newValues, diskRTree, nodesDriver,
+                                        gidNode, start, startIndex);
+
                 Envelope endEnvelope = new Envelope(end);
                 if (expand) {
                     endEnvelope.expandBy(tolerance);
@@ -251,7 +254,7 @@ public class NetworkGraphBuilder {
                     newValues[endIndex] =
                             ValueFactory.createValue(gidsEnd[0]);
                 }
-                
+
                 edgesDriver.addValues(newValues);
             }
             cleanUp(nodesDriver, edgesDriver, diskTreePath);
@@ -292,27 +295,30 @@ public class NetworkGraphBuilder {
         pm.endTask();
     }
 
-    private int startNodeWork(Coordinate start, DiskRTree diskRTree,
-                              final Value[] newValues, int startIndex,
-                              int gidNode, DiskBufferDriver nodesDriver) throws
-            IOException, DriverException {
+    private int expansionWork(final Value[] row,
+                              DiskRTree diskRTree,
+                              DiskBufferDriver nodesDriver,
+                              int gidNode,
+                              Coordinate coord,
+                              int index)
+            throws IOException, DriverException {
         // Expansion work ... // TODO
-        Envelope startEnvelope = new Envelope(start);
+        Envelope envelope = new Envelope(coord);
         if (expand) {
-            startEnvelope.expandBy(tolerance);
+            envelope.expandBy(tolerance);
         }
         // TODO
-        int[] gidsStart = diskRTree.query(startEnvelope);
+        int[] gidsStart = diskRTree.query(envelope);
         if (gidsStart.length == 0) {
-            newValues[startIndex] =
+            row[index] =
                     ValueFactory.createValue(gidNode);
             nodesDriver.addValues(new Value[]{
-                ValueFactory.createValue(gf.createPoint(start)),
+                ValueFactory.createValue(gf.createPoint(coord)),
                 ValueFactory.createValue(gidNode)});
-            diskRTree.insert(startEnvelope, gidNode);
+            diskRTree.insert(envelope, gidNode);
             gidNode++;
         } else {
-            newValues[startIndex] =
+            row[index] =
                     ValueFactory.createValue(gidsStart[0]);
         }
         return gidNode;
