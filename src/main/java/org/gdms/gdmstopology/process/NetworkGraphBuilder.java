@@ -38,7 +38,6 @@ import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import java.io.File;
 import java.io.IOException;
-import java.util.Iterator;
 import org.gdms.data.DataSourceFactory;
 import org.gdms.data.NonEditableDataSourceException;
 import org.gdms.data.indexes.rtree.DiskRTree;
@@ -149,9 +148,11 @@ public class NetworkGraphBuilder {
         // Get the geometry field index.
         int geomFieldIndex = MetadataUtilities.getSpatialFieldIndex(
                 dataSet.getMetadata());
-
-        if (geomFieldIndex != -1) { // Make sure there is a geometry field.
-
+        // Make sure there is a geometry field.
+        if (geomFieldIndex == -1) {
+            throw new DriverException(
+                    "The table must contain a geometry field");
+        } else {
             // Create a DiskBufferDriver for the nodes table.
             DiskBufferDriver nodesDriver =
                     new DiskBufferDriver(
@@ -294,9 +295,6 @@ public class NetworkGraphBuilder {
             //Remove the Rtree on disk
             new File(diskTreePath).delete();
             pm.endTask();
-        } else {
-            throw new DriverException(
-                    "The table must contain a geometry field");
         }
     }
 }
