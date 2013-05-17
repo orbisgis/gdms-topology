@@ -202,13 +202,10 @@ public class NetworkGraphBuilder {
                         break;
                     }
                 }
-                // Prepare the new row which will be the old row with
-                // new values appended.
-                final Value[] edgesRow = new Value[fieldsCount];
-                // Copy over the old values.
-                System.arraycopy(row, 0, edgesRow, 0, srcFieldsCount);
-                // Add an id.
-                edgesRow[idIndex] = ValueFactory.createValue(edgeCount++);
+
+                Value[] edgesRow = prepareEdgesRow(fieldsCount, row,
+                                                   srcFieldsCount, idIndex,
+                                                   edgeCount);
 
                 Coordinate[] cc = getCoords(row, geomFieldIndex);
 
@@ -239,6 +236,19 @@ public class NetworkGraphBuilder {
             }
             cleanUp(nodesDriver, edgesDriver, diskTreePath);
         }
+    }
+
+    private Value[] prepareEdgesRow(int fieldsCount, Value[] row,
+                                    int srcFieldsCount, int idIndex,
+                                    int edgeCount) {
+        // Prepare the new row which will be the old row with
+        // new values appended.
+        final Value[] edgesRow = new Value[fieldsCount];
+        // Copy over the old values.
+        System.arraycopy(row, 0, edgesRow, 0, srcFieldsCount);
+        // Add an id.
+        edgesRow[idIndex] = ValueFactory.createValue(edgeCount++);
+        return edgesRow;
     }
 
     private Coordinate[] getCoords(Value[] row, int geomFieldIndex) {
