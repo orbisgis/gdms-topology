@@ -52,6 +52,8 @@ import org.gdms.driver.DriverException;
 import org.gdms.gdmstopology.model.GraphMetadataFactory;
 import org.gdms.gdmstopology.model.GraphSchema;
 import org.orbisgis.progress.ProgressMonitor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Builds a graph (nodes + edges) from the given input data.
@@ -73,6 +75,8 @@ public class NetworkGraphBuilder {
     boolean zDirection = false;
     private String output_name;
     private boolean dim3 = false;
+    private static final Logger LOGGER =
+            LoggerFactory.getLogger(NetworkGraphBuilder.class);
 
     /**
      * This class is used to order edges and create required nodes to build a
@@ -193,10 +197,8 @@ public class NetworkGraphBuilder {
             int startIndex = edgeMedata.getFieldIndex(GraphSchema.START_NODE);
             int endIndex = edgeMedata.getFieldIndex(GraphSchema.END_NODE);
             // FIELD COUNTS
-            // The number of fields in the input table.
-            int srcFieldsCount = originalMD.getFieldCount();
             // The number of fields in the edge metadata.
-            int fieldsCount = edgeMedata.getFieldCount();
+            int edgesFieldCount = edgeMedata.getFieldCount();
             // COUNTERS
             int edgeCount = 0;
             int gidNode = 1;
@@ -212,11 +214,11 @@ public class NetworkGraphBuilder {
                 }
 
                 // Initialize a new row to be added to the edges driver.
-                Value[] edgesRow = prepareEdgesRow(row,
-                                                   srcFieldsCount,
-                                                   fieldsCount,
-                                                   edgeCount,
-                                                   idIndex);
+                Value[] edgesRow = initializeEdgeRow(row,
+                                                     edgesFieldCount);
+                // Add an id.
+                edgesRow[idIndex] = ValueFactory.createValue(edgeCount++);
+                LOGGER.debug("Edge count: {}", edgeCount);
 
                 // Get the start and end coordinates.
                 Coordinate[] cc = getCoords(row, geomFieldIndex);
@@ -246,19 +248,29 @@ public class NetworkGraphBuilder {
         }
     }
 
-    private Value[] prepareEdgesRow(Value[] row,
-                                    int srcFieldsCount,
-                                    int fieldsCount,
-                                    int edgeCount,
-                                    int idIndex) {
-        // Prepare the new row which will be the old row with
-        // new values appended.
-        final Value[] edgesRow = new Value[fieldsCount];
-        // Copy over the old values.
-        System.arraycopy(row, 0, edgesRow, 0, srcFieldsCount);
-        // Add an id.
-        edgesRow[idIndex] = ValueFactory.createValue(edgeCount++);
-        return edgesRow;
+    /**
+     * Initiates a new edge row as a copy of the given original row with space
+     * for new values.
+     *
+     * @param originalRow     The original row to be copied
+     * @param edgesFieldCount The number of fields in the edge row
+     *
+     * @return A newly initialized edge row ready to be filled in.
+     *
+     * @see GraphMetadataFactory#createEdgeMetadata
+     */
+    private Value[] initializeEdgeRow(Value[] originalRow,
+                                      int edgesFieldCount) {
+        if (edgesFieldCount < originalRow.length) {
+            throw new IllegalStateException("The edges row cannot have "
+                    + "fewer fields than the original row.");
+        } else {
+            // Initialize the new row.
+            final Value[] edgesRow = new Value[edgesFieldCount];
+            // Copy over the old values.
+            System.arraycopy(originalRow, 0, edgesRow, 0, originalRow.length);
+            return edgesRow;
+        }
     }
 
     private Coordinate[] getCoords(Value[] row, int geomFieldIndex) {
