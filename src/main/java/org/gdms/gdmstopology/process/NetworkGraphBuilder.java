@@ -177,9 +177,9 @@ public class NetworkGraphBuilder {
             int fieldsCount = edgeMedata.getFieldCount();
 
             // Set the indices for the id, start_node, and end_node.
-            int idIndex = srcFieldsCount;
-            int initialIndex = srcFieldsCount + 1;
-            int finalIndex = srcFieldsCount + 2;
+            int idIndex = edgeMedata.getFieldIndex(GraphSchema.ID);
+            int startIndex = edgeMedata.getFieldIndex(GraphSchema.START_NODE);
+            int endIndex = edgeMedata.getFieldIndex(GraphSchema.END_NODE);
 
             // Create a DiskBufferDriver for the edges table.
             DiskBufferDriver edgesDriver =
@@ -237,7 +237,7 @@ public class NetworkGraphBuilder {
                 int[] gidsStart = diskRTree.query(startEnvelope);
 
                 if (gidsStart.length == 0) {
-                    newValues[initialIndex] =
+                    newValues[startIndex] =
                             ValueFactory.createValue(gidNode);
                     nodesDriver.addValues(new Value[]{
                         ValueFactory.createValue(gf.createPoint(start)),
@@ -245,7 +245,7 @@ public class NetworkGraphBuilder {
                     diskRTree.insert(startEnvelope, gidNode);
                     gidNode++;
                 } else {
-                    newValues[initialIndex] =
+                    newValues[startIndex] =
                             ValueFactory.createValue(gidsStart[0]);
                 }
                 Envelope endEnvelope = new Envelope(end);
@@ -254,7 +254,7 @@ public class NetworkGraphBuilder {
                 }
                 int[] gidsEnd = diskRTree.query(endEnvelope);
                 if (gidsEnd.length == 0) {
-                    newValues[finalIndex] =
+                    newValues[endIndex] =
                             ValueFactory.createValue(gidNode);
                     nodesDriver.addValues(new Value[]{
                         ValueFactory.createValue(gf.createPoint(end)),
@@ -262,7 +262,7 @@ public class NetworkGraphBuilder {
                     diskRTree.insert(endEnvelope, gidNode);
                     gidNode++;
                 } else {
-                    newValues[finalIndex] =
+                    newValues[endIndex] =
                             ValueFactory.createValue(gidsEnd[0]);
                 }
                 edgesDriver.addValues(newValues);
