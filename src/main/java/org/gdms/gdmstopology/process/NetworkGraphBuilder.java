@@ -193,11 +193,11 @@ public class NetworkGraphBuilder {
             int gidNode = 1;
             pm.startTask("Create the graph", 100);
 
-            int count = 0;
+            int edgeCount = 0;
             // Go through the DataSet.
             for (Value[] row : dataSet) {
                 // See if the task has been cancelled.
-                if (count >= 100 && count % 100 == 0) {
+                if (edgeCount >= 100 && edgeCount % 100 == 0) {
                     if (pm.isCancelled()) {
                         break;
                     }
@@ -208,7 +208,7 @@ public class NetworkGraphBuilder {
                 // Copy over the old values.
                 System.arraycopy(row, 0, edgesRow, 0, srcFieldsCount);
                 // Add an id.
-                edgesRow[idIndex] = ValueFactory.createValue(count++);
+                edgesRow[idIndex] = ValueFactory.createValue(edgeCount++);
                 // Get the geometry.
                 Geometry geom = row[geomFieldIndex].getAsGeometry();
                 // Get the length of the geometry.
