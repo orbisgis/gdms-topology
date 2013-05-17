@@ -193,10 +193,10 @@ public class ST_Graph extends AbstractExecutorFunction {
                 graphNetwork.setTolerance(values[0].getAsDouble());
             } else if (values.length == 2) {
                 graphNetwork.setTolerance(values[0].getAsDouble());
-                graphNetwork.setZDirection(values[1].getAsBoolean());
+                graphNetwork.setOrientBySlope(values[1].getAsBoolean());
             } else if (values.length == 3) {
                 graphNetwork.setTolerance(values[0].getAsDouble());
-                graphNetwork.setZDirection(values[1].getAsBoolean());
+                graphNetwork.setOrientBySlope(values[1].getAsBoolean());
                 graphNetwork.setOutput_name(values[2].getAsString());
             }
             // Build the actual graph.

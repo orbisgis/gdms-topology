@@ -72,7 +72,7 @@ public class NetworkGraphBuilder {
     GeometryFactory gf = new GeometryFactory();
     private double tolerance = 0;
     private boolean expand = false;
-    boolean zDirection = false;
+    boolean orientBySlope = false;
     private String output_name;
     private boolean dim3 = false;
     private static final Logger LOGGER =
@@ -95,8 +95,8 @@ public class NetworkGraphBuilder {
      * @return if true is the graph is oriented coordinate the z value of the
      *         start and end coordinates
      */
-    public boolean isZDirection() {
-        return zDirection;
+    public boolean orientBySlope() {
+        return orientBySlope;
     }
 
     /**
@@ -105,8 +105,8 @@ public class NetworkGraphBuilder {
      *
      * @param dim3
      */
-    public void setZDirection(boolean zDirection) {
-        this.zDirection = zDirection;
+    public void setOrientBySlope(boolean orientBySlope) {
+        this.orientBySlope = orientBySlope;
     }
 
     /**
@@ -230,7 +230,7 @@ public class NetworkGraphBuilder {
                 Coordinate end = cc[cc.length - 1];
 
                 // Update the orientation by slope if necessary.
-                if (isZDirection() && start.z < end.z) {
+                if (orientBySlope() && start.z < end.z) {
                     Coordinate temp = start;
                     start = end;
                     end = temp;
@@ -290,16 +290,14 @@ public class NetworkGraphBuilder {
         // TODO
         int[] gidsStart = diskRTree.query(envelope);
         if (gidsStart.length == 0) {
-            row[index] =
-                    ValueFactory.createValue(gidNode);
+            row[index] = ValueFactory.createValue(gidNode);
             nodesDriver.addValues(new Value[]{
                 ValueFactory.createValue(gf.createPoint(coord)),
                 ValueFactory.createValue(gidNode)});
             diskRTree.insert(envelope, gidNode);
             gidNode++;
         } else {
-            row[index] =
-                    ValueFactory.createValue(gidsStart[0]);
+            row[index] = ValueFactory.createValue(gidsStart[0]);
         }
         return gidNode;
     }
