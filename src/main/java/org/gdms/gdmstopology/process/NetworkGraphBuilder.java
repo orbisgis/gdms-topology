@@ -52,8 +52,6 @@ import org.gdms.driver.DriverException;
 import org.gdms.gdmstopology.model.GraphMetadataFactory;
 import org.gdms.gdmstopology.model.GraphSchema;
 import org.orbisgis.progress.ProgressMonitor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Builds a graph (nodes + edges) from the given input data.
@@ -67,22 +65,45 @@ import org.slf4j.LoggerFactory;
  */
 public class NetworkGraphBuilder {
 
+    /**
+     * Used to parse the data set.
+     */
     private DataSourceFactory dsf;
+    /**
+     * Progress monitor.
+     */
     private ProgressMonitor pm;
-    GeometryFactory gf = new GeometryFactory();
-    private double tolerance = 0;
+    /**
+     * Used here to create {@link com.vividsolutions.jts.geom.Point}s (for
+     * nodes).
+     */
+    private static final GeometryFactory GF = new GeometryFactory();
+    /**
+     * Nodes within a radius r=tolerance of each other will be considered a
+     * single node.
+     */
+    private double tolerance = 0.0;
+    /**
+     * Boolean indicating whether the envelope around a point coordinate should
+     * be expanded by the given tolerance to look for nearby nodes.
+     */
     private boolean expandByTolerance = false;
+    /**
+     * Boolean indicating whether edges should be oriented from higher elevation
+     * to lower elevation.
+     */
     boolean orientBySlope = false;
+    /**
+     * The output name to prefix ".nodes" and ".edges".
+     */
     private String output_name;
-    private static final Logger LOGGER =
-            LoggerFactory.getLogger(NetworkGraphBuilder.class);
 
     /**
      * This class is used to order edges and create required nodes to build a
      * network graph
      *
-     * @param dsf
-     * @param pm
+     * @param dsf Used to parse the data set.
+     * @param pm  Progress monitor.
      */
     public NetworkGraphBuilder(DataSourceFactory dsf, ProgressMonitor pm) {
         this.dsf = dsf;
@@ -303,7 +324,7 @@ public class NetworkGraphBuilder {
             // Add this node's coordinate (as a POINT) and its id to the 
             // nodes table.
             nodesDriver.addValues(new Value[]{
-                ValueFactory.createValue(gf.createPoint(nodeCoord)),
+                ValueFactory.createValue(GF.createPoint(nodeCoord)),
                 ValueFactory.createValue(nodesGID)});
             // Insert the envelope around this node at the nodesGID row index.
             diskRTree.insert(envelope, nodesGID);
