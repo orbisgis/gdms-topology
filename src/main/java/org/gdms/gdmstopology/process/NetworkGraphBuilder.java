@@ -133,7 +133,7 @@ public class NetworkGraphBuilder {
      * Create the two data structure nodes and edges using a RTree disk. This
      * method limits the overhead when the all nodes are ordered.
      *
-     * @param sds
+     * @param dataSet Original dataset from which to build the graph.
      *
      * @throws DriverException
      * @throws IOException
