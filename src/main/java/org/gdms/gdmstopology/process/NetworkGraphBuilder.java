@@ -74,7 +74,6 @@ public class NetworkGraphBuilder {
     private boolean expandByTolerance = false;
     boolean orientBySlope = false;
     private String output_name;
-    private boolean dim3 = false;
     private static final Logger LOGGER =
             LoggerFactory.getLogger(NetworkGraphBuilder.class);
 
@@ -102,23 +101,19 @@ public class NetworkGraphBuilder {
     }
 
     /**
-     * Set if the z value of the coordinate must be used to order the nodes.
+     * Sets the tolerance.
      *
-     * @param dim3
-     */
-    public void setDim3(boolean dim3) {
-        this.dim3 = dim3;
-    }
-
-    /**
-     * Tolerance is used to merge closed nodes
-     *
-     * @param tolerance
+     * @param tolerance The tolerance.
      */
     public void setTolerance(double tolerance) {
         this.tolerance = tolerance;
     }
 
+    /**
+     * Sets the output table name.
+     *
+     * @param output_name The output table name.
+     */
     public void setOutput_name(String output_name) {
         this.output_name = output_name;
     }
