@@ -71,7 +71,7 @@ public class NetworkGraphBuilder {
     private ProgressMonitor pm;
     GeometryFactory gf = new GeometryFactory();
     private double tolerance = 0;
-    private boolean expand = false;
+    private boolean expandByTolerance = false;
     boolean orientBySlope = false;
     private String output_name;
     private boolean dim3 = false;
@@ -202,10 +202,6 @@ public class NetworkGraphBuilder {
 
                 // Get the geometry.
                 Geometry geom = row[geomFieldIndex].getAsGeometry();
-                // Decide whether or not to expand.
-                if (tolerance > 0 && geom.getLength() >= tolerance) {
-                    expand = true;
-                }
                 // Get the start and end coordinates of the geometry.
                 Coordinate[] cc = geom.getCoordinates();
                 Coordinate start = cc[0];
@@ -219,6 +215,13 @@ public class NetworkGraphBuilder {
                     end = temp;
                 }
 
+                // If we have a positive tolerance and this geometry's length
+                // is at least as big as the tolerance, then will expand an 
+                // envelope around a Coordinate by the given tolerance.
+                // TODO: Should we set expandByTolerance back to false otherwise?
+                if (tolerance > 0 && geom.getLength() >= tolerance) {
+                    expandByTolerance = true;
+                }
                 // Do start and end node work.
                 gidNode = expansionWork(edgesRow, diskRTree, nodesDriver,
                                         gidNode, start, startIndex);
@@ -267,7 +270,7 @@ public class NetworkGraphBuilder {
             throws IOException, DriverException {
         // Expansion work ... // TODO
         Envelope envelope = new Envelope(coord);
-        if (expand) {
+        if (expandByTolerance) {
             envelope.expandBy(tolerance);
         }
         // TODO
