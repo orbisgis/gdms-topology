@@ -214,24 +214,26 @@ public class NetworkGraphBuilder {
                 }
 
                 // Initialize a new row to be added to the edges driver.
-                Value[] edgesRow = initializeEdgeRow(row,
-                                                     edgesFieldCount);
+                Value[] edgesRow = initializeEdgeRow(row, edgesFieldCount);
                 // Add an id.
                 edgesRow[idIndex] = ValueFactory.createValue(edgeCount++);
-                LOGGER.debug("Edge count: {}", edgeCount);
 
-                // Get the start and end coordinates.
-                Coordinate[] cc = getCoords(row, geomFieldIndex);
+                // Get the geometry.
+                Geometry geom = row[geomFieldIndex].getAsGeometry();
+                // Decide whether or not to expand.
+                if (tolerance > 0 && geom.getLength() >= tolerance) {
+                    expand = true;
+                }
+                // Get the start and end coordinates of the geometry.
+                Coordinate[] cc = geom.getCoordinates();
                 Coordinate start = cc[0];
                 Coordinate end = cc[cc.length - 1];
 
                 // Update the orientation by slope if necessary.
-                if (isZDirection()) {
-                    if (start.z < end.z) {
-                        Coordinate temp = start;
-                        start = end;
-                        end = temp;
-                    }
+                if (isZDirection() && start.z < end.z) {
+                    Coordinate temp = start;
+                    start = end;
+                    end = temp;
                 }
 
                 // Do start and end node work.
@@ -271,20 +273,6 @@ public class NetworkGraphBuilder {
             System.arraycopy(originalRow, 0, edgesRow, 0, originalRow.length);
             return edgesRow;
         }
-    }
-
-    private Coordinate[] getCoords(Value[] row, int geomFieldIndex) {
-        // Get the geometry.
-        Geometry geom = row[geomFieldIndex].getAsGeometry();
-        // Get the length of the geometry.
-        double length = geom.getLength();
-        // Whether or not to expand ... // TODO
-        if (tolerance > 0 && length >= tolerance) {
-            expand = true;
-        }
-        // Get the coordinates of the geometry.
-        Coordinate[] cc = geom.getCoordinates();
-        return cc;
     }
 
     private int expansionWork(final Value[] row,
