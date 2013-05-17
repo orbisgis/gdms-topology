@@ -181,14 +181,14 @@ public class NetworkGraphBuilder {
             int startIndex = edgeMedata.getFieldIndex(GraphSchema.START_NODE);
             int endIndex = edgeMedata.getFieldIndex(GraphSchema.END_NODE);
             // COUNTERS
-            int edgeCount = 0;
-            int gidNode = 1;
+            int edgeGID = 0;
+            int nodesGID = 1;
 
             // Go through the DataSet.
             for (Value[] row : dataSet) {
 
                 // Check if we should cancel.
-                if (edgeCount >= 100 && edgeCount % 100 == 0) {
+                if (edgeGID >= 100 && edgeGID % 100 == 0) {
                     if (pm.isCancelled()) {
                         break;
                     }
@@ -198,21 +198,21 @@ public class NetworkGraphBuilder {
                 Value[] edgesRow =
                         initializeEdgeRow(row, edgeMedata.getFieldCount());
                 // Add an id.
-                edgesRow[idIndex] = ValueFactory.createValue(edgeCount++);
+                edgesRow[idIndex] = ValueFactory.createValue(edgeGID++);
 
                 // Get the geometry.
                 Geometry geom = row[geomFieldIndex].getAsGeometry();
-                // Get the start and end coordinates of the geometry.
+                // Get the start node and end node coordinates from the geometry.
                 Coordinate[] cc = geom.getCoordinates();
-                Coordinate start = cc[0];
-                Coordinate end = cc[cc.length - 1];
+                Coordinate startNodeCoord = cc[0];
+                Coordinate endNodeCoord = cc[cc.length - 1];
 
                 // If orienting by slope, check if the end is higher than the
                 // start. If so, then switch start and end coordinates.
-                if (orientBySlope && start.z < end.z) {
-                    Coordinate temp = start;
-                    start = end;
-                    end = temp;
+                if (orientBySlope && startNodeCoord.z < endNodeCoord.z) {
+                    Coordinate tmpCoord = startNodeCoord;
+                    startNodeCoord = endNodeCoord;
+                    endNodeCoord = tmpCoord;
                 }
 
                 // If we have a positive tolerance and this geometry's length
@@ -222,13 +222,16 @@ public class NetworkGraphBuilder {
                 if (tolerance > 0 && geom.getLength() >= tolerance) {
                     expandByTolerance = true;
                 }
-                // Do start and end node work.
-                gidNode = expansionWork(edgesRow, diskRTree, nodesDriver,
-                                        gidNode, start, startIndex);
-                gidNode = expansionWork(edgesRow, diskRTree, nodesDriver,
-                                        gidNode, end, endIndex);
+                // Add the start node.
+                nodesGID = addNodeToEdgesRowAndNodesDriver(
+                        diskRTree, edgesRow, nodesDriver,
+                        nodesGID, startNodeCoord, startIndex);
+                // Add the end node.
+                nodesGID = addNodeToEdgesRowAndNodesDriver(
+                        diskRTree, edgesRow, nodesDriver,
+                        nodesGID, endNodeCoord, endIndex);
 
-                // Add the row to the edges driver.
+                // Add the edges row to the edges table.
                 edgesDriver.addValues(edgesRow);
             }
             // Clean up.
@@ -261,31 +264,58 @@ public class NetworkGraphBuilder {
         }
     }
 
-    private int expansionWork(final Value[] row,
-                              DiskRTree diskRTree,
-                              DiskBufferDriver nodesDriver,
-                              int gidNode,
-                              Coordinate coord,
-                              int index)
+    /**
+     * Uses the given {@link DiskRTree} to find nearby nodes and stick them
+     * together up to the given tolerance; inserts the node into the edges row
+     * and the nodes table.
+     *
+     * @param diskRTree   The DiskRTree
+     * @param edgesRow    The edges row
+     * @param nodesDriver The nodes table
+     * @param nodesGID    The nodes GID
+     * @param nodeCoord   The node's coordinate
+     * @param nodeIndex   Where to insert the node in the edge row
+     *
+     * @return The nodes GID, incremented if necessary.
+     *
+     * @throws IOException
+     * @throws DriverException
+     */
+    private int addNodeToEdgesRowAndNodesDriver(DiskRTree diskRTree,
+                                                final Value[] edgesRow,
+                                                DiskBufferDriver nodesDriver,
+                                                int nodesGID,
+                                                Coordinate nodeCoord,
+                                                int nodeIndex)
             throws IOException, DriverException {
-        // Expansion work ... // TODO
-        Envelope envelope = new Envelope(coord);
+        // Get an envelope around (on) the given coordinate.
+        Envelope envelope = new Envelope(nodeCoord);
+        // Expand the envelope by tolerance if necessary.
         if (expandByTolerance) {
             envelope.expandBy(tolerance);
         }
-        // TODO
-        int[] gidsStart = diskRTree.query(envelope);
-        if (gidsStart.length == 0) {
-            row[index] = ValueFactory.createValue(gidNode);
+        // See if there are any other nodes in the envelope that we should
+        // stick together into a single node.
+        int[] nearbyNodeIds = diskRTree.query(envelope);
+        // If there is one, then add the previously found node to the edges row
+        // since we are sticking this node to the one found before.
+        if (nearbyNodeIds.length > 0) {
+            edgesRow[nodeIndex] = ValueFactory.createValue(nearbyNodeIds[0]);
+        } // Otherwise, just add this node.
+        else {
+            // Add this node's id to the edge row at the node's index.
+            edgesRow[nodeIndex] = ValueFactory.createValue(nodesGID);
+            // Add this node's coordinate (as a POINT) and its id to the 
+            // nodes table.
             nodesDriver.addValues(new Value[]{
-                ValueFactory.createValue(gf.createPoint(coord)),
-                ValueFactory.createValue(gidNode)});
-            diskRTree.insert(envelope, gidNode);
-            gidNode++;
-        } else {
-            row[index] = ValueFactory.createValue(gidsStart[0]);
+                ValueFactory.createValue(gf.createPoint(nodeCoord)),
+                ValueFactory.createValue(nodesGID)});
+            // Insert the envelope around this node at the nodesGID row index.
+            diskRTree.insert(envelope, nodesGID);
+            // Increment the nodesGID counter.
+            nodesGID++;
         }
-        return gidNode;
+        return nodesGID;
     }
 
     /**
