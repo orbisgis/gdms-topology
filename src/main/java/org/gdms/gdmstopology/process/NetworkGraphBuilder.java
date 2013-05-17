@@ -158,7 +158,7 @@ public class NetworkGraphBuilder {
             DiskBufferDriver nodesDriver =
                     new DiskBufferDriver(
                     dsf.getResultFile("gdms"),
-                    GraphMetadataFactory.createNodesMetadataGraph());
+                    GraphMetadataFactory.createNodesMetadata());
 
             // Get the path of a new file in the temporary directory.
             String diskTreePath = dsf.getTempFile();

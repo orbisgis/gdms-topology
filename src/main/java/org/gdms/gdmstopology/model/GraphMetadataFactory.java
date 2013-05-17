@@ -65,7 +65,7 @@ public final class GraphMetadataFactory {
      *
      * @return The metadata model for the graph nodes datasource.
      */
-    public static Metadata createNodesMetadataGraph() {
+    public static Metadata createNodesMetadata() {
         return new DefaultMetadata(
                 new Type[]{
                     TypeFactory.createType(Type.POINT),
@@ -118,7 +118,7 @@ public final class GraphMetadataFactory {
      *
      * @return The metadata model used by the distance functions.
      */
-    public static Metadata createDistancesMetadataGraph() {
+    public static Metadata createDistancesMetadata() {
         Metadata md = new DefaultMetadata(
                 new Type[]{
                     TypeFactory.createType(Type.INT),
