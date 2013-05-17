@@ -209,20 +209,14 @@ public class NetworkGraphBuilder {
                 System.arraycopy(row, 0, edgesRow, 0, srcFieldsCount);
                 // Add an id.
                 edgesRow[idIndex] = ValueFactory.createValue(edgeCount++);
-                // Get the geometry.
-                Geometry geom = row[geomFieldIndex].getAsGeometry();
-                // Get the length of the geometry.
-                double length = geom.getLength();
-                // Whether or not to expand ... // TODO
-                if (tolerance > 0 && length >= tolerance) {
-                    expand = true;
-                }
-                // Get the coordinates of the geometry.
-                Coordinate[] cc = geom.getCoordinates();
+
+                Coordinate[] cc = getCoords(row, geomFieldIndex);
+
                 // Get the start coordinate.
                 Coordinate start = cc[0];
                 // Get the end coordinate.
                 Coordinate end = cc[cc.length - 1];
+
                 // If the graph is to be oriented by z-values, perform
                 // the proper orientation.
                 if (isZDirection()) {
@@ -245,6 +239,20 @@ public class NetworkGraphBuilder {
             }
             cleanUp(nodesDriver, edgesDriver, diskTreePath);
         }
+    }
+
+    private Coordinate[] getCoords(Value[] row, int geomFieldIndex) {
+        // Get the geometry.
+        Geometry geom = row[geomFieldIndex].getAsGeometry();
+        // Get the length of the geometry.
+        double length = geom.getLength();
+        // Whether or not to expand ... // TODO
+        if (tolerance > 0 && length >= tolerance) {
+            expand = true;
+        }
+        // Get the coordinates of the geometry.
+        Coordinate[] cc = geom.getCoordinates();
+        return cc;
     }
 
     private int expansionWork(final Value[] row,
