@@ -237,23 +237,9 @@ public class NetworkGraphBuilder {
                 gidNode = expansionWork(newValues, diskRTree, nodesDriver,
                                         gidNode, start, startIndex);
 
-                Envelope endEnvelope = new Envelope(end);
-                if (expand) {
-                    endEnvelope.expandBy(tolerance);
-                }
-                int[] gidsEnd = diskRTree.query(endEnvelope);
-                if (gidsEnd.length == 0) {
-                    newValues[endIndex] =
-                            ValueFactory.createValue(gidNode);
-                    nodesDriver.addValues(new Value[]{
-                        ValueFactory.createValue(gf.createPoint(end)),
-                        ValueFactory.createValue(gidNode)});
-                    diskRTree.insert(endEnvelope, gidNode);
-                    gidNode++;
-                } else {
-                    newValues[endIndex] =
-                            ValueFactory.createValue(gidsEnd[0]);
-                }
+                // Do end node work.
+                gidNode = expansionWork(newValues, diskRTree, nodesDriver,
+                                        gidNode, end, endIndex);
 
                 edgesDriver.addValues(newValues);
             }
