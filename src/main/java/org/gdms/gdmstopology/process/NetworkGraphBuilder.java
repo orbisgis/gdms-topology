@@ -158,89 +158,95 @@ public class NetworkGraphBuilder {
             throw new DriverException(
                     "The table must contain a geometry field");
         } else {
-            // Create a DiskBufferDriver for the nodes table.
-            DiskBufferDriver nodesDriver =
-                    new DiskBufferDriver(
-                    dsf.getResultFile("gdms"),
-                    GraphMetadataFactory.createNodesMetadata());
+            
+            pm.startTask("Creating the graph", 100);
 
+            // RTREE
             // Get the path of a new file in the temporary directory.
             String diskTreePath = dsf.getTempFile();
             // TODO: What does this do?
             DiskRTree diskRTree = new DiskRTree();
             diskRTree.newIndex(new File(diskTreePath));
 
+            // METADATA
             // Obtain the original metadata from the input table
             Metadata originalMD = dataSet.getMetadata();
             // Count the number of fields in the input table.
             int srcFieldsCount = originalMD.getFieldCount();
-
             // Create the edge metadata.
             DefaultMetadata edgeMedata =
                     GraphMetadataFactory.createEdgeMetadata(originalMD);
             // Count the number of fields in the edge metadata.
             int fieldsCount = edgeMedata.getFieldCount();
 
-            // Set the indices for the id, start_node, and end_node.
-            int idIndex = edgeMedata.getFieldIndex(GraphSchema.ID);
-            int startIndex = edgeMedata.getFieldIndex(GraphSchema.START_NODE);
-            int endIndex = edgeMedata.getFieldIndex(GraphSchema.END_NODE);
-
+            // DISKBUFFERDRIVERS
+            // Create a DiskBufferDriver for the nodes table.
+            DiskBufferDriver nodesDriver =
+                    new DiskBufferDriver(
+                    dsf.getResultFile("gdms"),
+                    GraphMetadataFactory.createNodesMetadata());
             // Create a DiskBufferDriver for the edges table.
             DiskBufferDriver edgesDriver =
                     new DiskBufferDriver(dsf.getResultFile("gdms"), edgeMedata);
 
-            int gidNode = 1;
-            pm.startTask("Create the graph", 100);
-
+            // INDICES
+            // Set the indices for the id, start_node, and end_node.
+            int idIndex = edgeMedata.getFieldIndex(GraphSchema.ID);
+            int startIndex = edgeMedata.getFieldIndex(GraphSchema.START_NODE);
+            int endIndex = edgeMedata.getFieldIndex(GraphSchema.END_NODE);
+            // COUNTERS
             int edgeCount = 0;
+            int gidNode = 1;
+
             // Go through the DataSet.
             for (Value[] row : dataSet) {
-                // See if the task has been cancelled.
+
+                // Check if we should cancel.
                 if (edgeCount >= 100 && edgeCount % 100 == 0) {
                     if (pm.isCancelled()) {
                         break;
                     }
                 }
 
-                Value[] edgesRow = prepareEdgesRow(fieldsCount, row,
-                                                   srcFieldsCount, idIndex,
-                                                   edgeCount);
+                // Initialize a new row to be added to the edges driver.
+                Value[] edgesRow = prepareEdgesRow(
+                        row,
+                        srcFieldsCount, fieldsCount, edgeCount,
+                        idIndex);
 
+                // Get the start and end coordinates.
                 Coordinate[] cc = getCoords(row, geomFieldIndex);
-
-                // Get the start coordinate.
                 Coordinate start = cc[0];
-                // Get the end coordinate.
                 Coordinate end = cc[cc.length - 1];
 
-                // If the graph is to be oriented by z-values, perform
-                // the proper orientation.
+                // Update the orientation by slope if necessary.
                 if (isZDirection()) {
                     if (start.z < end.z) {
-                        Coordinate tmpStart = start;
+                        Coordinate temp = start;
                         start = end;
-                        end = tmpStart;
+                        end = temp;
                     }
                 }
 
-                // Do start node work.
+                // Do start and end node work.
                 gidNode = expansionWork(edgesRow, diskRTree, nodesDriver,
                                         gidNode, start, startIndex);
-
-                // Do end node work.
                 gidNode = expansionWork(edgesRow, diskRTree, nodesDriver,
                                         gidNode, end, endIndex);
 
+                // Add the row to the edges driver.
                 edgesDriver.addValues(edgesRow);
             }
+            // Clean up.
             cleanUp(nodesDriver, edgesDriver, diskTreePath);
         }
     }
 
-    private Value[] prepareEdgesRow(int fieldsCount, Value[] row,
-                                    int srcFieldsCount, int idIndex,
-                                    int edgeCount) {
+    private Value[] prepareEdgesRow(Value[] row,
+                                    int srcFieldsCount,
+                                    int fieldsCount,
+                                    int edgeCount,
+                                    int idIndex) {
         // Prepare the new row which will be the old row with
         // new values appended.
         final Value[] edgesRow = new Value[fieldsCount];
