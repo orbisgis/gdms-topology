@@ -208,7 +208,7 @@ public class NetworkGraphBuilder {
                 // Copy over the old values.
                 System.arraycopy(row, 0, newValues, 0, srcFieldsCount);
                 // Add an id.
-                newValues[idIndex] = ValueFactory.createValue(count + 1);
+                newValues[idIndex] = ValueFactory.createValue(count++);
                 // Get the geometry.
                 Geometry geom = row[geomFieldIndex].getAsGeometry();
                 // Get the length of the geometry.
@@ -269,9 +269,8 @@ public class NetworkGraphBuilder {
                     newValues[endIndex] =
                             ValueFactory.createValue(gidsEnd[0]);
                 }
+                
                 edgesDriver.addValues(newValues);
-                count++;
-
             }
             cleanUp(nodesDriver, edgesDriver, diskTreePath);
         }
