@@ -91,10 +91,11 @@ public class NetworkGraphBuilder {
     }
 
     /**
-     * Set if the graph must ne oriented according the z value of the start and
-     * end coordinates
+     * Sets whether edges should be oriented from higher elevation to lower
+     * elevation.
      *
-     * @param dim3
+     * @param orientBySlope True iff edges should be oriented from higher
+     *                      elevation to lower elevation.
      */
     public void setOrientBySlope(boolean orientBySlope) {
         this.orientBySlope = orientBySlope;
@@ -210,7 +211,8 @@ public class NetworkGraphBuilder {
                 Coordinate start = cc[0];
                 Coordinate end = cc[cc.length - 1];
 
-                // Update the orientation by slope if necessary.
+                // If orienting by slope, check if the end is higher than the
+                // start. If so, then switch start and end coordinates.
                 if (orientBySlope && start.z < end.z) {
                     Coordinate temp = start;
                     start = end;
