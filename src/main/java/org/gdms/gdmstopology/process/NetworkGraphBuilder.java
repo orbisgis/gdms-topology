@@ -153,31 +153,28 @@ public class NetworkGraphBuilder {
         // Get the geometry field index.
         int geomFieldIndex = MetadataUtilities.getSpatialFieldIndex(
                 dataSet.getMetadata());
+
         // Make sure there is a geometry field.
         if (geomFieldIndex == -1) {
             throw new DriverException(
                     "The table must contain a geometry field");
         } else {
-            
+
+            // Start the task.
             pm.startTask("Creating the graph", 100);
 
             // RTREE
-            // Get the path of a new file in the temporary directory.
-            String diskTreePath = dsf.getTempFile();
-            // TODO: What does this do?
+            String diskRTreePath = dsf.getTempFile();
             DiskRTree diskRTree = new DiskRTree();
-            diskRTree.newIndex(new File(diskTreePath));
+            File diskRTreeFile = new File(diskRTreePath);
+            diskRTree.newIndex(diskRTreeFile);
 
             // METADATA
-            // Obtain the original metadata from the input table
+            // The original metadata from the input table.
             Metadata originalMD = dataSet.getMetadata();
-            // Count the number of fields in the input table.
-            int srcFieldsCount = originalMD.getFieldCount();
-            // Create the edge metadata.
-            DefaultMetadata edgeMedata =
-                    GraphMetadataFactory.createEdgeMetadata(originalMD);
-            // Count the number of fields in the edge metadata.
-            int fieldsCount = edgeMedata.getFieldCount();
+            // The edge metadata.
+            DefaultMetadata edgeMedata = GraphMetadataFactory
+                    .createEdgeMetadata(originalMD);
 
             // DISKBUFFERDRIVERS
             // Create a DiskBufferDriver for the nodes table.
@@ -187,13 +184,19 @@ public class NetworkGraphBuilder {
                     GraphMetadataFactory.createNodesMetadata());
             // Create a DiskBufferDriver for the edges table.
             DiskBufferDriver edgesDriver =
-                    new DiskBufferDriver(dsf.getResultFile("gdms"), edgeMedata);
+                    new DiskBufferDriver(dsf.getResultFile("gdms"),
+                                         edgeMedata);
 
             // INDICES
             // Set the indices for the id, start_node, and end_node.
             int idIndex = edgeMedata.getFieldIndex(GraphSchema.ID);
             int startIndex = edgeMedata.getFieldIndex(GraphSchema.START_NODE);
             int endIndex = edgeMedata.getFieldIndex(GraphSchema.END_NODE);
+            // FIELD COUNTS
+            // The number of fields in the input table.
+            int srcFieldsCount = originalMD.getFieldCount();
+            // The number of fields in the edge metadata.
+            int fieldsCount = edgeMedata.getFieldCount();
             // COUNTERS
             int edgeCount = 0;
             int gidNode = 1;
@@ -209,10 +212,11 @@ public class NetworkGraphBuilder {
                 }
 
                 // Initialize a new row to be added to the edges driver.
-                Value[] edgesRow = prepareEdgesRow(
-                        row,
-                        srcFieldsCount, fieldsCount, edgeCount,
-                        idIndex);
+                Value[] edgesRow = prepareEdgesRow(row,
+                                                   srcFieldsCount,
+                                                   fieldsCount,
+                                                   edgeCount,
+                                                   idIndex);
 
                 // Get the start and end coordinates.
                 Coordinate[] cc = getCoords(row, geomFieldIndex);
@@ -238,7 +242,7 @@ public class NetworkGraphBuilder {
                 edgesDriver.addValues(edgesRow);
             }
             // Clean up.
-            cleanUp(nodesDriver, edgesDriver, diskTreePath);
+            cleanUp(nodesDriver, edgesDriver, diskRTreeFile);
         }
     }
 
@@ -304,15 +308,15 @@ public class NetworkGraphBuilder {
      * Clean up: register the nodes and edges tables, delete the RTree and end
      * the task.
      *
-     * @param nodesDriver  Nodes driver
-     * @param edgesDriver  Edges driver
-     * @param diskTreePath Path to the RTree
+     * @param nodesDriver   Nodes driver
+     * @param edgesDriver   Edges driver
+     * @param diskRTreeFile RTree file to be deleted
      *
      * @throws DriverException
      */
     private void cleanUp(DiskBufferDriver nodesDriver,
                          DiskBufferDriver edgesDriver,
-                         String diskTreePath)
+                         File diskRTreeFile)
             throws DriverException {
         // Finished writing.
         nodesDriver.writingFinished();
@@ -330,7 +334,9 @@ public class NetworkGraphBuilder {
                 register(ds_edges_name, edgesDriver.getFile());
 
         //Remove the Rtree on disk
-        new File(diskTreePath).delete();
+        diskRTreeFile.delete();
+
+        // End the task.
         pm.endTask();
     }
 }
