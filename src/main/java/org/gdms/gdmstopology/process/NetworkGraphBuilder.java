@@ -54,8 +54,14 @@ import org.gdms.gdmstopology.model.GraphSchema;
 import org.orbisgis.progress.ProgressMonitor;
 
 /**
+ * Builds a graph (nodes + edges) from the given input data.
  *
- * @author Erwan Bocher
+ * Concretely, {@link #buildGraph} uses an RTreeDisk on the given input network
+ * to produce two tables, nodes and edges. These tables contain unique ids
+ * assigned to each node (intersections) and edge edge (lines cut by
+ * intersections).
+ *
+ * @author Erwan Bocher, Adam Gouge
  */
 public class NetworkGraphBuilder {
 
@@ -200,8 +206,7 @@ public class NetworkGraphBuilder {
                 // new values appended.
                 final Value[] newValues = new Value[fieldsCount];
                 // Copy over the old values.
-                System.arraycopy(row, 0, newValues, 0,
-                                 srcFieldsCount);
+                System.arraycopy(row, 0, newValues, 0, srcFieldsCount);
                 // Add an id.
                 newValues[idIndex] = ValueFactory.createValue(count + 1);
                 // Get the geometry.
@@ -273,11 +278,12 @@ public class NetworkGraphBuilder {
     }
 
     /**
-     * Clean up.
+     * Clean up: register the nodes and edges tables, delete the RTree and end
+     * the task.
      *
-     * @param nodesDriver
-     * @param edgesDriver
-     * @param diskTreePath
+     * @param nodesDriver  Nodes driver
+     * @param edgesDriver  Edges driver
+     * @param diskTreePath Path to the RTree
      *
      * @throws DriverException
      */
@@ -288,7 +294,6 @@ public class NetworkGraphBuilder {
         // Finished writing.
         nodesDriver.writingFinished();
         edgesDriver.writingFinished();
-
 
         // The datasources will be registered as a schema
         String ds_nodes_name = dsf.getSourceManager().getUniqueName(
