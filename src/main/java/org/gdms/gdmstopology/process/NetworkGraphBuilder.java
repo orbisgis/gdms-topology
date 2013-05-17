@@ -179,9 +179,6 @@ public class NetworkGraphBuilder {
             int idIndex = edgeMedata.getFieldIndex(GraphSchema.ID);
             int startIndex = edgeMedata.getFieldIndex(GraphSchema.START_NODE);
             int endIndex = edgeMedata.getFieldIndex(GraphSchema.END_NODE);
-            // FIELD COUNTS
-            // The number of fields in the edge metadata.
-            int edgesFieldCount = edgeMedata.getFieldCount();
             // COUNTERS
             int edgeCount = 0;
             int gidNode = 1;
@@ -197,7 +194,8 @@ public class NetworkGraphBuilder {
                 }
 
                 // Initialize a new row to be added to the edges driver.
-                Value[] edgesRow = initializeEdgeRow(row, edgesFieldCount);
+                Value[] edgesRow =
+                        initializeEdgeRow(row, edgeMedata.getFieldCount());
                 // Add an id.
                 edgesRow[idIndex] = ValueFactory.createValue(edgeCount++);
 
