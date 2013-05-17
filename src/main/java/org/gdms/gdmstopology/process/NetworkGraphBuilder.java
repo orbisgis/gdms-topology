@@ -276,25 +276,41 @@ public class NetworkGraphBuilder {
                 count++;
 
             }
-            // Finished writing.
-            nodesDriver.writingFinished();
-            edgesDriver.writingFinished();
-
-
-            // The datasources will be registered as a schema
-            String ds_nodes_name = dsf.getSourceManager().getUniqueName(
-                    output_name + ".nodes");
-            dsf.getSourceManager().
-                    register(ds_nodes_name, nodesDriver.getFile());
-
-            String ds_edges_name = dsf.getSourceManager().getUniqueName(
-                    output_name + ".edges");
-            dsf.getSourceManager().
-                    register(ds_edges_name, edgesDriver.getFile());
-
-            //Remove the Rtree on disk
-            new File(diskTreePath).delete();
-            pm.endTask();
+            cleanUp(nodesDriver, edgesDriver, diskTreePath);
         }
+    }
+
+    /**
+     * Clean up.
+     *
+     * @param nodesDriver
+     * @param edgesDriver
+     * @param diskTreePath
+     *
+     * @throws DriverException
+     */
+    private void cleanUp(DiskBufferDriver nodesDriver,
+                         DiskBufferDriver edgesDriver,
+                         String diskTreePath)
+            throws DriverException {
+        // Finished writing.
+        nodesDriver.writingFinished();
+        edgesDriver.writingFinished();
+
+
+        // The datasources will be registered as a schema
+        String ds_nodes_name = dsf.getSourceManager().getUniqueName(
+                output_name + ".nodes");
+        dsf.getSourceManager().
+                register(ds_nodes_name, nodesDriver.getFile());
+
+        String ds_edges_name = dsf.getSourceManager().getUniqueName(
+                output_name + ".edges");
+        dsf.getSourceManager().
+                register(ds_edges_name, edgesDriver.getFile());
+
+        //Remove the Rtree on disk
+        new File(diskTreePath).delete();
+        pm.endTask();
     }
 }
