@@ -204,11 +204,11 @@ public class NetworkGraphBuilder {
                 }
                 // Prepare the new row which will be the old row with
                 // new values appended.
-                final Value[] newValues = new Value[fieldsCount];
+                final Value[] edgesRow = new Value[fieldsCount];
                 // Copy over the old values.
-                System.arraycopy(row, 0, newValues, 0, srcFieldsCount);
+                System.arraycopy(row, 0, edgesRow, 0, srcFieldsCount);
                 // Add an id.
-                newValues[idIndex] = ValueFactory.createValue(count++);
+                edgesRow[idIndex] = ValueFactory.createValue(count++);
                 // Get the geometry.
                 Geometry geom = row[geomFieldIndex].getAsGeometry();
                 // Get the length of the geometry.
@@ -234,14 +234,14 @@ public class NetworkGraphBuilder {
                 }
 
                 // Do start node work.
-                gidNode = expansionWork(newValues, diskRTree, nodesDriver,
+                gidNode = expansionWork(edgesRow, diskRTree, nodesDriver,
                                         gidNode, start, startIndex);
 
                 // Do end node work.
-                gidNode = expansionWork(newValues, diskRTree, nodesDriver,
+                gidNode = expansionWork(edgesRow, diskRTree, nodesDriver,
                                         gidNode, end, endIndex);
 
-                edgesDriver.addValues(newValues);
+                edgesDriver.addValues(edgesRow);
             }
             cleanUp(nodesDriver, edgesDriver, diskTreePath);
         }
