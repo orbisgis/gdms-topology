@@ -89,9 +89,7 @@ public abstract class ExecutorFunctionHelper extends FunctionHelper {
      * @throws DriverException
      */
     private void writeToTable(DiskBufferDriver driver,
-                                String outputTablePrefix) throws DriverException {
-        // TODO: Necessary?
-//        driver.open();
+                              String outputTablePrefix) throws DriverException {
         // Register the result in a new output table.
         String outputTableName = dsf.getSourceManager().
                 getUniqueName(
