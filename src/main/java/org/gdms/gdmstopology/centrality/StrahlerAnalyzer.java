@@ -44,7 +44,7 @@ import org.gdms.data.values.ValueFactory;
 import org.gdms.driver.DataSet;
 import org.gdms.driver.DiskBufferDriver;
 import org.gdms.driver.DriverException;
-import org.gdms.gdmstopology.functionhelpers.TableFunctionHelper;
+import org.gdms.gdmstopology.functionhelpers.FunctionHelper;
 import org.gdms.gdmstopology.graphcreator.GraphCreator;
 import org.gdms.gdmstopology.model.GraphSchema;
 import org.javanetworkanalyzer.model.Edge;
@@ -58,7 +58,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author Adam Gouge
  */
-public class StrahlerAnalyzer extends TableFunctionHelper {
+public class StrahlerAnalyzer extends FunctionHelper {
 
     /**
      * The data set.
@@ -105,14 +105,14 @@ public class StrahlerAnalyzer extends TableFunctionHelper {
 
     @Override
     protected void computeAndStoreResults(DiskBufferDriver driver) {
-        
+
         // Prepare the graph.
         KeyedGraph<VStrahler, Edge> graph =
                 new GraphCreator(dataSet,
                                  GraphSchema.UNDIRECT,
                                  VStrahler.class,
                                  Edge.class).prepareGraph();
-        
+
         // Compute the Strahler numbers.
         new DFSForStrahler(graph).calculate(graph.getVertex(rootNode));
 

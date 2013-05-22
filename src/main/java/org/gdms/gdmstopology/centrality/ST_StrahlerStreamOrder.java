@@ -124,7 +124,7 @@ public class ST_StrahlerStreamOrder extends AbstractTableFunction {
         rootNode = GraphFunctionParser.parseSource(values[0]);
         // Return a new table listing all the vertices and to which
         // connected component they belong.
-        return new StrahlerAnalyzer(dsf, pm, dataSet, rootNode).doWork();
+        return new StrahlerAnalyzer(dsf, pm, dataSet, rootNode).prepareDataSet();
     }
 
     /**
