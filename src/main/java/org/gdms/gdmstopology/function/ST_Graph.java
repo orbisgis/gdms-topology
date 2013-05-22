@@ -53,8 +53,12 @@ import org.gdms.sql.function.table.TableDefinition;
  * Constructs a mathematical graph based on the data contained in the input
  * table.
  *
- * <p> Example usage: <center>
- * {@code EXECUTE ST_Graph(input_table[, tolerance, orient_by_slope, 'output_table_prefix']);}
+ * <p> Example usage: <center> {@code
+ * EXECUTE ST_Graph(
+ * input_table
+ * [, tolerance,
+ * orient_by_slope,
+ * 'output_table_prefix']);}
  * </center>
  *
  * <p> Concretely, this function produces two tables, containing the indicated
@@ -136,7 +140,6 @@ public class ST_Graph extends AbstractExecutorFunction {
         return "Constructs a mathematical graph based on the data contained "
                 + "in the <code>input_table</code>. This table should contain "
                 + "one-dimensional geometries."
-                
                 + "<p>The <code>tolerance</code> is a double used to define how easily "
                 + "closely neighboring nodes 'snap together' to become a single "
                 + "node. More precisely, a tolerance value of <i>r</i> defines a disk "
@@ -147,7 +150,6 @@ public class ST_Graph extends AbstractExecutorFunction {
                 + "reflect these labeling changes. If more than two disks intersect,"
                 + " a similar procedure is applied. A standard value for the "
                 + "tolerance is <code>0.01</code>."
-                
                 + "<p>The boolean <code>orient_by_slope</code> indicates whether the edges "
                 + "should be oriented according to slope. That is, a value of "
                 + "<code>true</code> will orient each edge from the node with larger "
@@ -155,7 +157,6 @@ public class ST_Graph extends AbstractExecutorFunction {
                 + "of <code>false</code> will orient the graph according to the input "
                 + "geometry. That is, the orientation will be from the first "
                 + "point of a segment to the last point of the segment. "
-                
                 + "<p>Finally, <code>output_table_prefix</code> prefixes the names of the two "
                 + "output tables (<code>.nodes</code> and <code>.edges</code>).";
     }
@@ -163,12 +164,13 @@ public class ST_Graph extends AbstractExecutorFunction {
     /**
      * Evaluates the function in order to build the graph.
      *
-     * @param dsf The {@link DataSourceFactory} used to parse the data set.
+     * @param dsf    The {@link DataSourceFactory} used to parse the data set.
      * @param tables The input table. (This {@link DataSet} array will contain
-     * only one element since there is only one input table.)
+     *               only one element since there is only one input table.)
      * @param values Array containing the optional arguments.
-     * @param pm The progress monitor used to track the progress of the graph
-     * construction.
+     * @param pm     The progress monitor used to track the progress of the
+     *               graph construction.
+     *
      * @throws FunctionException
      */
     @Override
@@ -191,10 +193,10 @@ public class ST_Graph extends AbstractExecutorFunction {
                 graphNetwork.setTolerance(values[0].getAsDouble());
             } else if (values.length == 2) {
                 graphNetwork.setTolerance(values[0].getAsDouble());
-                graphNetwork.setZDirection(values[1].getAsBoolean());
+                graphNetwork.setOrientBySlope(values[1].getAsBoolean());
             } else if (values.length == 3) {
                 graphNetwork.setTolerance(values[0].getAsDouble());
-                graphNetwork.setZDirection(values[1].getAsBoolean());
+                graphNetwork.setOrientBySlope(values[1].getAsBoolean());
                 graphNetwork.setOutput_name(values[2].getAsString());
             }
             // Build the actual graph.
@@ -214,9 +216,14 @@ public class ST_Graph extends AbstractExecutorFunction {
      * Returns an array of all possible signatures of this function. Multiple
      * signatures arise from some arguments being optional.
      *
-     * <p> Possible signatures: <OL> <li> {@code (TABLE input_table)} <li>
-     * {@code (TABLE input_table, DOUBLE tolerance)} <li> {@code (TABLE input_table, DOUBLE tolerance, BOOLEAN orient_by_slope)} <li>
-     * {@code (TABLE input_table, DOUBLE tolerance, BOOLEAN orient_by_slope, STRING output_table_prefix)} </OL>
+     * <p> Possible signatures: <OL>
+     * <li> {@code (TABLE input_table)}
+     * <li> {@code (TABLE input_table, DOUBLE tolerance)}
+     * <li>
+     * {@code (TABLE input_table, DOUBLE tolerance, BOOLEAN orient_by_slope)}
+     * <li>
+     * {@code (TABLE input_table, DOUBLE tolerance, BOOLEAN orient_by_slope, STRING output_table_prefix)}
+     * </OL>
      *
      * @return An array of all possible signatures of this function.
      */
@@ -225,24 +232,24 @@ public class ST_Graph extends AbstractExecutorFunction {
     @Override
     public FunctionSignature[] getFunctionSignatures() {
         return new FunctionSignature[]{
-                    // First possible signature: (TABLE input_table).
-                    new ExecutorFunctionSignature(
-                    new TableArgument(TableDefinition.GEOMETRY)),
-                    // Second possible signature: (TABLE input_table, DOUBLE tolerance)
-                    new ExecutorFunctionSignature(
-                    new TableArgument(TableDefinition.GEOMETRY),
-                    ScalarArgument.DOUBLE),
-                    // Third possible signature: (TABLE input_table, DOUBLE tolerance, BOOLEAN orient_by_slope)
-                    new ExecutorFunctionSignature(
-                    new TableArgument(TableDefinition.GEOMETRY),
-                    ScalarArgument.DOUBLE,
-                    ScalarArgument.BOOLEAN),
-                    // Fourth possible signature: (TABLE input_table, DOUBLE tolerance, BOOLEAN orient_by_slope, STRING output_table_prefix).
-                    new ExecutorFunctionSignature(
-                    new TableArgument(TableDefinition.GEOMETRY),
-                    ScalarArgument.DOUBLE,
-                    ScalarArgument.BOOLEAN,
-                    ScalarArgument.STRING)
-                };
+            // First possible signature: (TABLE input_table).
+            new ExecutorFunctionSignature(
+            new TableArgument(TableDefinition.GEOMETRY)),
+            // Second possible signature: (TABLE input_table, DOUBLE tolerance)
+            new ExecutorFunctionSignature(
+            new TableArgument(TableDefinition.GEOMETRY),
+            ScalarArgument.DOUBLE),
+            // Third possible signature: (TABLE input_table, DOUBLE tolerance, BOOLEAN orient_by_slope)
+            new ExecutorFunctionSignature(
+            new TableArgument(TableDefinition.GEOMETRY),
+            ScalarArgument.DOUBLE,
+            ScalarArgument.BOOLEAN),
+            // Fourth possible signature: (TABLE input_table, DOUBLE tolerance, BOOLEAN orient_by_slope, STRING output_table_prefix).
+            new ExecutorFunctionSignature(
+            new TableArgument(TableDefinition.GEOMETRY),
+            ScalarArgument.DOUBLE,
+            ScalarArgument.BOOLEAN,
+            ScalarArgument.STRING)
+        };
     }
 }

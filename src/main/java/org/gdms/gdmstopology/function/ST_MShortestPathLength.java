@@ -99,7 +99,7 @@ public class ST_MShortestPathLength extends AbstractTableFunction {
 
         @Override
         public Metadata getMetadata(Metadata[] tables) throws DriverException {
-                return GraphMetadataFactory.createDistancesMetadataGraph();
+                return GraphMetadataFactory.createDistancesMetadata();
         }
 
         @Override

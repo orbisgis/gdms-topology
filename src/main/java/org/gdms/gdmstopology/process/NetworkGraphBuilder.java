@@ -38,14 +38,12 @@ import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import java.io.File;
 import java.io.IOException;
-import java.util.Iterator;
 import org.gdms.data.DataSourceFactory;
 import org.gdms.data.NonEditableDataSourceException;
 import org.gdms.data.indexes.rtree.DiskRTree;
 import org.gdms.data.schema.DefaultMetadata;
+import org.gdms.data.schema.Metadata;
 import org.gdms.data.schema.MetadataUtilities;
-import org.gdms.data.types.Type;
-import org.gdms.data.types.TypeFactory;
 import org.gdms.data.values.Value;
 import org.gdms.data.values.ValueFactory;
 import org.gdms.driver.DataSet;
@@ -56,26 +54,56 @@ import org.gdms.gdmstopology.model.GraphSchema;
 import org.orbisgis.progress.ProgressMonitor;
 
 /**
+ * Builds a graph (nodes + edges) from the given input data.
  *
- * @author Erwan Bocher
+ * Concretely, {@link #buildGraph} uses an RTreeDisk on the given input network
+ * to produce two tables, nodes and edges. These tables contain unique ids
+ * assigned to each node (intersections) and edge edge (lines cut by
+ * intersections).
+ *
+ * @author Erwan Bocher, Adam Gouge
  */
 public class NetworkGraphBuilder {
 
+    /**
+     * Used to parse the data set.
+     */
     private DataSourceFactory dsf;
+    /**
+     * Progress monitor.
+     */
     private ProgressMonitor pm;
-    GeometryFactory gf = new GeometryFactory();
-    private double tolerance = 0;
-    private boolean expand = false;
-    boolean zDirection = false;
+    /**
+     * Used here to create {@link com.vividsolutions.jts.geom.Point}s (for
+     * nodes).
+     */
+    private static final GeometryFactory GF = new GeometryFactory();
+    /**
+     * Nodes within a radius r=tolerance of each other will be considered a
+     * single node.
+     */
+    private double tolerance = 0.0;
+    /**
+     * Boolean indicating whether the envelope around a point coordinate should
+     * be expanded by the given tolerance to look for nearby nodes.
+     */
+    private boolean expandByTolerance = false;
+    /**
+     * Boolean indicating whether edges should be oriented from higher elevation
+     * to lower elevation.
+     */
+    boolean orientBySlope = false;
+    /**
+     * The output name to prefix ".nodes" and ".edges".
+     */
     private String output_name;
-    private boolean dim3 = false;
 
     /**
      * This class is used to order edges and create required nodes to build a
      * network graph
      *
-     * @param dsf
-     * @param pm
+     * @param dsf Used to parse the data set.
+     * @param pm  Progress monitor.
      */
     public NetworkGraphBuilder(DataSourceFactory dsf, ProgressMonitor pm) {
         this.dsf = dsf;
@@ -83,50 +111,30 @@ public class NetworkGraphBuilder {
     }
 
     /**
+     * Sets whether edges should be oriented from higher elevation to lower
+     * elevation.
      *
-     * @return if true is the graph is oriented coordinate the z value of the
-     * start and end coordinates
+     * @param orientBySlope True iff edges should be oriented from higher
+     *                      elevation to lower elevation.
      */
-    public boolean isZDirection() {
-        return zDirection;
+    public void setOrientBySlope(boolean orientBySlope) {
+        this.orientBySlope = orientBySlope;
     }
 
     /**
-     * Set if the graph must ne oriented according the z value of the start and
-     * end coordinates
+     * Sets the tolerance.
      *
-     * @param dim3
-     */
-    public void setZDirection(boolean zDirection) {
-        this.zDirection = zDirection;
-    }
-
-    /**
-     * Set if the z value of the coordinate must be used to order the nodes.
-     *
-     * @param dim3
-     */
-    public void setDim3(boolean dim3) {
-        this.dim3 = dim3;
-    }
-
-    /**
-     *
-     * @return if the z value of the coordinate must be used.
-     */
-    public boolean isDim3() {
-        return dim3;
-    }
-
-    /**
-     * Tolerance is used to merge closed nodes
-     *
-     * @param tolerance
+     * @param tolerance The tolerance.
      */
     public void setTolerance(double tolerance) {
         this.tolerance = tolerance;
     }
 
+    /**
+     * Sets the output table name.
+     *
+     * @param output_name The output table name.
+     */
     public void setOutput_name(String output_name) {
         this.output_name = output_name;
     }
@@ -135,148 +143,230 @@ public class NetworkGraphBuilder {
      * Create the two data structure nodes and edges using a RTree disk. This
      * method limits the overhead when the all nodes are ordered.
      *
-     * @param sds
+     * @param dataSet Original dataset from which to build the graph.
+     *
      * @throws DriverException
      * @throws IOException
      * @throws NonEditableDataSourceException
      */
-    public void buildGraph(DataSet dataSet) throws DriverException, IOException, NonEditableDataSourceException {
+    public void buildGraph(DataSet dataSet)
+            throws DriverException,
+            IOException,
+            NonEditableDataSourceException {
 
         // Get the geometry field index.
-        int geomFieldIndex = MetadataUtilities.getSpatialFieldIndex(dataSet.getMetadata());
+        int geomFieldIndex = MetadataUtilities.getSpatialFieldIndex(
+                dataSet.getMetadata());
 
-        if (geomFieldIndex != -1) { // Make sure there is a geometry field.
+        // Make sure there is a geometry field.
+        if (geomFieldIndex == -1) {
+            throw new DriverException(
+                    "The table must contain a geometry field");
+        } else {
 
-            // Create a DiskBufferDriver for the nodes table.
-            DiskBufferDriver nodesDriver = new DiskBufferDriver(dsf.getResultFile("gdms"), GraphMetadataFactory.createNodesMetadataGraph());
+            // Start the task.
+            pm.startTask("Creating the graph", 100);
 
-            // Get the path of a new file in the temporary directory.
-            String diskTreePath = dsf.getTempFile();
-            // TODO: What does this do?
+            // RTREE
+            String diskRTreePath = dsf.getTempFile();
             DiskRTree diskRTree = new DiskRTree();
-            diskRTree.newIndex(new File(diskTreePath));
+            File diskRTreeFile = new File(diskRTreePath);
+            diskRTree.newIndex(diskRTreeFile);
 
-            // Obtain the original metadata from the input table to which we will append the metadata for the edges.
-            DefaultMetadata edgeMedata = new DefaultMetadata(dataSet.getMetadata());
-            // Count the number of fields in the input table.
-            int srcFieldsCount = edgeMedata.getFieldCount();
+            // METADATA
+            // The original metadata from the input table.
+            Metadata originalMD = dataSet.getMetadata();
+            // The edge metadata.
+            DefaultMetadata edgeMedata = GraphMetadataFactory
+                    .createEdgeMetadata(originalMD);
 
-            // Add fields to the metadata for the id, start_node, and end_node.
-            edgeMedata.addField(GraphSchema.ID, TypeFactory.createType(Type.INT));
-            edgeMedata.addField(GraphSchema.START_NODE, TypeFactory.createType(Type.INT));
-            edgeMedata.addField(GraphSchema.END_NODE, TypeFactory.createType(Type.INT));
-
-            // Count the number of fields in the edge metadata.
-            int fieldsCount = edgeMedata.getFieldCount();
-
-            // Set the indices for the id, start_node, and end_node.
-            int idIndex = srcFieldsCount;
-            int initialIndex = srcFieldsCount + 1;
-            int finalIndex = srcFieldsCount + 2;
-
+            // DISKBUFFERDRIVERS
+            // Create a DiskBufferDriver for the nodes table.
+            DiskBufferDriver nodesDriver =
+                    new DiskBufferDriver(
+                    dsf.getResultFile("gdms"),
+                    GraphMetadataFactory.createNodesMetadata());
             // Create a DiskBufferDriver for the edges table.
-            DiskBufferDriver edgesDriver = new DiskBufferDriver(dsf.getResultFile("gdms"), edgeMedata);
+            DiskBufferDriver edgesDriver =
+                    new DiskBufferDriver(dsf.getResultFile("gdms"),
+                                         edgeMedata);
 
-            int gidNode = 1;
-            pm.startTask("Create the graph", 100);
+            // INDICES
+            // Set the indices for the id, start_node, and end_node.
+            int idIndex = edgeMedata.getFieldIndex(GraphSchema.ID);
+            int startIndex = edgeMedata.getFieldIndex(GraphSchema.START_NODE);
+            int endIndex = edgeMedata.getFieldIndex(GraphSchema.END_NODE);
+            // COUNTERS
+            int edgeGID = 0;
+            int nodesGID = 1;
 
-            int count = 0;
             // Go through the DataSet.
             for (Value[] row : dataSet) {
-                // See if the task has been cancelled.
-                if (count >= 100 && count % 100 == 0) {
+
+                // Check if we should cancel.
+                if (edgeGID >= 100 && edgeGID % 100 == 0) {
                     if (pm.isCancelled()) {
                         break;
                     }
                 }
-                // Prepare the new row which will be the old row with new values appended.
-                final Value[] newValues = new Value[fieldsCount];
-                // Copy over the old values.
-                System.arraycopy(row, 0, newValues, 0,
-                        srcFieldsCount);
+
+                // Initialize a new row to be added to the edges driver.
+                Value[] edgesRow =
+                        initializeEdgeRow(row, edgeMedata.getFieldCount());
                 // Add an id.
-                newValues[idIndex] = ValueFactory.createValue(count + 1);
+                edgesRow[idIndex] = ValueFactory.createValue(edgeGID++);
+
                 // Get the geometry.
                 Geometry geom = row[geomFieldIndex].getAsGeometry();
-                // Get the length of the geometry.
-                double length = geom.getLength();
-                // Whether or not to expand ... // TODO
-                if (tolerance > 0 && length >= tolerance) {
-                    expand = true;
-                }
-                // Get the coordinates of the geometry.
+                // Get the start node and end node coordinates from the geometry.
                 Coordinate[] cc = geom.getCoordinates();
-                // Get the start coordinate.
-                Coordinate start = cc[0];
-                // Get the end coordinate.
-                Coordinate end = cc[cc.length - 1];
-                // If the graph is to be oriented by z-values, perform
-                // the proper orientation.
-                if (isZDirection()) {
-                    if (start.z < end.z) {
-                        Coordinate tmpStart = start;
-                        start = end;
-                        end = tmpStart;
-                    }
-                }
-                // Expansion work ... // TODO
-                Envelope startEnvelope = new Envelope(start);
-                if (expand) {
-                    startEnvelope.expandBy(tolerance);
-                }
-                // TODO
-                int[] gidsStart = diskRTree.query(startEnvelope);
-                
-                if (gidsStart.length == 0) {
-                    newValues[initialIndex] =
-                            ValueFactory.createValue(gidNode);
-                    nodesDriver.addValues(new Value[]{
-                                ValueFactory.createValue(gf.createPoint(start)),
-                                ValueFactory.createValue(gidNode)});
-                    diskRTree.insert(startEnvelope, gidNode);
-                    gidNode++;
-                } else {
-                    newValues[initialIndex] =
-                            ValueFactory.createValue(gidsStart[0]);
-                }
-                Envelope endEnvelope = new Envelope(end);
-                if (expand) {
-                    endEnvelope.expandBy(tolerance);
-                }
-                int[] gidsEnd = diskRTree.query(endEnvelope);
-                if (gidsEnd.length == 0) {
-                    newValues[finalIndex] =
-                            ValueFactory.createValue(gidNode);
-                    nodesDriver.addValues(new Value[]{
-                                ValueFactory.createValue(gf.createPoint(end)),
-                                ValueFactory.createValue(gidNode)});
-                    diskRTree.insert(endEnvelope, gidNode);
-                    gidNode++;
-                } else {
-                    newValues[finalIndex] =
-                            ValueFactory.createValue(gidsEnd[0]);
-                }
-                edgesDriver.addValues(newValues);
-                count++;
+                Coordinate startNodeCoord = cc[0];
+                Coordinate endNodeCoord = cc[cc.length - 1];
 
+                // If orienting by slope, check if the end is higher than the
+                // start. If so, then switch start and end coordinates.
+                if (orientBySlope && startNodeCoord.z < endNodeCoord.z) {
+                    Coordinate tmpCoord = startNodeCoord;
+                    startNodeCoord = endNodeCoord;
+                    endNodeCoord = tmpCoord;
+                }
+
+                // If we have a positive tolerance and this geometry's length
+                // is at least as big as the tolerance, then will expand an 
+                // envelope around a Coordinate by the given tolerance.
+                // TODO: Should we set expandByTolerance back to false otherwise?
+                if (tolerance > 0 && geom.getLength() >= tolerance) {
+                    expandByTolerance = true;
+                }
+                // Add the start node.
+                nodesGID = addNodeToEdgesRowAndNodesDriver(
+                        diskRTree, edgesRow, nodesDriver,
+                        nodesGID, startNodeCoord, startIndex);
+                // Add the end node.
+                nodesGID = addNodeToEdgesRowAndNodesDriver(
+                        diskRTree, edgesRow, nodesDriver,
+                        nodesGID, endNodeCoord, endIndex);
+
+                // Add the edges row to the edges table.
+                edgesDriver.addValues(edgesRow);
             }
-            // Finished writing.
-            nodesDriver.writingFinished();
-            edgesDriver.writingFinished();
-
-
-            // The datasources will be registered as a schema
-            String ds_nodes_name = dsf.getSourceManager().getUniqueName(output_name + ".nodes");
-            dsf.getSourceManager().register(ds_nodes_name, nodesDriver.getFile());
-
-            String ds_edges_name = dsf.getSourceManager().getUniqueName(output_name + ".edges");
-            dsf.getSourceManager().register(ds_edges_name, edgesDriver.getFile());
-
-            //Remove the Rtree on disk
-            new File(diskTreePath).delete();
-            pm.endTask();
-        } else {
-            throw new DriverException("The table must contains a geometry field");
+            // Clean up.
+            cleanUp(nodesDriver, edgesDriver, diskRTreeFile);
         }
+    }
+
+    /**
+     * Initiates a new edge row as a copy of the given original row with space
+     * for new values.
+     *
+     * @param originalRow     The original row to be copied
+     * @param edgesFieldCount The number of fields in the edge row
+     *
+     * @return A newly initialized edge row ready to be filled in.
+     *
+     * @see GraphMetadataFactory#createEdgeMetadata
+     */
+    private Value[] initializeEdgeRow(Value[] originalRow,
+                                      int edgesFieldCount) {
+        if (edgesFieldCount < originalRow.length) {
+            throw new IllegalStateException("The edges row cannot have "
+                    + "fewer fields than the original row.");
+        } else {
+            // Initialize the new row.
+            final Value[] edgesRow = new Value[edgesFieldCount];
+            // Copy over the old values.
+            System.arraycopy(originalRow, 0, edgesRow, 0, originalRow.length);
+            return edgesRow;
+        }
+    }
+
+    /**
+     * Uses the given {@link DiskRTree} to find nearby nodes and stick them
+     * together up to the given tolerance; inserts the node into the edges row
+     * and the nodes table.
+     *
+     * @param diskRTree   The DiskRTree
+     * @param edgesRow    The edges row
+     * @param nodesDriver The nodes table
+     * @param nodesGID    The nodes GID
+     * @param nodeCoord   The node's coordinate
+     * @param nodeIndex   Where to insert the node in the edge row
+     *
+     * @return The nodes GID, incremented if necessary.
+     *
+     * @throws IOException
+     * @throws DriverException
+     */
+    private int addNodeToEdgesRowAndNodesDriver(DiskRTree diskRTree,
+                                                final Value[] edgesRow,
+                                                DiskBufferDriver nodesDriver,
+                                                int nodesGID,
+                                                Coordinate nodeCoord,
+                                                int nodeIndex)
+            throws IOException, DriverException {
+        // Get an envelope around (on) the given coordinate.
+        Envelope envelope = new Envelope(nodeCoord);
+        // Expand the envelope by tolerance if necessary.
+        if (expandByTolerance) {
+            envelope.expandBy(tolerance);
+        }
+        // See if there are any other nodes in the envelope that we should
+        // stick together into a single node.
+        int[] nearbyNodeIds = diskRTree.query(envelope);
+        // If there is one, then add the previously found node to the edges row
+        // since we are sticking this node to the one found before.
+        if (nearbyNodeIds.length > 0) {
+            edgesRow[nodeIndex] = ValueFactory.createValue(nearbyNodeIds[0]);
+        } // Otherwise, just add this node.
+        else {
+            // Add this node's id to the edge row at the node's index.
+            edgesRow[nodeIndex] = ValueFactory.createValue(nodesGID);
+            // Add this node's coordinate (as a POINT) and its id to the 
+            // nodes table.
+            nodesDriver.addValues(new Value[]{
+                ValueFactory.createValue(GF.createPoint(nodeCoord)),
+                ValueFactory.createValue(nodesGID)});
+            // Insert the envelope around this node at the nodesGID row index.
+            diskRTree.insert(envelope, nodesGID);
+            // Increment the nodesGID counter.
+            nodesGID++;
+        }
+        return nodesGID;
+    }
+
+    /**
+     * Clean up: register the nodes and edges tables, delete the RTree and end
+     * the task.
+     *
+     * @param nodesDriver   Nodes driver
+     * @param edgesDriver   Edges driver
+     * @param diskRTreeFile RTree file to be deleted
+     *
+     * @throws DriverException
+     */
+    private void cleanUp(DiskBufferDriver nodesDriver,
+                         DiskBufferDriver edgesDriver,
+                         File diskRTreeFile)
+            throws DriverException {
+        // Finished writing.
+        nodesDriver.writingFinished();
+        edgesDriver.writingFinished();
+
+        // The datasources will be registered as a schema
+        String ds_nodes_name = dsf.getSourceManager().getUniqueName(
+                output_name + ".nodes");
+        dsf.getSourceManager().
+                register(ds_nodes_name, nodesDriver.getFile());
+
+        String ds_edges_name = dsf.getSourceManager().getUniqueName(
+                output_name + ".edges");
+        dsf.getSourceManager().
+                register(ds_edges_name, edgesDriver.getFile());
+
+        //Remove the Rtree on disk
+        diskRTreeFile.delete();
+
+        // End the task.
+        pm.endTask();
     }
 }
