@@ -32,24 +32,20 @@
  */
 package org.gdms.gdmstopology.centrality;
 
-import java.io.IOException;
-import org.gdms.data.DataSourceCreationException;
 import org.gdms.data.DataSourceFactory;
-import org.gdms.data.NoSuchTableException;
-import org.gdms.data.types.Type;
+import org.gdms.data.schema.Metadata;
 import org.gdms.data.values.Value;
 import org.gdms.driver.DataSet;
 import org.gdms.driver.DriverException;
 import org.gdms.gdmstopology.model.GraphException;
 import org.gdms.gdmstopology.model.GraphSchema;
 import org.gdms.gdmstopology.parse.GraphFunctionParser;
-import org.gdms.gdmstopology.parse.OutputFunctionParser;
 import org.gdms.gdmstopology.utils.ArrayConcatenator;
 import org.gdms.sql.function.FunctionException;
 import org.gdms.sql.function.FunctionSignature;
 import org.gdms.sql.function.ScalarArgument;
-import org.gdms.sql.function.executor.AbstractExecutorFunction;
 import org.gdms.sql.function.executor.ExecutorFunctionSignature;
+import org.gdms.sql.function.table.AbstractTableFunction;
 import org.gdms.sql.function.table.TableArgument;
 import org.orbisgis.progress.ProgressMonitor;
 
@@ -87,7 +83,7 @@ import org.orbisgis.progress.ProgressMonitor;
  *
  * @author Adam Gouge
  */
-public class ST_GraphAnalysis extends AbstractExecutorFunction {
+public class ST_GraphAnalysis extends AbstractTableFunction {
 
     /**
      * The name of this function.
@@ -96,10 +92,9 @@ public class ST_GraphAnalysis extends AbstractExecutorFunction {
     /**
      * The SQL order of this function.
      */
-    private static final String SQL_ORDER = "EXECUTE ST_GraphAnalysis("
+    private static final String SQL_ORDER = "SELECT * FROM ST_GraphAnalysis("
             + "input_table, "
             + "'weights_column'"
-            + "[, 'output_table_prefix']"
             + "[, orientation]);";
     /**
      * Short description of this function.
@@ -137,10 +132,8 @@ public class ST_GraphAnalysis extends AbstractExecutorFunction {
             + "the name of the column of the input table that gives the weight "
             + "of each edge, or 1 if the graph is to be considered unweighted. "
             + "</ul>"
-            + "<p> Optional parameters: "
+            + "<p> Optional parameter: "
             + "<ul> "
-            + "<li> <code>'output_table_prefix'</code> - a string used to "
-            + "prefix the name of the output table. "
             + "<li> <code>orientation</code> - an integer specifying the "
             + "orientation of the graph: "
             + "<ul> "
@@ -172,15 +165,11 @@ public class ST_GraphAnalysis extends AbstractExecutorFunction {
      * Specifies the weight column (or 1 in the case of an unweighted graph).
      */
     private String weightsColumn;
-    // OPTIONAL ARGUMENTS
+    // OPTIONAL ARGUMENT
     /**
      * Specifies the orientation of the graph.
      */
     private int orientation = -1;
-    /**
-     * Specifies the prefix of the output table name.
-     */
-    private String outputTablePrefix;
 
     /**
      * Evaluates the function to calculate the centrality indices.
@@ -197,7 +186,7 @@ public class ST_GraphAnalysis extends AbstractExecutorFunction {
      * @throws FunctionException
      */
     @Override
-    public void evaluate(
+    public DataSet evaluate(
             DataSourceFactory dsf,
             DataSet[] tables,
             Value[] values,
@@ -212,17 +201,15 @@ public class ST_GraphAnalysis extends AbstractExecutorFunction {
             // SECOND PARAMETER: Either 1 or weight column name.
             weightsColumn = GraphFunctionParser.parseWeight(values[0]);
 
-            // OPTIONAL PARAMETERS: [,'output_table_prefix'][, orientation]
-            parseOptionalArguments(values);
-
+            // OPTIONAL PARAMETER: [, orientation]
+            orientation = (values.length == 2)
+                    ? GraphFunctionParser.parseOrientation(values[1])
+                    : GraphSchema.DIRECT;
             // Take all user-entered values into account when doing
             // graph analysis.
-            doAnalysisAccordingToUserInput(dsf, dataSet, pm);
-
+            return doAnalysisAccordingToUserInput(dsf, dataSet, pm);
         } catch (Exception ex) {
-            System.out.println(ex);
-            throw new FunctionException(
-                    EVALUATE_ERROR, ex);
+            throw new FunctionException(EVALUATE_ERROR, ex);
         }
     }
 
@@ -238,7 +225,7 @@ public class ST_GraphAnalysis extends AbstractExecutorFunction {
      * @throws GraphException
      * @throws DriverException
      */
-    private void doAnalysisAccordingToUserInput(
+    private DataSet doAnalysisAccordingToUserInput(
             DataSourceFactory dsf,
             DataSet dataSet,
             ProgressMonitor pm)
@@ -250,43 +237,7 @@ public class ST_GraphAnalysis extends AbstractExecutorFunction {
                 : // Weighted graph
                 new WeightedGraphAnalyzer(
                 dsf, dataSet, pm, orientation, weightsColumn);
-        analyzer.doWork(outputTablePrefix);
-    }
-
-    /**
-     * Parse the optional function argument at the given index.
-     *
-     * @param values Array containing the other arguments.
-     * @param index  The index.
-     *
-     * @throws FunctionException
-     */
-    private void parseOptionalArgument(Value[] values, int index) {
-        final int slotType = values[index].getType();
-        if (slotType == Type.INT) {
-            orientation = GraphFunctionParser.parseOrientation(values[index]);
-        } else if (slotType == Type.STRING) {
-            outputTablePrefix = OutputFunctionParser.
-                    parseOutputTablePrefix(values[index]);
-        }
-    }
-
-    /**
-     * Parse the optional function arguments.
-     *
-     * @param values Array containing the other arguments.
-     *
-     * @throws FunctionException
-     */
-    private void parseOptionalArguments(Value[] values) {
-        // Set default values.
-        outputTablePrefix = OutputFunctionParser.DEFAULT_OUTPUT_TABLE_PREFIX;
-        orientation = GraphSchema.DIRECT;
-        // Recover optional arguments.
-        int index = NUMBER_OF_REQUIRED_ARGUMENTS;
-        while (values.length > index) {
-            parseOptionalArgument(values, index++);
-        }
+        return analyzer.prepareDataSet();
     }
 
     /**
@@ -390,5 +341,10 @@ public class ST_GraphAnalysis extends AbstractExecutorFunction {
             weight,
             ScalarArgument.INT,
             ScalarArgument.STRING)};
+    }
+
+    @Override
+    public Metadata getMetadata(Metadata[] tables) throws DriverException {
+        return GraphAnalyzer.MD;
     }
 }
