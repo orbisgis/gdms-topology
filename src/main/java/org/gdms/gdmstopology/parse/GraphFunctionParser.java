@@ -37,6 +37,8 @@ import org.gdms.data.types.Type;
 import org.gdms.data.values.Value;
 import org.gdms.gdmstopology.model.GraphSchema;
 import org.gdms.sql.function.FunctionException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A helper class to parse {@link Value} arguments for SQL functions related to
@@ -45,6 +47,9 @@ import org.gdms.sql.function.FunctionException;
  * @author Adam Gouge
  */
 public class GraphFunctionParser {
+
+    private static final Logger LOGGER =
+            LoggerFactory.getLogger(GraphFunctionParser.class);
 
     /**
      * Return the name of the weights column or null for unweighted graphs.
@@ -62,7 +67,7 @@ public class GraphFunctionParser {
         if (slotType == Type.INT) {
             final int allWeightsOneInt = value.getAsInt();
             if (allWeightsOneInt == 1) {
-                System.out.println("Setting all weights equal to 1.");
+                LOGGER.debug("Setting all weights equal to 1.");
                 weights = null;
             } else { // We only accept 1 or a string.
                 throw new IllegalArgumentException(
@@ -72,9 +77,8 @@ public class GraphFunctionParser {
         } else if (slotType == Type.STRING) {
             // Set the weights column name.
             weights = value.getAsString();
-            System.out.println("Setting the weight column name "
-                    + "to be \'" + weights
-                    + "\'.");
+            LOGGER.debug("Setting the weight column name to be \'{}\'.",
+                         weights);
         } else {
             throw new IllegalArgumentException(
                     "Either enter 1 to set all weights equal to 1 "
@@ -96,14 +100,15 @@ public class GraphFunctionParser {
         final int slotType = value.getType();
         if (slotType == Type.INT) {
             final int orientation = value.getAsInt();
-            System.out.print("Setting the orientation "
-                    + "to be ");
-            if (orientation == GraphSchema.DIRECT) {
-                System.out.println("directed.");
-            } else if (orientation == GraphSchema.DIRECT_REVERSED) {
-                System.out.println("reversed.");
-            } else if (orientation == GraphSchema.UNDIRECT) {
-                System.out.println("undirected.");
+            if (LOGGER.isDebugEnabled()) {
+                String graphType = (orientation == GraphSchema.DIRECT)
+                        ? "directed"
+                        : (orientation == GraphSchema.DIRECT_REVERSED)
+                        ? "reversed"
+                        : (orientation == GraphSchema.UNDIRECT)
+                        ? "undirected"
+                        : "ERROR";
+                LOGGER.debug("Setting the orientation to be {}.", graphType);
             }
             return orientation;
         } else {
@@ -162,8 +167,7 @@ public class GraphFunctionParser {
      */
     public static int parseSource(Value value) {
         final int source = parseVertex(value);
-        System.out.println("Setting the source "
-                + "to be " + source + ".");
+        LOGGER.debug("Setting the source to be {}.", source);
         return source;
     }
 
@@ -178,8 +182,7 @@ public class GraphFunctionParser {
      */
     public static int parseTarget(Value value) {
         final int target = parseVertex(value);
-        System.out.println("Setting the target "
-                + "to be " + target + ".");
+        LOGGER.debug("Setting the target to be {}.", target);
         return target;
     }
 }
