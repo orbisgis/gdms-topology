@@ -244,7 +244,7 @@ public class GraphPath extends GraphAnalysis {
                     "The graph must contain the target vertex");
         }
 
-        DiskBufferDriver diskBufferDriver = new DiskBufferDriver(dsf, GraphMetadataFactory.createDistancesMetadataGraph());        
+        DiskBufferDriver diskBufferDriver = new DiskBufferDriver(dsf, GraphMetadataFactory.createDistancesMetadata());        
 
         int count = 0;
         pm.startTask("Calculate distances path", 100);
@@ -402,7 +402,7 @@ public class GraphPath extends GraphAnalysis {
     public static DiskBufferDriver computeDistanceBetweenSeveralNodes(DataSourceFactory dsf, GDMSValueGraph<Integer, GraphEdge> graph,
             DataSet nodes, double radius, ProgressMonitor pm) throws GraphException, DriverException {
         initIndex(dsf, nodes, new NullProgressMonitor());
-        DiskBufferDriver diskBufferDriver = new DiskBufferDriver(dsf, GraphMetadataFactory.createDistancesMetadataGraph());
+        DiskBufferDriver diskBufferDriver = new DiskBufferDriver(dsf, GraphMetadataFactory.createDistancesMetadata());
 
         ClosestFirstIterator<Integer, GraphEdge> cl = null;
         HashSet<Integer> visitedSources = new HashSet<Integer>();
