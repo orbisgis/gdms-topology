@@ -32,12 +32,14 @@
  */
 package org.gdms.gdmstopology.function;
 
+import com.vividsolutions.jts.geom.Geometry;
 import org.gdms.data.DataSource;
 import org.gdms.data.types.Type;
 import org.gdms.data.types.TypeFactory;
 import org.gdms.data.values.Value;
 import org.gdms.data.values.ValueFactory;
 import org.gdms.driver.DataSet;
+import org.gdms.driver.DriverException;
 import org.gdms.driver.memory.MemoryDataSetDriver;
 import org.gdms.gdmstopology.TopologySetupTest;
 import static org.junit.Assert.*;
@@ -74,24 +76,20 @@ public class ST_GraphTest extends TopologySetupTest {
 
         DataSource nodes = dsf.getDataSource("output.nodes");
 
-        // The graph returns 11 nodes
+        // Make sure six nodes were created.
         nodes.open();
         assertTrue(nodes.getRowCount() == 6);
         nodes.close();
 
+        // Make sure the edge geometries are as expected.
         DataSource edges = dsf.getDataSource("output.edges");
         DataSource expectedEdges = dsf.getDataSource(GRAPH2D_EDGES);
-
-        // The graph returns 10 lines. The same as input.
         edges.open();
         expectedEdges.open();
-        assertTrue(edges.getRowCount() == 6);
-        // Make sure expectedEdges and edges match.
-        for (int i = 0; i < expectedEdges.getRowCount(); i++) {
-            assertTrue(checkIsPresent(expectedEdges.getRow(i), edges));
-        }
+        checkGeometries(expectedEdges, edges);
         expectedEdges.close();
         edges.close();
+
         data.close();
     }
 
@@ -235,24 +233,21 @@ public class ST_GraphTest extends TopologySetupTest {
     }
 
     /**
-     * Check if the line expected is present in the table out.
+     * Checks the geometries (in the first column) in a given table against
+     * expected geometries.
      *
-     * @param expected
-     * @param out
-     *
-     * @return
+     * @param expected Table containing expected geometries
+     * @param table    Table to check
      *
      * @throws Exception
      */
-    private boolean checkIsPresent(Value[] expected, DataSource out) throws
-            Exception {
-        for (long i = 0; i < out.getRowCount(); i++) {
-            Value[] vals = out.getRow(i);
-            if (expected[0].getAsGeometry().equals(vals[0].getAsGeometry())) {
-                return true;
-            }
+    private void checkGeometries(DataSource expected, DataSource table)
+            throws Exception {
+        assertTrue(expected.getRowCount() == table.getRowCount());
+        for (long i = 0; i < table.getRowCount(); i++) {
+            Geometry expectedGeometry = expected.getRow(i)[0].getAsGeometry();
+            Geometry geometry = table.getRow(i)[0].getAsGeometry();
+            assertTrue(expectedGeometry.equals(geometry));
         }
-        return false;
-
     }
 }
