@@ -39,7 +39,6 @@ import org.gdms.data.types.TypeFactory;
 import org.gdms.data.values.Value;
 import org.gdms.data.values.ValueFactory;
 import org.gdms.driver.DataSet;
-import org.gdms.driver.DriverException;
 import org.gdms.driver.memory.MemoryDataSetDriver;
 import org.gdms.gdmstopology.TopologySetupTest;
 import static org.junit.Assert.*;
@@ -54,12 +53,12 @@ import org.orbisgis.progress.NullProgressMonitor;
 public class ST_GraphTest extends TopologySetupTest {
 
     /**
-     * A test to validate the network graph method
+     * Tests ST_Graph on a 2D graph.
      *
      * @throws Exception
      */
     @Test
-    public void testST_Graph() throws Exception {
+    public void graph2DTest() throws Exception {
 
         // Input datasource                
         DataSource data = dsf.getDataSource(GRAPH2D);
@@ -93,8 +92,14 @@ public class ST_GraphTest extends TopologySetupTest {
         data.close();
     }
 
+    /**
+     * Makes sure ST_Graph correctly orients edges by their elevation when
+     * requested to do so.
+     *
+     * @throws Exception
+     */
     @Test
-    public void testZGraph() throws Exception {
+    public void orientByElevationTest1() throws Exception {
 
         // Input datasource
         final MemoryDataSetDriver data =
@@ -120,7 +125,7 @@ public class ST_GraphTest extends TopologySetupTest {
         DataSet[] tables = new DataSet[]{data};
         fn.evaluate(dsf,
                     tables,
-                    // Tolerance, orient by slope, output
+                    // Tolerance, orient by elevation, output
                     new Value[]{ValueFactory.createValue(0),
                                 ValueFactory.createValue(true),
                                 ValueFactory.createValue("output")},
@@ -146,8 +151,14 @@ public class ST_GraphTest extends TopologySetupTest {
         edges.close();
     }
 
+    /**
+     * Makes sure ST_Graph correctly orients edges by their elevation when
+     * requested to do so.
+     *
+     * @throws Exception
+     */
     @Test
-    public void testZGraph2() throws Exception {
+    public void orientByElevationTest2() throws Exception {
 
         // Input datasource
         final MemoryDataSetDriver data =
@@ -173,7 +184,7 @@ public class ST_GraphTest extends TopologySetupTest {
         DataSet[] tables = new DataSet[]{data};
         fn.evaluate(dsf,
                     tables,
-                    // Tolerance, orient by slope, output
+                    // Tolerance, orient by elevation, output
                     new Value[]{ValueFactory.createValue(0),
                                 ValueFactory.createValue(true),
                                 ValueFactory.createValue("output")},
