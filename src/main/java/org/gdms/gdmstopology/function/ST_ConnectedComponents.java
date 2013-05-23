@@ -187,7 +187,7 @@ public class ST_ConnectedComponents extends AbstractTableFunction {
                     pm,
                     dataSet,
                     orientation,
-                    weightsColumn).doWork();
+                    weightsColumn).prepareDataSet();
         } catch (Exception ex) {
             System.out.println(ex);
             throw new FunctionException(EVALUATE_ERROR, ex);

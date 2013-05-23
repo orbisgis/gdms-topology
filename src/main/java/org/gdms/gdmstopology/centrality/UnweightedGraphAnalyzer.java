@@ -80,14 +80,6 @@ public class UnweightedGraphAnalyzer
      * {@inheritDoc}
      */
     @Override
-    protected String getOutputTableSuffix() {
-        return GraphSchema.UNWEIGHTED + "." + super.getOutputTableSuffix();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     protected org.javanetworkanalyzer.analyzers.UnweightedGraphAnalyzer<Edge> prepareAnalyzer() {
         try {
             return new org.javanetworkanalyzer.analyzers.UnweightedGraphAnalyzer(

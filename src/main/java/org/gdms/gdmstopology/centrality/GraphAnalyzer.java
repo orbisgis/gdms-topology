@@ -32,7 +32,6 @@
  */
 package org.gdms.gdmstopology.centrality;
 
-import org.gdms.gdmstopology.functionhelpers.ExecutorFunctionHelper;
 import org.javanetworkanalyzer.data.VBetw;
 import java.util.Map;
 import org.apache.log4j.Level;
@@ -47,6 +46,7 @@ import org.gdms.data.values.ValueFactory;
 import org.gdms.driver.DataSet;
 import org.gdms.driver.DiskBufferDriver;
 import org.gdms.driver.DriverException;
+import org.gdms.gdmstopology.functionhelpers.FunctionHelper;
 import org.gdms.gdmstopology.model.GraphSchema;
 import org.javanetworkanalyzer.data.PathLengthData;
 import org.jgrapht.Graph;
@@ -59,7 +59,7 @@ import org.orbisgis.progress.ProgressMonitor;
  * @author Adam Gouge
  */
 public abstract class GraphAnalyzer<V extends VBetw, E, S extends PathLengthData>
-        extends ExecutorFunctionHelper {
+        extends FunctionHelper {
 
     /**
      * The data set.
@@ -79,6 +79,18 @@ public abstract class GraphAnalyzer<V extends VBetw, E, S extends PathLengthData
      */
     protected static final String INDICES_ERROR =
             "Problem with indices.";
+    /**
+     * Result metadata.
+     */
+    public static final Metadata MD = new DefaultMetadata(
+            new Type[]{
+        TypeFactory.createType(Type.INT),
+        TypeFactory.createType(Type.DOUBLE),
+        TypeFactory.createType(Type.DOUBLE)},
+            new String[]{
+        GraphSchema.ID,
+        GraphSchema.BETWEENNESS_CENTRALITY,
+        GraphSchema.CLOSENESS_CENTRALITY});
     /**
      * A logger.
      */
@@ -112,11 +124,6 @@ public abstract class GraphAnalyzer<V extends VBetw, E, S extends PathLengthData
         this.orientation = orientation;
     }
 
-    @Override
-    protected String getOutputTableSuffix() {
-        return GraphSchema.GRAPH_ANALYSIS;
-    }
-
     /**
      * Prepares the graph analyzer.
      *
@@ -126,15 +133,7 @@ public abstract class GraphAnalyzer<V extends VBetw, E, S extends PathLengthData
 
     @Override
     protected Metadata createMetadata() {
-        return new DefaultMetadata(
-                new Type[]{
-            TypeFactory.createType(Type.INT),
-            TypeFactory.createType(Type.DOUBLE),
-            TypeFactory.createType(Type.DOUBLE)},
-                new String[]{
-            GraphSchema.ID,
-            GraphSchema.BETWEENNESS_CENTRALITY,
-            GraphSchema.CLOSENESS_CENTRALITY});
+        return MD;
     }
 
     @Override

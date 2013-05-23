@@ -110,6 +110,13 @@ public class GraphFunctionParser {
                         : "ERROR";
                 LOGGER.debug("Setting the orientation to be {}.", graphType);
             }
+            if (orientation != GraphSchema.DIRECT
+                    && orientation != GraphSchema.DIRECT_REVERSED
+                    && orientation != GraphSchema.UNDIRECT) {
+                throw new IllegalArgumentException(
+                        "Please enter a valid orientation. "
+                        + orientation + " is not valid");
+            }
             return orientation;
         } else {
             throw new IllegalArgumentException(

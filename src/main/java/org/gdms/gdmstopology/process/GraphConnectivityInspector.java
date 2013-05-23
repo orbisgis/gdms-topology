@@ -32,8 +32,6 @@
  */
 package org.gdms.gdmstopology.process;
 
-import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -47,7 +45,7 @@ import org.gdms.data.values.ValueFactory;
 import org.gdms.driver.DataSet;
 import org.gdms.driver.DiskBufferDriver;
 import org.gdms.driver.DriverException;
-import org.gdms.gdmstopology.functionhelpers.TableFunctionHelper;
+import org.gdms.gdmstopology.functionhelpers.FunctionHelper;
 import org.gdms.gdmstopology.model.DWMultigraphDataSource;
 import org.gdms.gdmstopology.model.EdgeReversedGraphDataSource;
 import org.gdms.gdmstopology.model.GraphEdge;
@@ -62,7 +60,7 @@ import org.orbisgis.progress.ProgressMonitor;
  *
  * @author Adam Gouge
  */
-public class GraphConnectivityInspector extends TableFunctionHelper {
+public class GraphConnectivityInspector extends FunctionHelper {
 
     /**
      * The data set.
