@@ -60,46 +60,39 @@ public class ST_GraphTest extends TopologySetupTest {
     public void testST_Graph() throws Exception {
 
         //Input datasource                
-        DataSource srcDS = dsf.getDataSource(GRAPH2D);
-        srcDS.open();
+        DataSource data = dsf.getDataSource(GRAPH2D);
+        data.open();
 
-        ST_Graph st_Graph = new ST_Graph();
-        DataSource[] tables = new DataSource[]{srcDS};
-        st_Graph.evaluate(
-                dsf,
-                tables,
-                new Value[]{
-            ValueFactory.createValue(0),
-            ValueFactory.createValue(false),
-            ValueFactory.createValue("output")
-        },
-                new NullProgressMonitor());
+        ST_Graph fn = new ST_Graph();
+        DataSource[] tables = new DataSource[]{data};
+        fn.evaluate(dsf,
+                    tables,
+                    new Value[]{ValueFactory.createValue(0),
+                                ValueFactory.createValue(false),
+                                ValueFactory.createValue("output")},
+                    new NullProgressMonitor());
 
-        DataSource dsResult_nodes = dsf.getDataSource("output.nodes");
+        DataSource nodes = dsf.getDataSource("output.nodes");
 
+        // The graph returns 11 nodes
+        nodes.open();
+        assertTrue(nodes.getRowCount() == 6);
+        nodes.close();
 
-        dsResult_nodes.open();
-        //The graph returns 11 nodes
-        assertTrue(dsResult_nodes.getRowCount() == 6);
-        dsResult_nodes.close();
+        DataSource edges = dsf.getDataSource("output.edges");
+        DataSource expectedEdges = dsf.getDataSource(GRAPH2D_EDGES);
 
-        DataSource dsResult_edges = dsf.getDataSource("output.edges");
-        DataSource expectedDS = dsf.getDataSource(GRAPH2D_EDGES);
-
-        dsResult_edges.open();
-        //The graph returns 10 lines. The same as input.
-        assertTrue(dsResult_edges.getRowCount() == 6);
-
-        expectedDS.open();
-        //Check if all values are equals between input datasource and excepted datasource
-        for (int i = 0; i < expectedDS.getRowCount(); i++) {
-            assertTrue(checkIsPresent(expectedDS.getRow(i), dsResult_edges));
-
+        // The graph returns 10 lines. The same as input.
+        edges.open();
+        expectedEdges.open();
+        assertTrue(edges.getRowCount() == 6);
+        // Make sure expectedEdges and edges match.
+        for (int i = 0; i < expectedEdges.getRowCount(); i++) {
+            assertTrue(checkIsPresent(expectedEdges.getRow(i), edges));
         }
-        expectedDS.close();
-        dsResult_edges.close();
-        srcDS.close();
-
+        expectedEdges.close();
+        edges.close();
+        data.close();
     }
 
     @Test
