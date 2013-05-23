@@ -243,9 +243,9 @@ public class GraphCreator<V extends VId, E extends Edge> {
             endNodeIndex = md.getFieldIndex(GraphSchema.END_NODE);
             verifyIndex(endNodeIndex, GraphSchema.END_NODE);
         } catch (DriverException ex) {
-            LOGGER.trace(METADATA_ERROR, ex);
+            LOGGER.error(METADATA_ERROR, ex);
         } catch (IndexException ex) {
-            LOGGER.trace("Problem with indices.", ex);
+            LOGGER.error("Problem with indices.", ex);
         }
         return md;
     }

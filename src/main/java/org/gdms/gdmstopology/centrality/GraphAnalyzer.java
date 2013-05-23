@@ -49,6 +49,7 @@ import org.gdms.driver.DiskBufferDriver;
 import org.gdms.driver.DriverException;
 import org.gdms.gdmstopology.model.GraphSchema;
 import org.javanetworkanalyzer.data.PathLengthData;
+import org.jgrapht.Graph;
 import org.orbisgis.progress.ProgressMonitor;
 
 /**
@@ -57,7 +58,7 @@ import org.orbisgis.progress.ProgressMonitor;
  *
  * @author Adam Gouge
  */
-public abstract class GraphAnalyzer<T extends VBetw, E, S extends PathLengthData>
+public abstract class GraphAnalyzer<V extends VBetw, E, S extends PathLengthData>
         extends ExecutorFunctionHelper {
 
     /**
@@ -121,7 +122,7 @@ public abstract class GraphAnalyzer<T extends VBetw, E, S extends PathLengthData
      *
      * @return The graph analyzer.
      */
-    protected abstract org.javanetworkanalyzer.analyzers.GraphAnalyzer<T, E, S> prepareAnalyzer();
+    protected abstract org.javanetworkanalyzer.analyzers.GraphAnalyzer<V, E, S> prepareAnalyzer();
 
     @Override
     protected Metadata createMetadata() {
@@ -140,37 +141,35 @@ public abstract class GraphAnalyzer<T extends VBetw, E, S extends PathLengthData
     protected void computeAndStoreResults(
             DiskBufferDriver driver) {
 
-        Map<Integer, T> results = null;
+        // TODO: We no longer return the results this way.
+        Map<Integer, V> results = null;
+
+        org.javanetworkanalyzer.analyzers.GraphAnalyzer<V, E, S> analyzer =
+                prepareAnalyzer();
         try {
-            // TODO: We no longer return the results this way.
-            prepareAnalyzer().computeAll();
+            analyzer.computeAll();
         } catch (Exception ex) {
-            LOGGER.trace(ANALYZER_PREP_ERROR, ex);
+            LOGGER.error("Problem doing graph analysis.", ex);
         }
 
-        if (results != null) {
+        Graph<V, E> graph = analyzer.getGraph();
+
+        for (V node : graph.vertexSet()) {
+            Value[] valuesToAdd =
+                    new Value[]{
+                // ID
+                ValueFactory.createValue(node.getID()),
+                // Betweenness
+                ValueFactory.createValue(node.getBetweenness()),
+                // Closeness
+                ValueFactory.createValue(node.getCloseness())
+            };
             try {
-                for (Integer node : results.keySet()) {
-
-                    final T nodeNBInfo = results.get(node);
-
-                    Value[] valuesToAdd =
-                            new Value[]{
-                        // ID
-                        ValueFactory.createValue(node),
-                        // Betweenness
-                        ValueFactory.createValue(nodeNBInfo.getBetweenness()),
-                        // Closeness
-                        ValueFactory.createValue(nodeNBInfo.getCloseness())
-                    };
-
-                    driver.addValues(valuesToAdd);
-                }
+                driver.addValues(valuesToAdd);
             } catch (DriverException ex) {
-                LOGGER.trace(STORAGE_ERROR, ex);
+                LOGGER.error("Problem storing centrality indices "
+                        + "for node " + node.getID(), ex);
             }
-        } else {
-            LOGGER.trace("Null analyzer.");
         }
     }
 }
