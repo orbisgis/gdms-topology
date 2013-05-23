@@ -171,38 +171,35 @@ public class ST_GraphTest extends TopologySetupTest {
             wktReader.read("LINESTRING( 10 5 5, 5 5 10)")),
             ValueFactory.createValue(3)});
 
-
-        ST_Graph st_Graph = new ST_Graph();
+        ST_Graph fn = new ST_Graph();
         DataSet[] tables = new DataSet[]{data};
-        st_Graph.evaluate(
-                dsf,
-                tables,
-                new Value[]{
-            ValueFactory.createValue(0),
-            ValueFactory.createValue(true),
-            ValueFactory.createValue("output")
-        },
-                new NullProgressMonitor());
+        fn.evaluate(dsf,
+                    tables,
+                    // Tolerance, orient by slope, output
+                    new Value[]{ValueFactory.createValue(0),
+                                ValueFactory.createValue(true),
+                                ValueFactory.createValue("output")},
+                    new NullProgressMonitor());
 
-        DataSource dsResult_nodes = dsf.getDataSource("output.edges");
-        dsResult_nodes.open();
-        int gidField = dsResult_nodes.getMetadata().getFieldIndex("gid");
+        DataSource edges = dsf.getDataSource("output.edges");
+        edges.open();
+        int gidIndex = edges.getMetadata().getFieldIndex("gid");
 
-        for (int i = 0; i < dsResult_nodes.getRowCount(); i++) {
-            Value[] values = dsResult_nodes.getRow(i);
+        for (int i = 0; i < edges.getRowCount(); i++) {
+            Value[] row = edges.getRow(i);
+            int id = row[gidIndex].getAsInt();
+            int source = row[3].getAsInt();
+            int target = row[4].getAsInt();
 
-            if (values[gidField].getAsInt() == 1) {
-                assertTrue(
-                        (values[3].getAsInt() == 1) && (values[4].getAsInt() == 2));
-            } else if (values[gidField].getAsInt() == 2) {
-                assertTrue(
-                        (values[3].getAsInt() == 1) && (values[4].getAsInt() == 3));
-            } else if (values[gidField].getAsInt() == 3) {
-                assertTrue(
-                        (values[3].getAsInt() == 1) && (values[4].getAsInt() == 4));
+            if (id == 1) {
+                assertTrue(source == 1 && target == 2);
+            } else if (id == 2) {
+                assertTrue(source == 1 && target == 3);
+            } else if (id == 3) {
+                assertTrue(source == 1 && target == 4);
             }
         }
-        dsResult_nodes.close();
+        edges.close();
     }
 
     /**
