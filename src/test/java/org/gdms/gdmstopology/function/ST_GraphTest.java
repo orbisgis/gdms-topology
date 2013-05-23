@@ -209,42 +209,29 @@ public class ST_GraphTest extends TopologySetupTest {
      */
     @Test
     public void testDim3() throws Exception {
-        //Input datasource
-        final MemoryDataSetDriver driver_src = new MemoryDataSetDriver(
-                new String[]{
-            "the_geom",
-            "gid"},
-                new Type[]{
-            TypeFactory.createType(Type.GEOMETRY),
-            TypeFactory.createType(Type.INT)
-        });
+        // Input datasource
+        final MemoryDataSetDriver data =
+                new MemoryDataSetDriver(
+                new String[]{"the_geom", "gid"},
+                new Type[]{TypeFactory.createType(Type.GEOMETRY),
+                           TypeFactory.createType(Type.INT)});
 
-        driver_src.addValues(
-                new Value[]{
-            ValueFactory.createValue(wktReader.read(
-            "LINESTRING( 200 300 0, 400 300 0)")),
-            ValueFactory.createValue(1)
-        });
-        driver_src.addValues(
-                new Value[]{
-            ValueFactory.createValue(wktReader.read(
-            "LINESTRING( 600 300 10, 400 300 0)")),
-            ValueFactory.createValue(2)
-        });
-        driver_src.addValues(
-                new Value[]{
-            ValueFactory.createValue(wktReader.read(
-            "LINESTRING( 600 300 10, 800 300 0)")),
-            ValueFactory.createValue(3)
-        });
-        driver_src.addValues(
-                new Value[]{
-            ValueFactory.createValue(wktReader.read(
-            "LINESTRING( 600 300 0, 400 300 0)")),
-            ValueFactory.createValue(2)
-        });
-
-
+        data.addValues(new Value[]{
+            ValueFactory.createValue(
+            wktReader.read("LINESTRING( 200 300 0, 400 300 0)")),
+            ValueFactory.createValue(1)});
+        data.addValues(new Value[]{
+            ValueFactory.createValue(
+            wktReader.read("LINESTRING( 600 300 10, 400 300 0)")),
+            ValueFactory.createValue(2)});
+        data.addValues(new Value[]{
+            ValueFactory.createValue(
+            wktReader.read("LINESTRING( 600 300 10, 800 300 0)")),
+            ValueFactory.createValue(3)});
+        data.addValues(new Value[]{
+            ValueFactory.createValue(
+            wktReader.read("LINESTRING( 600 300 0, 400 300 0)")),
+            ValueFactory.createValue(2)});
     }
 
     /**
