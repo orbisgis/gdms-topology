@@ -110,15 +110,15 @@ public class ST_GraphTest extends TopologySetupTest {
 
         data.addValues(new Value[]{
             ValueFactory.createValue(
-            wktReader.read("LINESTRING( 0 0 0, 5 5 10)")),
+            wktReader.read("LINESTRING( 0 0 0, 1 1 2)")),
             ValueFactory.createValue(1)});
         data.addValues(new Value[]{
             ValueFactory.createValue(
-            wktReader.read("LINESTRING( 0 10 5, 5 5 10)")),
+            wktReader.read("LINESTRING( 0 2 1, 1 1 2)")),
             ValueFactory.createValue(2)});
         data.addValues(new Value[]{
             ValueFactory.createValue(
-            wktReader.read("LINESTRING( 10 5 15, 5 5 10)")),
+            wktReader.read("LINESTRING( 2 1 3, 1 1 2)")),
             ValueFactory.createValue(3)});
 
         ST_Graph fn = new ST_Graph();
@@ -169,15 +169,15 @@ public class ST_GraphTest extends TopologySetupTest {
 
         data.addValues(new Value[]{
             ValueFactory.createValue(
-            wktReader.read("LINESTRING( 0 0 0, 5 5 10)")),
+            wktReader.read("LINESTRING( 0 0 0, 1 1 2)")),
             ValueFactory.createValue(1)});
         data.addValues(new Value[]{
             ValueFactory.createValue(
-            wktReader.read("LINESTRING( 0 10 5, 5 5 10)")),
+            wktReader.read("LINESTRING( 0 2 1, 1 1 2)")),
             ValueFactory.createValue(2)});
         data.addValues(new Value[]{
             ValueFactory.createValue(
-            wktReader.read("LINESTRING( 10 5 5, 5 5 10)")),
+            wktReader.read("LINESTRING( 2 1 1, 1 1 2)")),
             ValueFactory.createValue(3)});
 
         ST_Graph fn = new ST_Graph();
