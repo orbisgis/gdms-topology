@@ -37,6 +37,8 @@ import org.gdms.data.DataSourceFactory;
 import org.gdms.driver.DiskBufferDriver;
 import org.gdms.driver.DriverException;
 import org.orbisgis.progress.ProgressMonitor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A helper class to store the results calculated by an executor function.
@@ -46,6 +48,9 @@ import org.orbisgis.progress.ProgressMonitor;
  * @author Adam Gouge
  */
 public abstract class ExecutorFunctionHelper extends FunctionHelper {
+
+    private static final Logger LOGGER =
+            LoggerFactory.getLogger(ExecutorFunctionHelper.class);
 
     /**
      * Constructor.
@@ -83,10 +88,8 @@ public abstract class ExecutorFunctionHelper extends FunctionHelper {
      *
      * @throws DriverException
      */
-    private String writeToTable(DiskBufferDriver driver,
-                                String outputTablePrefix) throws DriverException {
-        // TODO: Necessary?
-        driver.open();
+    private void writeToTable(DiskBufferDriver driver,
+                              String outputTablePrefix) throws DriverException {
         // Register the result in a new output table.
         String outputTableName = dsf.getSourceManager().
                 getUniqueName(
@@ -95,7 +98,7 @@ public abstract class ExecutorFunctionHelper extends FunctionHelper {
         dsf.getSourceManager().register(
                 outputTableName,
                 driver.getFile());
-        return outputTableName;
+        LOGGER.info("Table stored as {}", outputTableName);
     }
 
     /**

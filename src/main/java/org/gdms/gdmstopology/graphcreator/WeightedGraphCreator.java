@@ -104,9 +104,9 @@ public class WeightedGraphCreator<V extends VId, E extends Edge>
                 throw new IllegalStateException(METADATA_ERROR);
             }
         } catch (IndexException ex) {
-            LOGGER.trace("Problem with indices.", ex);
+            LOGGER.error("Problem with indices.", ex);
         } catch (DriverException ex) {
-            LOGGER.trace(METADATA_ERROR, ex);
+            LOGGER.error(METADATA_ERROR, ex);
         }
         return md;
     }
