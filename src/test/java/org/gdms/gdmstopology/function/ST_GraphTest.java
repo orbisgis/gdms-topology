@@ -59,7 +59,7 @@ public class ST_GraphTest extends TopologySetupTest {
     @Test
     public void testST_Graph() throws Exception {
 
-        //Input datasource                
+        // Input datasource                
         DataSource data = dsf.getDataSource(GRAPH2D);
         data.open();
 
@@ -98,105 +98,82 @@ public class ST_GraphTest extends TopologySetupTest {
     @Test
     public void testZGraph() throws Exception {
 
-        //Input datasource
-        final MemoryDataSetDriver driver_src = new MemoryDataSetDriver(
-                new String[]{
-            "the_geom",
-            "gid"
-        },
-                new Type[]{
-            TypeFactory.createType(Type.GEOMETRY),
-            TypeFactory.createType(Type.INT)
-        });
+        // Input datasource
+        final MemoryDataSetDriver data =
+                new MemoryDataSetDriver(
+                new String[]{"the_geom", "gid"},
+                new Type[]{TypeFactory.createType(Type.GEOMETRY),
+                           TypeFactory.createType(Type.INT)});
 
-        driver_src.addValues(
-                new Value[]{
-            ValueFactory.createValue(wktReader.
-            read("LINESTRING( 0 0 0, 5 5 10)")),
-            ValueFactory.createValue(1)
-        });
-        driver_src.addValues(
-                new Value[]{
-            ValueFactory.createValue(wktReader.read(
-            "LINESTRING( 0 10 5, 5 5 10)")),
-            ValueFactory.createValue(2)
-        });
-        driver_src.addValues(
-                new Value[]{
-            ValueFactory.createValue(wktReader.read(
-            "LINESTRING( 10 5 15, 5 5 10)")),
-            ValueFactory.createValue(3)
-        });
+        data.addValues(new Value[]{
+            ValueFactory.createValue(
+            wktReader.read("LINESTRING( 0 0 0, 5 5 10)")),
+            ValueFactory.createValue(1)});
+        data.addValues(new Value[]{
+            ValueFactory.createValue(
+            wktReader.read("LINESTRING( 0 10 5, 5 5 10)")),
+            ValueFactory.createValue(2)});
+        data.addValues(new Value[]{
+            ValueFactory.createValue(
+            wktReader.read("LINESTRING( 10 5 15, 5 5 10)")),
+            ValueFactory.createValue(3)});
 
+        ST_Graph fn = new ST_Graph();
+        DataSet[] tables = new DataSet[]{data};
+        fn.evaluate(dsf,
+                    tables,
+                    // Tolerance, orient by slope, output
+                    new Value[]{ValueFactory.createValue(0),
+                                ValueFactory.createValue(true),
+                                ValueFactory.createValue("output")},
+                    new NullProgressMonitor());
 
-        ST_Graph st_Graph = new ST_Graph();
-        DataSet[] tables = new DataSet[]{driver_src};
-        st_Graph.evaluate(
-                dsf,
-                tables,
-                new Value[]{
-            ValueFactory.createValue(0),
-            ValueFactory.createValue(true),
-            ValueFactory.createValue("output")
-        },
-                new NullProgressMonitor());
+        DataSource edges = dsf.getDataSource("output.edges");
+        edges.open();
+        int gidIndex = edges.getMetadata().getFieldIndex("gid");
+        for (int i = 0; i < edges.getRowCount(); i++) {
+            Value[] row = edges.getRow(i);
+            int id = row[gidIndex].getAsInt();
+            int source = row[3].getAsInt();
+            int target = row[4].getAsInt();
 
-        DataSource dsResult_nodes = dsf.getDataSource("output.edges");
-        dsResult_nodes.open();
-        int gidField = dsResult_nodes.getMetadata().getFieldIndex("gid");
-
-        for (int i = 0; i < dsResult_nodes.getRowCount(); i++) {
-            Value[] values = dsResult_nodes.getRow(i);
-
-            if (values[gidField].getAsInt() == 1) {
-                assertTrue(
-                        (values[3].getAsInt() == 1) && (values[4].getAsInt() == 2));
-            } else if (values[gidField].getAsInt() == 2) {
-                assertTrue(
-                        (values[3].getAsInt() == 1) && (values[4].getAsInt() == 3));
-            } else if (values[gidField].getAsInt() == 3) {
-                assertTrue(
-                        (values[3].getAsInt() == 4) && (values[4].getAsInt() == 1));
+            if (id == 1) {
+                assertTrue(source == 1 && target == 2);
+            } else if (id == 2) {
+                assertTrue(source == 1 && target == 3);
+            } else if (id == 3) {
+                assertTrue(source == 4 && target == 1);
             }
         }
-        dsResult_nodes.close();
+        edges.close();
     }
 
     @Test
     public void testZGraph2() throws Exception {
 
-        //Input datasource
-        final MemoryDataSetDriver driver_src = new MemoryDataSetDriver(
-                new String[]{
-            "the_geom",
-            "gid"},
-                new Type[]{
-            TypeFactory.createType(Type.GEOMETRY),
-            TypeFactory.createType(Type.INT)
-        });
+        // Input datasource
+        final MemoryDataSetDriver data =
+                new MemoryDataSetDriver(
+                new String[]{"the_geom", "gid"},
+                new Type[]{TypeFactory.createType(Type.GEOMETRY),
+                           TypeFactory.createType(Type.INT)});
 
-        driver_src.addValues(
-                new Value[]{
-            ValueFactory.createValue(wktReader.
-            read("LINESTRING( 0 0 0, 5 5 10)")),
-            ValueFactory.createValue(1)
-        });
-        driver_src.addValues(
-                new Value[]{
-            ValueFactory.createValue(wktReader.read(
-            "LINESTRING( 0 10 5, 5 5 10)")),
-            ValueFactory.createValue(2)
-        });
-        driver_src.addValues(
-                new Value[]{
-            ValueFactory.createValue(wktReader.read(
-            "LINESTRING( 10 5 5, 5 5 10)")),
-            ValueFactory.createValue(3)
-        });
+        data.addValues(new Value[]{
+            ValueFactory.createValue(
+            wktReader.read("LINESTRING( 0 0 0, 5 5 10)")),
+            ValueFactory.createValue(1)});
+        data.addValues(new Value[]{
+            ValueFactory.createValue(
+            wktReader.read("LINESTRING( 0 10 5, 5 5 10)")),
+            ValueFactory.createValue(2)});
+        data.addValues(new Value[]{
+            ValueFactory.createValue(
+            wktReader.read("LINESTRING( 10 5 5, 5 5 10)")),
+            ValueFactory.createValue(3)});
 
 
         ST_Graph st_Graph = new ST_Graph();
-        DataSet[] tables = new DataSet[]{driver_src};
+        DataSet[] tables = new DataSet[]{data};
         st_Graph.evaluate(
                 dsf,
                 tables,
