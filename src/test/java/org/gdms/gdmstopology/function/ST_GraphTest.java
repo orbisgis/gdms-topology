@@ -60,22 +60,19 @@ public class ST_GraphTest extends TopologySetupTest {
     @Test
     public void graph2DTest() throws Exception {
 
-        // Input datasource                
         DataSource data = dsf.getDataSource(GRAPH2D);
         data.open();
-
-        ST_Graph fn = new ST_Graph();
         DataSource[] tables = new DataSource[]{data};
-        fn.evaluate(dsf,
-                    tables,
-                    new Value[]{ValueFactory.createValue(0),
-                                ValueFactory.createValue(false),
-                                ValueFactory.createValue("output")},
-                    new NullProgressMonitor());
 
-        DataSource nodes = dsf.getDataSource("output.nodes");
+        new ST_Graph().evaluate(dsf,
+                                tables,
+                                new Value[]{ValueFactory.createValue(0),
+                                            ValueFactory.createValue(false),
+                                            ValueFactory.createValue("output")},
+                                new NullProgressMonitor());
 
         // Make sure six nodes were created.
+        DataSource nodes = dsf.getDataSource("output.nodes");
         nodes.open();
         assertTrue(nodes.getRowCount() == 6);
         nodes.close();
@@ -101,13 +98,8 @@ public class ST_GraphTest extends TopologySetupTest {
     @Test
     public void orientByElevationTest1() throws Exception {
 
-        // Input datasource
-        final MemoryDataSetDriver data =
-                new MemoryDataSetDriver(
-                new String[]{"the_geom", "gid"},
-                new Type[]{TypeFactory.createType(Type.GEOMETRY),
-                           TypeFactory.createType(Type.INT)});
-
+        // Prepare data.
+        MemoryDataSetDriver data = initializeDriver();
         data.addValues(new Value[]{
             ValueFactory.createValue(
             wktReader.read("LINESTRING( 0 0 0, 1 1 2)")),
@@ -120,17 +112,18 @@ public class ST_GraphTest extends TopologySetupTest {
             ValueFactory.createValue(
             wktReader.read("LINESTRING( 2 1 3, 1 1 2)")),
             ValueFactory.createValue(3)});
-
-        ST_Graph fn = new ST_Graph();
         DataSet[] tables = new DataSet[]{data};
-        fn.evaluate(dsf,
-                    tables,
-                    // Tolerance, orient by elevation, output
-                    new Value[]{ValueFactory.createValue(0),
-                                ValueFactory.createValue(true),
-                                ValueFactory.createValue("output")},
-                    new NullProgressMonitor());
 
+        // Evaluate ST_Graph.
+        new ST_Graph().evaluate(dsf,
+                                tables,
+                                // Tolerance, orient by elevation, output
+                                new Value[]{ValueFactory.createValue(0),
+                                            ValueFactory.createValue(true),
+                                            ValueFactory.createValue("output")},
+                                new NullProgressMonitor());
+
+        // Check edge orientations.
         DataSource edges = dsf.getDataSource("output.edges");
         edges.open();
         int gidIndex = edges.getMetadata().getFieldIndex("gid");
@@ -160,13 +153,8 @@ public class ST_GraphTest extends TopologySetupTest {
     @Test
     public void orientByElevationTest2() throws Exception {
 
-        // Input datasource
-        final MemoryDataSetDriver data =
-                new MemoryDataSetDriver(
-                new String[]{"the_geom", "gid"},
-                new Type[]{TypeFactory.createType(Type.GEOMETRY),
-                           TypeFactory.createType(Type.INT)});
-
+        // Prepare data.
+        MemoryDataSetDriver data = initializeDriver();
         data.addValues(new Value[]{
             ValueFactory.createValue(
             wktReader.read("LINESTRING( 0 0 0, 1 1 2)")),
@@ -179,21 +167,21 @@ public class ST_GraphTest extends TopologySetupTest {
             ValueFactory.createValue(
             wktReader.read("LINESTRING( 2 1 1, 1 1 2)")),
             ValueFactory.createValue(3)});
-
-        ST_Graph fn = new ST_Graph();
         DataSet[] tables = new DataSet[]{data};
-        fn.evaluate(dsf,
-                    tables,
-                    // Tolerance, orient by elevation, output
-                    new Value[]{ValueFactory.createValue(0),
-                                ValueFactory.createValue(true),
-                                ValueFactory.createValue("output")},
-                    new NullProgressMonitor());
 
+        // Evaluate ST_Graph.
+        new ST_Graph().evaluate(dsf,
+                                tables,
+                                // Tolerance, orient by elevation, output
+                                new Value[]{ValueFactory.createValue(0),
+                                            ValueFactory.createValue(true),
+                                            ValueFactory.createValue("output")},
+                                new NullProgressMonitor());
+
+        // Check edge orientations.
         DataSource edges = dsf.getDataSource("output.edges");
         edges.open();
         int gidIndex = edges.getMetadata().getFieldIndex("gid");
-
         for (int i = 0; i < edges.getRowCount(); i++) {
             Value[] row = edges.getRow(i);
             int id = row[gidIndex].getAsInt();
@@ -218,13 +206,7 @@ public class ST_GraphTest extends TopologySetupTest {
      */
     @Test
     public void testDim3() throws Exception {
-        // Input datasource
-        final MemoryDataSetDriver data =
-                new MemoryDataSetDriver(
-                new String[]{"the_geom", "gid"},
-                new Type[]{TypeFactory.createType(Type.GEOMETRY),
-                           TypeFactory.createType(Type.INT)});
-
+        MemoryDataSetDriver data = initializeDriver();
         data.addValues(new Value[]{
             ValueFactory.createValue(
             wktReader.read("LINESTRING( 200 300 0, 400 300 0)")),
@@ -260,5 +242,20 @@ public class ST_GraphTest extends TopologySetupTest {
             Geometry geometry = table.getRow(i)[0].getAsGeometry();
             assertTrue(expectedGeometry.equals(geometry));
         }
+    }
+
+    /**
+     * Sets up a driver with geometry and gid columns ready to receive input
+     * data.
+     *
+     * @return A newly created driver
+     */
+    private MemoryDataSetDriver initializeDriver() {
+        final MemoryDataSetDriver data =
+                new MemoryDataSetDriver(
+                new String[]{"the_geom", "gid"},
+                new Type[]{TypeFactory.createType(Type.GEOMETRY),
+                           TypeFactory.createType(Type.INT)});
+        return data;
     }
 }
