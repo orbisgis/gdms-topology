@@ -91,14 +91,6 @@ public class WeightedGraphAnalyzer
      * {@inheritDoc}
      */
     @Override
-    protected String getOutputTableSuffix() {
-        return GraphSchema.WEIGHTED + "." + super.getOutputTableSuffix();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     protected org.javanetworkanalyzer.analyzers.WeightedGraphAnalyzer<Edge> prepareAnalyzer() {
         try {
             return new org.javanetworkanalyzer.analyzers.WeightedGraphAnalyzer(

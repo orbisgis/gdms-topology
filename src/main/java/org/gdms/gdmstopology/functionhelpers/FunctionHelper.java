@@ -87,7 +87,7 @@ public abstract class FunctionHelper {
      *
      * @throws DriverException
      */
-    public DiskBufferDriver doWork() {
+    public DiskBufferDriver prepareDataSet() {
 
         DiskBufferDriver driver = null;
         try {
