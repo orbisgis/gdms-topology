@@ -220,16 +220,8 @@ public class NetworkGraphBuilder {
                 Geometry geom = row[geomFieldIndex].getAsGeometry();
                 // Get the start node and end node coordinates from the geometry.
                 Coordinate[] cc = geom.getCoordinates();
-                Coordinate startNodeCoord = cc[0];
-                Coordinate endNodeCoord = cc[cc.length - 1];
-
-                // If orienting by slope, check if the end is higher than the
-                // start. If so, then switch start and end coordinates.
-                if (orientBySlope && startNodeCoord.z < endNodeCoord.z) {
-                    Coordinate tmpCoord = startNodeCoord;
-                    startNodeCoord = endNodeCoord;
-                    endNodeCoord = tmpCoord;
-                }
+                Coordinate firstPoint = cc[0];
+                Coordinate lastPoint = cc[cc.length - 1];
 
                 // If we have a positive tolerance and this geometry's length
                 // is at least as big as the tolerance, then will expand an 
@@ -238,14 +230,20 @@ public class NetworkGraphBuilder {
                 if (tolerance > 0 && geom.getLength() >= tolerance) {
                     expandByTolerance = true;
                 }
-                // Add the start node.
-                nodesGID = addNodeToEdgesRowAndNodesDriver(
-                        diskRTree, edgesRow, nodesDriver,
-                        nodesGID, startNodeCoord, startIndex);
-                // Add the end node.
-                nodesGID = addNodeToEdgesRowAndNodesDriver(
-                        diskRTree, edgesRow, nodesDriver,
-                        nodesGID, endNodeCoord, endIndex);
+
+                // If orienting by slope, check if the end elevation is higher
+                // than the start elevation. If so, then orient from lastPoint
+                // to firstPoint.
+                if (orientBySlope && firstPoint.z < lastPoint.z) {
+                    nodesGID = orient(firstPoint, endIndex,
+                                      lastPoint, startIndex, diskRTree,
+                                      edgesRow, nodesDriver, nodesGID);
+                } // Otherwise orient from firstPoint to lastPoint.
+                else {
+                    nodesGID = orient(firstPoint, startIndex,
+                                      lastPoint, endIndex, diskRTree,
+                                      edgesRow, nodesDriver, nodesGID);
+                }
 
                 // Add the edges row to the edges table.
                 edgesDriver.addValues(edgesRow);
@@ -270,7 +268,7 @@ public class NetworkGraphBuilder {
                                       int edgesFieldCount) {
         if (edgesFieldCount < originalRow.length) {
             throw new IllegalStateException("The edges row cannot have "
-                    + "fewer fields than the original row.");
+                                            + "fewer fields than the original row.");
         } else {
             // Initialize the new row.
             final Value[] edgesRow = new Value[edgesFieldCount];
@@ -281,28 +279,58 @@ public class NetworkGraphBuilder {
     }
 
     /**
-     * Uses the given {@link DiskRTree} to find nearby nodes and stick them
-     * together up to the given tolerance; inserts the node into the edges row
-     * and the nodes table.
+     * Assigns ids to firstPoint and lastPoint (in that order) and inserts
+     * firstPoint at position firstIndex and lastPoint at position lastIndex in
+     * the edges row.
      *
+     * @param firstPoint  First point
+     * @param firstIndex  Index at which to insert the first point
+     * @param lastPoint   Last point
+     * @param lastIndex   Index at which to insert the last point
      * @param diskRTree   The DiskRTree
      * @param edgesRow    The edges row
      * @param nodesDriver The nodes table
      * @param nodesGID    The nodes GID
+     *
+     * @return The nodes GID, properly incremented
+     *
+     * @throws DriverException
+     * @throws IOException
+     */
+    private int orient(Coordinate firstPoint, int firstIndex,
+                       Coordinate lastPoint, int lastIndex,
+                       DiskRTree diskRTree, Value[] edgesRow,
+                       DiskBufferDriver nodesDriver, int nodesGID)
+            throws DriverException, IOException {
+        // Number the firstPoint and insert it at firstIndex.
+        nodesGID = addNode(firstPoint, firstIndex, diskRTree,
+                           edgesRow, nodesDriver, nodesGID);
+        // Number the lastPoint and insert it at lastIndex.
+        nodesGID = addNode(lastPoint, lastIndex, diskRTree,
+                           edgesRow, nodesDriver, nodesGID);
+        return nodesGID;
+    }
+
+    /**
+     * Uses the given {@link DiskRTree} to find nearby nodes and stick them
+     * together up to the given tolerance; inserts the node into the edges row
+     * and the nodes table.
+     *
      * @param nodeCoord   The node's coordinate
      * @param nodeIndex   Where to insert the node in the edge row
+     * @param diskRTree   The DiskRTree
+     * @param edgesRow    The edges row
+     * @param nodesDriver The nodes table
+     * @param nodesGID    The nodes GID
      *
      * @return The nodes GID, incremented if necessary.
      *
      * @throws IOException
      * @throws DriverException
      */
-    private int addNodeToEdgesRowAndNodesDriver(DiskRTree diskRTree,
-                                                final Value[] edgesRow,
-                                                DiskBufferDriver nodesDriver,
-                                                int nodesGID,
-                                                Coordinate nodeCoord,
-                                                int nodeIndex)
+    private int addNode(Coordinate nodeCoord, int nodeIndex,
+                        DiskRTree diskRTree, final Value[] edgesRow,
+                        DiskBufferDriver nodesDriver, int nodesGID)
             throws IOException, DriverException {
         // Get an envelope around (on) the given coordinate.
         Envelope envelope = new Envelope(nodeCoord);
