@@ -74,6 +74,7 @@ public class ST_GraphTest extends TopologySetupTest {
                                 new NullProgressMonitor());
 
         // Make sure six nodes were created.
+        // TODO: Check node ids and geometries.
         DataSource nodes = dsf.getDataSource("output.nodes");
         nodes.open();
         assertTrue(nodes.getRowCount() == 6);
@@ -84,7 +85,13 @@ public class ST_GraphTest extends TopologySetupTest {
         DataSource expectedEdges = dsf.getDataSource(GRAPH2D_EDGES);
         edges.open();
         expectedEdges.open();
-        checkGeometries(expectedEdges, edges);
+        assertTrue(expectedEdges.getRowCount() == edges.getRowCount());
+        for (long i = 0; i < edges.getRowCount(); i++) {
+            Geometry expectedGeometry =
+                    expectedEdges.getRow(i)[0].getAsGeometry();
+            Geometry geometry = edges.getRow(i)[0].getAsGeometry();
+            assertTrue(expectedGeometry.equals(geometry));
+        }
         expectedEdges.close();
         edges.close();
 
@@ -170,7 +177,6 @@ public class ST_GraphTest extends TopologySetupTest {
         // Check the edges table.
         DataSource edges = dsf.getDataSource("output.edges");
         edges.open();
-        print(edges);
         System.out.println("");
         assertTrue(edges.getRowCount() == 1);
         Value[] row = edges.getRow(0);
@@ -181,51 +187,6 @@ public class ST_GraphTest extends TopologySetupTest {
         } // zOne >= zTwo
         else {
             assertTrue(source == 1 && target == 2);
-        }
-    }
-
-    /**
-     * We test if the 3D is well managed during the graph construction
-     *
-     * @throws Exception
-     */
-    @Test
-    public void testDim3() throws Exception {
-        MemoryDataSetDriver data = initializeDriver();
-        data.addValues(new Value[]{
-            ValueFactory.createValue(
-            wktReader.read("LINESTRING( 200 300 0, 400 300 0)")),
-            ValueFactory.createValue(1)});
-        data.addValues(new Value[]{
-            ValueFactory.createValue(
-            wktReader.read("LINESTRING( 600 300 10, 400 300 0)")),
-            ValueFactory.createValue(2)});
-        data.addValues(new Value[]{
-            ValueFactory.createValue(
-            wktReader.read("LINESTRING( 600 300 10, 800 300 0)")),
-            ValueFactory.createValue(3)});
-        data.addValues(new Value[]{
-            ValueFactory.createValue(
-            wktReader.read("LINESTRING( 600 300 0, 400 300 0)")),
-            ValueFactory.createValue(2)});
-    }
-
-    /**
-     * Checks the geometries (in the first column) in a given table against
-     * expected geometries.
-     *
-     * @param expected Table containing expected geometries
-     * @param table    Table to check
-     *
-     * @throws Exception
-     */
-    private void checkGeometries(DataSource expected, DataSource table)
-            throws Exception {
-        assertTrue(expected.getRowCount() == table.getRowCount());
-        for (long i = 0; i < table.getRowCount(); i++) {
-            Geometry expectedGeometry = expected.getRow(i)[0].getAsGeometry();
-            Geometry geometry = table.getRow(i)[0].getAsGeometry();
-            assertTrue(expectedGeometry.equals(geometry));
         }
     }
 
