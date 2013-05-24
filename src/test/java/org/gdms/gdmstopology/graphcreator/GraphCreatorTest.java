@@ -33,8 +33,6 @@
 package org.gdms.gdmstopology.graphcreator;
 
 import com.vividsolutions.jts.io.ParseException;
-import java.util.HashSet;
-import java.util.Set;
 import org.gdms.data.DataSource;
 import org.gdms.data.DataSourceCreationException;
 import org.gdms.data.NoSuchTableException;
@@ -44,7 +42,6 @@ import org.gdms.data.types.TypeFactory;
 import org.gdms.data.values.Value;
 import org.gdms.data.values.ValueFactory;
 import org.gdms.driver.DataSet;
-import org.gdms.driver.DiskBufferDriver;
 import org.gdms.driver.DriverException;
 import org.gdms.driver.memory.MemoryDataSetDriver;
 import org.gdms.gdmstopology.TopologySetupTest;
@@ -53,9 +50,11 @@ import org.gdms.gdmstopology.model.GraphSchema;
 import org.gdms.sql.function.FunctionException;
 import org.javanetworkanalyzer.data.VBetw;
 import org.javanetworkanalyzer.data.VUBetw;
+import org.javanetworkanalyzer.data.VWBetw;
 import org.javanetworkanalyzer.model.Edge;
 import org.javanetworkanalyzer.model.KeyedGraph;
-import org.jgrapht.Graphs;
+import org.javanetworkanalyzer.model.UndirectedG;
+import org.javanetworkanalyzer.model.WeightedKeyedGraph;
 import org.junit.Test;
 import org.orbisgis.progress.NullProgressMonitor;
 import org.slf4j.Logger;
@@ -63,7 +62,7 @@ import org.slf4j.LoggerFactory;
 import static org.junit.Assert.*;
 
 /**
- * Tests the graph creators.
+ * Tests the graph creators under all possible configurations.
  *
  * @author Adam Gouge
  */
@@ -71,15 +70,18 @@ public class GraphCreatorTest extends TopologySetupTest {
 
     private static final Logger LOGGER =
             LoggerFactory.getLogger(GraphCreatorTest.class);
+    private static final int[] EDGE_ORIENTATIONS =
+            new int[]{GraphCreator.DIRECTED_EDGE,
+                      GraphCreator.REVERSED_EDGE,
+                      GraphCreator.UNDIRECTED_EDGE};
+    private static final double[] EDGE_WEIGHTS = new double[]{2.3, 4.2, 5.7};
+    private static final double TOLERANCE = 0.0;
 
     @Test
     public void unweightedUndirected() throws Exception {
 
-        DataSource edges = prepareEdges();
-
-        // Unweighted undirected graph
         KeyedGraph<VUBetw, Edge> graph =
-                new GraphCreator<VUBetw, Edge>(edges,
+                new GraphCreator<VUBetw, Edge>(prepareEdges(),
                                                GraphSchema.UNDIRECT,
                                                VUBetw.class,
                                                Edge.class).prepareGraph();
@@ -87,15 +89,187 @@ public class GraphCreatorTest extends TopologySetupTest {
         assertTrue(graph.vertexSet().size() == 4);
 
         assertTrue(graph.edgeSet().size() == 3);
-        assertTrue(graph.containsEdge(graph.getVertex(1), graph.getVertex(2)));
-        assertTrue(graph.containsEdge(graph.getVertex(2), graph.getVertex(1)));
-        assertTrue(graph.containsEdge(graph.getVertex(2), graph.getVertex(3)));
-        assertTrue(graph.containsEdge(graph.getVertex(3), graph.getVertex(2)));
-        assertTrue(graph.containsEdge(graph.getVertex(3), graph.getVertex(4)));
-        assertTrue(graph.containsEdge(graph.getVertex(4), graph.getVertex(3)));
+        checkUndirectedOrientations(graph);
+
+        for (Edge edge : graph.edgeSet()) {
+            assertEquals(1.0, graph.getEdgeWeight(edge), TOLERANCE);
+        }
 
         print(graph);
-        edges.close();
+    }
+
+    @Test
+    public void unweightedDirected() throws Exception {
+
+        DataSet newEdges = introduceOrientations(prepareEdges(),
+                                                 EDGE_ORIENTATIONS);
+        KeyedGraph<VUBetw, Edge> graph =
+                new GraphCreator<VUBetw, Edge>(newEdges,
+                                               GraphSchema.DIRECT,
+                                               VUBetw.class,
+                                               Edge.class).prepareGraph();
+        assertTrue(graph.vertexSet().size() == 4);
+
+        assertTrue(graph.edgeSet().size() == 4);
+        checkDirectedOrientations(graph);
+
+        for (Edge edge : graph.edgeSet()) {
+            assertEquals(1.0, graph.getEdgeWeight(edge), TOLERANCE);
+        }
+
+        print(graph);
+    }
+
+    @Test
+    public void unweightedReversed() throws Exception {
+
+        DataSet newEdges = introduceOrientations(prepareEdges(),
+                                                 EDGE_ORIENTATIONS);
+        KeyedGraph<VUBetw, Edge> graph =
+                new GraphCreator<VUBetw, Edge>(newEdges,
+                                               GraphSchema.DIRECT_REVERSED,
+                                               VUBetw.class,
+                                               Edge.class).prepareGraph();
+
+        assertTrue(graph.vertexSet().size() == 4);
+
+        assertTrue(graph.edgeSet().size() == 4);
+        checkReversedOrientations(graph);
+
+        for (Edge edge : graph.edgeSet()) {
+            assertEquals(1.0, graph.getEdgeWeight(edge), TOLERANCE);
+        }
+
+        print(graph);
+    }
+
+    @Test
+    public void weightedUndirected() throws Exception {
+
+        DataSet newEdges = introduceWeights(prepareEdges(),
+                                            EDGE_WEIGHTS);
+
+        WeightedKeyedGraph<VWBetw, Edge> graph =
+                new WeightedGraphCreator<VWBetw, Edge>(
+                newEdges,
+                GraphSchema.UNDIRECT,
+                VWBetw.class,
+                Edge.class,
+                GraphSchema.WEIGHT).prepareGraph();
+
+        assertTrue(graph.vertexSet().size() == 4);
+
+        assertTrue(graph.edgeSet().size() == 3);
+        checkUndirectedOrientations(graph);
+
+        assertEquals(EDGE_WEIGHTS[0],
+                     graph.getEdgeWeight(graph.getEdge(graph.getVertex(1),
+                                                       graph.getVertex(2))),
+                     TOLERANCE);
+        assertEquals(EDGE_WEIGHTS[0],
+                     graph.getEdgeWeight(graph.getEdge(graph.getVertex(2),
+                                                       graph.getVertex(1))),
+                     TOLERANCE);
+        assertEquals(EDGE_WEIGHTS[1],
+                     graph.getEdgeWeight(graph.getEdge(graph.getVertex(2),
+                                                       graph.getVertex(3))),
+                     TOLERANCE);
+        assertEquals(EDGE_WEIGHTS[1],
+                     graph.getEdgeWeight(graph.getEdge(graph.getVertex(3),
+                                                       graph.getVertex(2))),
+                     TOLERANCE);
+        assertEquals(EDGE_WEIGHTS[2],
+                     graph.getEdgeWeight(graph.getEdge(graph.getVertex(3),
+                                                       graph.getVertex(4))),
+                     TOLERANCE);
+        assertEquals(EDGE_WEIGHTS[2],
+                     graph.getEdgeWeight(graph.getEdge(graph.getVertex(4),
+                                                       graph.getVertex(3))),
+                     TOLERANCE);
+
+        print(graph);
+    }
+
+    @Test
+    public void weightedDirected() throws Exception {
+
+        DataSet newEdges =
+                introduceOrientations(introduceWeights(prepareEdges(),
+                                                       EDGE_WEIGHTS),
+                                      EDGE_ORIENTATIONS);
+
+        WeightedKeyedGraph<VWBetw, Edge> graph =
+                new WeightedGraphCreator<VWBetw, Edge>(
+                newEdges,
+                GraphSchema.DIRECT,
+                VWBetw.class,
+                Edge.class,
+                GraphSchema.WEIGHT).prepareGraph();
+
+        assertTrue(graph.vertexSet().size() == 4);
+
+        assertTrue(graph.edgeSet().size() == 4);
+        checkDirectedOrientations(graph);
+
+        assertEquals(EDGE_WEIGHTS[0],
+                     graph.getEdgeWeight(graph.getEdge(graph.getVertex(1),
+                                                       graph.getVertex(2))),
+                     TOLERANCE);
+        assertEquals(EDGE_WEIGHTS[1],
+                     graph.getEdgeWeight(graph.getEdge(graph.getVertex(3),
+                                                       graph.getVertex(2))),
+                     TOLERANCE);
+        assertEquals(EDGE_WEIGHTS[2],
+                     graph.getEdgeWeight(graph.getEdge(graph.getVertex(3),
+                                                       graph.getVertex(4))),
+                     TOLERANCE);
+        assertEquals(EDGE_WEIGHTS[2],
+                     graph.getEdgeWeight(graph.getEdge(graph.getVertex(4),
+                                                       graph.getVertex(3))),
+                     TOLERANCE);
+
+        print(graph);
+    }
+
+    @Test
+    public void weightedReversed() throws Exception {
+
+        DataSet newEdges =
+                introduceOrientations(introduceWeights(prepareEdges(),
+                                                       EDGE_WEIGHTS),
+                                      EDGE_ORIENTATIONS);
+
+        WeightedKeyedGraph<VWBetw, Edge> graph =
+                new WeightedGraphCreator<VWBetw, Edge>(
+                newEdges,
+                GraphSchema.DIRECT_REVERSED,
+                VWBetw.class,
+                Edge.class,
+                GraphSchema.WEIGHT).prepareGraph();
+
+        assertTrue(graph.vertexSet().size() == 4);
+
+        assertTrue(graph.edgeSet().size() == 4);
+        checkReversedOrientations(graph);
+
+        assertEquals(EDGE_WEIGHTS[0],
+                     graph.getEdgeWeight(graph.getEdge(graph.getVertex(2),
+                                                       graph.getVertex(1))),
+                     TOLERANCE);
+        assertEquals(EDGE_WEIGHTS[1],
+                     graph.getEdgeWeight(graph.getEdge(graph.getVertex(2),
+                                                       graph.getVertex(3))),
+                     TOLERANCE);
+        assertEquals(EDGE_WEIGHTS[2],
+                     graph.getEdgeWeight(graph.getEdge(graph.getVertex(3),
+                                                       graph.getVertex(4))),
+                     TOLERANCE);
+        assertEquals(EDGE_WEIGHTS[2],
+                     graph.getEdgeWeight(graph.getEdge(graph.getVertex(4),
+                                                       graph.getVertex(3))),
+                     TOLERANCE);
+
+        print(graph);
     }
 
     /**
@@ -125,13 +299,13 @@ public class GraphCreatorTest extends TopologySetupTest {
         for (String name : table.getMetadata().getFieldNames()) {
             metadata += name + "\t";
         }
-        LOGGER.info(metadata);
+        LOGGER.debug(metadata);
         for (int i = 0; i < table.getRowCount(); i++) {
             String row = "";
             for (Value v : table.getRow(i)) {
                 row += v + "\t";
             }
-            LOGGER.info(row);
+            LOGGER.debug(row);
         }
     }
 
@@ -141,16 +315,23 @@ public class GraphCreatorTest extends TopologySetupTest {
      * @param graph The graph.
      */
     private void print(KeyedGraph<? extends VBetw, Edge> graph) {
-        LOGGER.info("\tGRAPH");
+        LOGGER.debug("\tGRAPH");
+        String leftArrow;
+        if (graph instanceof UndirectedG) {
+            leftArrow = "<";
+        } else {
+            leftArrow = "";
+        }
         for (Edge edge : graph.edgeSet()) {
-            LOGGER.info("{} --> {} ({})",
-                        graph.getEdgeSource(edge).getID(),
-                        graph.getEdgeTarget(edge).getID(),
-                        graph.getEdgeWeight(edge));
+            LOGGER.debug("{} {}--> {} ({})",
+                         graph.getEdgeSource(edge).getID(),
+                         leftArrow,
+                         graph.getEdgeTarget(edge).getID(),
+                         graph.getEdgeWeight(edge));
         }
     }
 
-    private DataSource prepareEdges() throws FunctionException, DriverException,
+    private DataSet prepareEdges() throws FunctionException, DriverException,
             DataSourceCreationException, NoSuchTableException, ParseException {
         MemoryDataSetDriver data = initializeDriver();
         data.addValues(new Value[]{
@@ -168,7 +349,7 @@ public class GraphCreatorTest extends TopologySetupTest {
 
         DataSet[] tables = new DataSet[]{data};
 
-        LOGGER.info("\tDATA");
+        LOGGER.debug("\tDATA");
         print(data);
 
         // Evaluate ST_Graph.
@@ -183,16 +364,87 @@ public class GraphCreatorTest extends TopologySetupTest {
         // Check the nodes table.
         DataSource nodes = dsf.getDataSource("output.nodes");
         nodes.open();
-        LOGGER.info("\tNODES");
+        LOGGER.debug("\tNODES");
         print(nodes);
         nodes.close();
 
         // Check the edges table.
         DataSource edges = dsf.getDataSource("output.edges");
         edges.open();
-        LOGGER.info("\tEDGES");
+        LOGGER.debug("\tEDGES");
         print(edges);
 
         return edges;
+    }
+
+    private DataSet introduceOrientations(DataSet edges,
+                                          int[] edgeOrientations)
+            throws DriverException {
+        DefaultMetadata newMetadata = new DefaultMetadata(edges.getMetadata());
+        newMetadata.addField(GraphSchema.EDGE_ORIENTATION,
+                             TypeFactory.createType(Type.INT));
+        MemoryDataSetDriver newEdges =
+                new MemoryDataSetDriver(newMetadata);
+        for (int i = 0; i < edges.getRowCount(); i++) {
+            Value[] oldRow = edges.getRow(i);
+            final Value[] newRow = new Value[newMetadata.getFieldCount()];
+            System.arraycopy(oldRow, 0, newRow, 0,
+                             newMetadata.getFieldCount() - 1);
+            newRow[newMetadata.getFieldCount() - 1] =
+                    ValueFactory.createValue(edgeOrientations[i]);
+            newEdges.addValues(newRow);
+        }
+        LOGGER.debug("\tORIENTED EDGES");
+        print(newEdges);
+        return newEdges;
+    }
+
+    private DataSet introduceWeights(DataSet edges,
+                                     double[] edgeWeights)
+            throws DriverException {
+        DefaultMetadata newMetadata = new DefaultMetadata(edges.getMetadata());
+        newMetadata.addField(GraphSchema.WEIGHT,
+                             TypeFactory.createType(Type.DOUBLE));
+        MemoryDataSetDriver newEdges =
+                new MemoryDataSetDriver(newMetadata);
+        for (int i = 0; i < edges.getRowCount(); i++) {
+            Value[] oldRow = edges.getRow(i);
+            final Value[] newRow = new Value[newMetadata.getFieldCount()];
+            System.arraycopy(oldRow, 0, newRow, 0,
+                             newMetadata.getFieldCount() - 1);
+            newRow[newMetadata.getFieldCount() - 1] =
+                    ValueFactory.createValue(edgeWeights[i]);
+            newEdges.addValues(newRow);
+        }
+        LOGGER.debug("\tWEIGHTED EDGES");
+        print(newEdges);
+        return newEdges;
+    }
+
+    private void checkDirectedOrientations(KeyedGraph graph) {
+        assertTrue(graph.containsEdge(graph.getVertex(1), graph.getVertex(2)));
+        assertFalse(graph.containsEdge(graph.getVertex(2), graph.getVertex(1)));
+        assertFalse(graph.containsEdge(graph.getVertex(2), graph.getVertex(3)));
+        assertTrue(graph.containsEdge(graph.getVertex(3), graph.getVertex(2)));
+        assertTrue(graph.containsEdge(graph.getVertex(3), graph.getVertex(4)));
+        assertTrue(graph.containsEdge(graph.getVertex(4), graph.getVertex(3)));
+    }
+
+    private void checkUndirectedOrientations(KeyedGraph graph) {
+        assertTrue(graph.containsEdge(graph.getVertex(1), graph.getVertex(2)));
+        assertTrue(graph.containsEdge(graph.getVertex(2), graph.getVertex(1)));
+        assertTrue(graph.containsEdge(graph.getVertex(2), graph.getVertex(3)));
+        assertTrue(graph.containsEdge(graph.getVertex(3), graph.getVertex(2)));
+        assertTrue(graph.containsEdge(graph.getVertex(3), graph.getVertex(4)));
+        assertTrue(graph.containsEdge(graph.getVertex(4), graph.getVertex(3)));
+    }
+
+    private void checkReversedOrientations(KeyedGraph graph) {
+        assertFalse(graph.containsEdge(graph.getVertex(1), graph.getVertex(2)));
+        assertTrue(graph.containsEdge(graph.getVertex(2), graph.getVertex(1)));
+        assertTrue(graph.containsEdge(graph.getVertex(2), graph.getVertex(3)));
+        assertFalse(graph.containsEdge(graph.getVertex(3), graph.getVertex(2)));
+        assertTrue(graph.containsEdge(graph.getVertex(3), graph.getVertex(4)));
+        assertTrue(graph.containsEdge(graph.getVertex(4), graph.getVertex(3)));
     }
 }
