@@ -49,7 +49,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Creates a weighted graph with a specified orientation from the given
+ * Creates a weighted graph with a specified globalOrientation from the given
  * {@link DataSet}.
  *
  * @author Adam Gouge
@@ -68,8 +68,8 @@ public class WeightedGraphCreator<V extends VId, E extends Edge>
     /**
      * Constructs a new {@link WeightedGraphCreator}.
      *
-     * @param dataSet     The data set.
-     * @param orientation The orientation.
+     * @param dataSet           The data set.
+     * @param globalOrientation The globalOrientation.
      *
      */
     public WeightedGraphCreator(DataSet dataSet,
@@ -114,7 +114,7 @@ public class WeightedGraphCreator<V extends VId, E extends Edge>
     @Override
     protected KeyedGraph<V, E> initializeGraph() {
         KeyedGraph<V, E> graph;
-        if (orientation != UNDIRECTED) {
+        if (globalOrientation != UNDIRECTED) {
             // Weighted Directed or Reversed
             graph = new DirectedWeightedPseudoG<V, E>(vertexClass, edgeClass);
         } else {
@@ -127,8 +127,8 @@ public class WeightedGraphCreator<V extends VId, E extends Edge>
     @Override
     protected E loadEdge(Value[] row,
                          KeyedGraph<V, E> graph,
-                         boolean reverse) {
-        E edge = super.loadEdge(row, graph, reverse);
+                         boolean globalReverse) {
+        E edge = super.loadEdge(row, graph, globalReverse);
         double weight = row[weightFieldIndex].getAsDouble();
         edge.setWeight(weight);
         return edge;

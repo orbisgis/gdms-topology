@@ -50,7 +50,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Creates a graph with a specified orientation from the given {@link DataSet}.
+ * Creates a graph with a specified globalOrientation from the given
+ * {@link DataSet}.
  *
  * @author Adam Gouge
  */
@@ -61,9 +62,9 @@ public class GraphCreator<V extends VId, E extends Edge> {
      */
     protected final DataSet dataSet;
     /**
-     * Orientation.
+     * Global globalOrientation (directed, reversed or undirected).
      */
-    protected final int orientation;
+    protected final int globalOrientation;
     /**
      * Vertex class used for initializing the graph.
      */
@@ -76,7 +77,8 @@ public class GraphCreator<V extends VId, E extends Edge> {
     protected int startNodeIndex = -1;
     protected int endNodeIndex = -1;
     /**
-     * An error message given when a user inputs an erroneous graph orientation.
+     * An error message given when a user inputs an erroneous graph
+     * globalOrientation.
      */
     public final static String GRAPH_TYPE_ERROR =
             "Please enter an appropriate graph orientation (1, 2 or 3).";
@@ -115,11 +117,11 @@ public class GraphCreator<V extends VId, E extends Edge> {
      *
      */
     public GraphCreator(DataSet dataSet,
-                        int orientation,
+                        int globalOrientation,
                         Class<? extends V> vertexClass,
                         Class<? extends E> edgeClass) {
         this.dataSet = dataSet;
-        this.orientation = orientation;
+        this.globalOrientation = globalOrientation;
         this.vertexClass = vertexClass;
         this.edgeClass = edgeClass;
     }
@@ -156,7 +158,7 @@ public class GraphCreator<V extends VId, E extends Edge> {
      */
     protected KeyedGraph<V, E> initializeGraph() {
         KeyedGraph<V, E> graph;
-        if (orientation != UNDIRECTED) {
+        if (globalOrientation != UNDIRECTED) {
             // Unweighted Directed or Reversed
             graph = new DirectedPseudoG<V, E>(vertexClass, edgeClass);
         } else {
@@ -167,21 +169,17 @@ public class GraphCreator<V extends VId, E extends Edge> {
     }
 
     /**
-     * Loads the graph edges with the appropriate orientation.
+     * Loads the graph edges with the appropriate globalOrientation.
      *
-     * @param graph            The graph.
-     * @param orientation      The orientation.
-     * @param startNodeIndex   The start node index.
-     * @param endNodeIndex     The end node index.
-     * @param weightFieldIndex The weight field index.
+     * @param graph The graph.
      *
      * @throws GraphException
      */
     private KeyedGraph<V, E> loadEdges(KeyedGraph<V, E> graph) {
-        // Should we reverse the edge orientation?
-        boolean reverse = (orientation == REVERSED) ? true : false;
+        // Should we reverse the globalOrientation?
+        boolean globalReverse = (globalOrientation == REVERSED) ? true : false;
         for (Value[] row : dataSet) {
-            loadEdge(row, graph, reverse);
+            loadEdge(row, graph, globalReverse);
         }
         return graph;
     }
@@ -189,17 +187,18 @@ public class GraphCreator<V extends VId, E extends Edge> {
     /**
      * Loads an edge into the graph.
      *
-     * @param row     The row from which to load the edge.
-     * @param graph   The graph to which the edges will be added.
-     * @param reverse {@code true} iff the edge orientation should be reversed.
+     * @param row           The row from which to load the edge.
+     * @param graph         The graph to which the edges will be added.
+     * @param globalReverse {@code true} iff the globalOrientation should be
+     *                      reversed.
      *
      * @return The newly loaded edge.
      */
     protected E loadEdge(Value[] row,
                          KeyedGraph<V, E> graph,
-                         boolean reverse) {
+                         boolean globalReverse) {
         // Add the edge to the graph.
-        if (reverse) {
+        if (globalReverse) {
             return graph.addEdge(row[endNodeIndex].getAsInt(),
                                  row[startNodeIndex].getAsInt());
         } else {
