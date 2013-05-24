@@ -180,7 +180,7 @@ public class GraphCreator<V extends VId, E extends Edge> {
      * @throws GraphException
      */
     private KeyedGraph<V, E> loadEdges(KeyedGraph<V, E> graph) {
-        if (edgeOrientationIndex == -1) {
+        if (edgeOrientationIndex == -1 && globalOrientation != UNDIRECTED) {
             LOGGER.warn("Assuming all edges are directed.");
         }
         for (Value[] row : dataSet) {

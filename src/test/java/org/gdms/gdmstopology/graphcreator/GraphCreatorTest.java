@@ -87,8 +87,8 @@ public class GraphCreatorTest extends TopologySetupTest {
                                                Edge.class).prepareGraph();
 
         assertTrue(graph.vertexSet().size() == 4);
-
         assertTrue(graph.edgeSet().size() == 3);
+
         checkUndirectedOrientations(graph);
 
         for (Edge edge : graph.edgeSet()) {
@@ -108,9 +108,10 @@ public class GraphCreatorTest extends TopologySetupTest {
                                                GraphSchema.DIRECT,
                                                VUBetw.class,
                                                Edge.class).prepareGraph();
-        assertTrue(graph.vertexSet().size() == 4);
 
+        assertTrue(graph.vertexSet().size() == 4);
         assertTrue(graph.edgeSet().size() == 4);
+
         checkDirectedOrientations(graph);
 
         for (Edge edge : graph.edgeSet()) {
@@ -132,8 +133,8 @@ public class GraphCreatorTest extends TopologySetupTest {
                                                Edge.class).prepareGraph();
 
         assertTrue(graph.vertexSet().size() == 4);
-
         assertTrue(graph.edgeSet().size() == 4);
+
         checkReversedOrientations(graph);
 
         for (Edge edge : graph.edgeSet()) {
@@ -158,8 +159,8 @@ public class GraphCreatorTest extends TopologySetupTest {
                 GraphSchema.WEIGHT).prepareGraph();
 
         assertTrue(graph.vertexSet().size() == 4);
-
         assertTrue(graph.edgeSet().size() == 3);
+
         checkUndirectedOrientations(graph);
 
         assertEquals(EDGE_WEIGHTS[0],
@@ -207,8 +208,8 @@ public class GraphCreatorTest extends TopologySetupTest {
                 GraphSchema.WEIGHT).prepareGraph();
 
         assertTrue(graph.vertexSet().size() == 4);
-
         assertTrue(graph.edgeSet().size() == 4);
+
         checkDirectedOrientations(graph);
 
         assertEquals(EDGE_WEIGHTS[0],
@@ -248,8 +249,8 @@ public class GraphCreatorTest extends TopologySetupTest {
                 GraphSchema.WEIGHT).prepareGraph();
 
         assertTrue(graph.vertexSet().size() == 4);
-
         assertTrue(graph.edgeSet().size() == 4);
+
         checkReversedOrientations(graph);
 
         assertEquals(EDGE_WEIGHTS[0],
