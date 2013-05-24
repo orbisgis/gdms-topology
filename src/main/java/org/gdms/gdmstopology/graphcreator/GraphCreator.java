@@ -77,9 +77,9 @@ public class GraphCreator<V extends VId, E extends Edge> {
     protected int startNodeIndex = -1;
     protected int endNodeIndex = -1;
     protected int edgeOrientationIndex = -1;
-    protected static final int DIRECTED_EDGE = 1;
-    protected static final int REVERSED_EDGE = -1;
-    protected static final int UNDIRECTED_EDGE = 0;
+    public static final int DIRECTED_EDGE = 1;
+    public static final int REVERSED_EDGE = -1;
+    public static final int UNDIRECTED_EDGE = 0;
     /**
      * An error message given when a user inputs an erroneous graph
      * globalOrientation.
