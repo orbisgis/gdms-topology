@@ -76,6 +76,10 @@ public class GraphCreator<V extends VId, E extends Edge> {
     // Initialize all the indices to -1.
     protected int startNodeIndex = -1;
     protected int endNodeIndex = -1;
+    protected int edgeOrientationIndex = -1;
+    protected static final int DIRECTED_EDGE = 1;
+    protected static final int REVERSED_EDGE = -1;
+    protected static final int UNDIRECTED_EDGE = 0;
     /**
      * An error message given when a user inputs an erroneous graph
      * globalOrientation.
@@ -176,10 +180,11 @@ public class GraphCreator<V extends VId, E extends Edge> {
      * @throws GraphException
      */
     private KeyedGraph<V, E> loadEdges(KeyedGraph<V, E> graph) {
-        // Should we reverse the globalOrientation?
-        boolean globalReverse = (globalOrientation == REVERSED) ? true : false;
+        if (edgeOrientationIndex == -1) {
+            LOGGER.warn("Assuming all edges are directed.");
+        }
         for (Value[] row : dataSet) {
-            loadEdge(row, graph, globalReverse);
+            loadEdge(row, graph);
         }
         return graph;
     }
@@ -187,23 +192,49 @@ public class GraphCreator<V extends VId, E extends Edge> {
     /**
      * Loads an edge into the graph.
      *
-     * @param row           The row from which to load the edge.
-     * @param graph         The graph to which the edges will be added.
-     * @param globalReverse {@code true} iff the globalOrientation should be
-     *                      reversed.
+     * @param row   The row from which to load the edge.
+     * @param graph The graph to which the edges will be added.
      *
      * @return The newly loaded edge.
      */
-    protected E loadEdge(Value[] row,
-                         KeyedGraph<V, E> graph,
-                         boolean globalReverse) {
-        // Add the edge to the graph.
-        if (globalReverse) {
-            return graph.addEdge(row[endNodeIndex].getAsInt(),
-                                 row[startNodeIndex].getAsInt());
+    protected E loadEdge(Value[] row, KeyedGraph<V, E> graph) {
+        final int startNode = row[startNodeIndex].getAsInt();
+        final int endNode = row[endNodeIndex].getAsInt();
+        // Undirected graphs are either pseudographs or weighted pseudographs,
+        // which are undirected, so there is no need to add edges in both
+        // directions.
+        if (globalOrientation == GraphSchema.UNDIRECT) {
+            return graph.addEdge(endNode, startNode);
         } else {
-            return graph.addEdge(row[startNodeIndex].getAsInt(),
-                                 row[endNodeIndex].getAsInt());
+            // Directed graphs are either directed pseudographs or directed
+            // weighted pseudographs and must specify an orientation for each
+            // individual edge. If no orientations are specified, every edge
+            // is considered to be directed.
+            int edgeOrientation = (edgeOrientationIndex == -1)
+                    ? DIRECTED_EDGE
+                    : row[edgeOrientationIndex].getAsInt();
+            if (edgeOrientation == UNDIRECTED_EDGE) {
+                return loadDoubleEdge(row, graph, startNode, endNode);
+            } else if (edgeOrientation == DIRECTED_EDGE) {
+                // Reverse a directed edge (global).
+                if (globalOrientation == REVERSED) {
+                    return graph.addEdge(endNode, startNode);
+                } // No reversal.
+                else {
+                    return graph.addEdge(startNode, endNode);
+                }
+            } else if (edgeOrientation == REVERSED_EDGE) {
+                // Reversing twice is the same as no reversal.
+                if (globalOrientation == REVERSED) {
+                    return graph.addEdge(startNode, endNode);
+                } // Otherwise reverse just once (local).
+                else {
+                    return graph.addEdge(endNode, startNode);
+                }
+            } else {
+                throw new IllegalArgumentException(
+                        edgeOrientation + " is not a valid edge orientation.");
+            }
         }
     }
 
@@ -241,11 +272,29 @@ public class GraphCreator<V extends VId, E extends Edge> {
             verifyIndex(startNodeIndex, GraphSchema.START_NODE);
             endNodeIndex = md.getFieldIndex(GraphSchema.END_NODE);
             verifyIndex(endNodeIndex, GraphSchema.END_NODE);
+            // For directed graphs, also get the edge orientation index.
+            if (globalOrientation != GraphSchema.UNDIRECT) {
+                edgeOrientationIndex = md.getFieldIndex(
+                        GraphSchema.EDGE_ORIENTATION);
+                // We don't verify the index because we allow the user to
+                // omit the edge_orientation column.
+            }
         } catch (DriverException ex) {
             LOGGER.error(METADATA_ERROR, ex);
         } catch (IndexException ex) {
             LOGGER.error("Problem with indices.", ex);
         }
         return md;
+    }
+
+    protected E loadDoubleEdge(Value[] row,
+                               KeyedGraph<V, E> graph,
+                               final int startNode,
+                               final int endNode) {
+        // In directed graphs, undirected edges are represented
+        // by directed edges in both directions.
+        // Note: row is ignored since we only need it for weighted graphs.
+        graph.addEdge(startNode, endNode);
+        return graph.addEdge(endNode, startNode);
     }
 }

@@ -125,12 +125,25 @@ public class WeightedGraphCreator<V extends VId, E extends Edge>
     }
 
     @Override
-    protected E loadEdge(Value[] row,
-                         KeyedGraph<V, E> graph,
-                         boolean globalReverse) {
-        E edge = super.loadEdge(row, graph, globalReverse);
+    protected E loadEdge(Value[] row, KeyedGraph<V, E> graph) {
+        E edge = super.loadEdge(row, graph);
         double weight = row[weightFieldIndex].getAsDouble();
         edge.setWeight(weight);
         return edge;
+    }
+
+    @Override
+    protected E loadDoubleEdge(Value[] row,
+                               KeyedGraph<V, E> graph,
+                               final int startNode,
+                               final int endNode) {
+        // In directed graphs, undirected edges are represented
+        // by directed edges in both directions.
+        E edgeTo = graph.addEdge(startNode, endNode);
+        E edgeFrom = graph.addEdge(endNode, startNode);
+        double weight = row[weightFieldIndex].getAsDouble();
+        edgeTo.setWeight(weight);
+        edgeFrom.setWeight(weight);
+        return edgeFrom;
     }
 }
