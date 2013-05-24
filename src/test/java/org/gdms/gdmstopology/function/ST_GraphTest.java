@@ -34,7 +34,6 @@ package org.gdms.gdmstopology.function;
 
 import com.vividsolutions.jts.geom.Geometry;
 import org.gdms.data.DataSource;
-import org.gdms.data.schema.Metadata;
 import org.gdms.data.types.Type;
 import org.gdms.data.types.TypeFactory;
 import org.gdms.data.values.Value;
@@ -188,6 +187,7 @@ public class ST_GraphTest extends TopologySetupTest {
         else {
             assertTrue(source == 1 && target == 2);
         }
+        edges.close();
     }
 
     /**
