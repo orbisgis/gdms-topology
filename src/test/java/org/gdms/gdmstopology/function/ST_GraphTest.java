@@ -34,11 +34,13 @@ package org.gdms.gdmstopology.function;
 
 import com.vividsolutions.jts.geom.Geometry;
 import org.gdms.data.DataSource;
+import org.gdms.data.schema.Metadata;
 import org.gdms.data.types.Type;
 import org.gdms.data.types.TypeFactory;
 import org.gdms.data.values.Value;
 import org.gdms.data.values.ValueFactory;
 import org.gdms.driver.DataSet;
+import org.gdms.driver.DriverException;
 import org.gdms.driver.memory.MemoryDataSetDriver;
 import org.gdms.gdmstopology.TopologySetupTest;
 import static org.junit.Assert.*;
@@ -90,83 +92,56 @@ public class ST_GraphTest extends TopologySetupTest {
     }
 
     /**
-     * Makes sure ST_Graph correctly orients edges by their elevation when
-     * requested to do so.
+     * Tests orienting when node 1 has higher elevation than node 2 (1 --> 2).
      *
      * @throws Exception
      */
     @Test
-    public void orientByElevationTest1() throws Exception {
-
-        // Prepare data.
-        MemoryDataSetDriver data = initializeDriver();
-        data.addValues(new Value[]{
-            ValueFactory.createValue(
-            wktReader.read("LINESTRING( 0 0 0, 1 1 2)")),
-            ValueFactory.createValue(1)});
-        data.addValues(new Value[]{
-            ValueFactory.createValue(
-            wktReader.read("LINESTRING( 0 2 1, 1 1 2)")),
-            ValueFactory.createValue(2)});
-        data.addValues(new Value[]{
-            ValueFactory.createValue(
-            wktReader.read("LINESTRING( 2 1 3, 1 1 2)")),
-            ValueFactory.createValue(3)});
-        DataSet[] tables = new DataSet[]{data};
-
-        // Evaluate ST_Graph.
-        new ST_Graph().evaluate(dsf,
-                                tables,
-                                // Tolerance, orient by elevation, output
-                                new Value[]{ValueFactory.createValue(0),
-                                            ValueFactory.createValue(true),
-                                            ValueFactory.createValue("output")},
-                                new NullProgressMonitor());
-
-        // Check edge orientations.
-        DataSource edges = dsf.getDataSource("output.edges");
-        edges.open();
-        int gidIndex = edges.getMetadata().getFieldIndex("gid");
-        for (int i = 0; i < edges.getRowCount(); i++) {
-            Value[] row = edges.getRow(i);
-            int id = row[gidIndex].getAsInt();
-            int source = row[3].getAsInt();
-            int target = row[4].getAsInt();
-
-            if (id == 1) {
-                assertTrue(source == 1 && target == 2);
-            } else if (id == 2) {
-                assertTrue(source == 1 && target == 3);
-            } else if (id == 3) {
-                assertTrue(source == 4 && target == 1);
-            }
-        }
-        edges.close();
+    public void orientNodeOneToNodeTwo() throws Exception {
+        orientByElevation(10, 5);
     }
 
     /**
-     * Makes sure ST_Graph correctly orients edges by their elevation when
-     * requested to do so.
+     * Tests orienting when node 2 has higher elevation than node 1 (2 --> 1).
      *
      * @throws Exception
      */
     @Test
-    public void orientByElevationTest2() throws Exception {
+    public void orientNodeTwoToNodeOne() throws Exception {
+        orientByElevation(5, 10);
+    }
 
-        // Prepare data.
+    /**
+     * Tests orienting when nodes 1 and 2 have equal elevation (1 --> 2).
+     *
+     * @throws Exception
+     */
+    @Test
+    public void orientSameElevation() throws Exception {
+        orientByElevation(5, 5);
+    }
+
+    /**
+     * Constructs a linestring consisting of distinct points nodeOne with
+     * z-coordinate zOne and nodeTwo with z-coordinate zTwo; checks that the
+     * resulting nodes and edges tables are created correctly and that the
+     * resulting edge has the correct orientation.
+     *
+     * @param zOne z-coordinate of nodeOne
+     * @param zTwo z-coordinate of nodeTwo
+     *
+     * @throws Exception
+     */
+    public void orientByElevation(int zOne, int zTwo) throws Exception {
+
+        String nodeOne = "1 2 " + zOne;
+        String nodeTwo = "3 4 " + zTwo;
+
         MemoryDataSetDriver data = initializeDriver();
         data.addValues(new Value[]{
             ValueFactory.createValue(
-            wktReader.read("LINESTRING( 0 0 0, 1 1 2)")),
+            wktReader.read("LINESTRING(" + nodeOne + ", " + nodeTwo + ")")),
             ValueFactory.createValue(1)});
-        data.addValues(new Value[]{
-            ValueFactory.createValue(
-            wktReader.read("LINESTRING( 0 2 1, 1 1 2)")),
-            ValueFactory.createValue(2)});
-        data.addValues(new Value[]{
-            ValueFactory.createValue(
-            wktReader.read("LINESTRING( 2 1 1, 1 1 2)")),
-            ValueFactory.createValue(3)});
         DataSet[] tables = new DataSet[]{data};
 
         // Evaluate ST_Graph.
@@ -178,25 +153,35 @@ public class ST_GraphTest extends TopologySetupTest {
                                             ValueFactory.createValue("output")},
                                 new NullProgressMonitor());
 
-        // Check edge orientations.
+        // Check the nodes table.
+        DataSource nodes = dsf.getDataSource("output.nodes");
+        nodes.open();
+        assertTrue(nodes.getRowCount() == 2);
+        Value[] row1 = nodes.getRow(0);
+        assertTrue(row1[0].getAsGeometry().equals(
+                wktReader.read("POINT(" + nodeOne + ")")));
+        assertTrue(row1[1].getAsInt() == 1);
+        Value[] row2 = nodes.getRow(1);
+        assertTrue(row2[0].getAsGeometry().equals(
+                wktReader.read("POINT(" + nodeTwo + ")")));
+        assertTrue(row2[1].getAsInt() == 2);
+        nodes.close();
+
+        // Check the edges table.
         DataSource edges = dsf.getDataSource("output.edges");
         edges.open();
-        int gidIndex = edges.getMetadata().getFieldIndex("gid");
-        for (int i = 0; i < edges.getRowCount(); i++) {
-            Value[] row = edges.getRow(i);
-            int id = row[gidIndex].getAsInt();
-            int source = row[3].getAsInt();
-            int target = row[4].getAsInt();
-
-            if (id == 1) {
-                assertTrue(source == 1 && target == 2);
-            } else if (id == 2) {
-                assertTrue(source == 1 && target == 3);
-            } else if (id == 3) {
-                assertTrue(source == 1 && target == 4);
-            }
+        print(edges);
+        System.out.println("");
+        assertTrue(edges.getRowCount() == 1);
+        Value[] row = edges.getRow(0);
+        int source = row[3].getAsInt();
+        int target = row[4].getAsInt();
+        if (zTwo > zOne) {
+            assertTrue(source == 2 && target == 1);
+        } // zOne >= zTwo
+        else {
+            assertTrue(source == 1 && target == 2);
         }
-        edges.close();
     }
 
     /**
@@ -257,5 +242,25 @@ public class ST_GraphTest extends TopologySetupTest {
                 new Type[]{TypeFactory.createType(Type.GEOMETRY),
                            TypeFactory.createType(Type.INT)});
         return data;
+    }
+
+    /**
+     * Prints the given table for debugging.
+     *
+     * @param table The table
+     *
+     * @throws DriverException
+     */
+    private void print(DataSet table) throws DriverException {
+        for (String name : table.getMetadata().getFieldNames()) {
+            System.out.print(name + "\t");
+        }
+        System.out.println("");
+        for (int i = 0; i < table.getRowCount(); i++) {
+            for (Value v : table.getRow(i)) {
+                System.out.print(v + "\t");
+            }
+            System.out.println("");
+        }
     }
 }
