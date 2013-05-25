@@ -131,11 +131,11 @@ public class Graph2DGraphCreatorTest extends TopologySetupTest {
 
     /**
      * Loads the 2D graph according to whether it is to be considered weighted
-     * and according to the given orientation.
+     * and according to the given globalOrientation.
      *
      * @param weighted    {@code true} iff the graph is to be considered
      *                    weighted.
-     * @param orientation The orientation.
+     * @param globalOrientation The globalOrientation.
      *
      * @return The graph.
      *

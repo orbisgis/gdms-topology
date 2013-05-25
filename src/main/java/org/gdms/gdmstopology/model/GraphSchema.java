@@ -141,6 +141,10 @@ public final class GraphSchema {
      * Specifies the Strahler number of a node.
      */
     public static final String STRAHLER_NUMBER = "strahler_number";
+    /**
+     * Specifies the orientation of an edge.
+     */
+    public static final String EDGE_ORIENTATION = "edge_orientation";
 
     /**
      * Empty constructor.
