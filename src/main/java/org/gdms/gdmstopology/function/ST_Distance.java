@@ -32,12 +32,24 @@
  */
 package org.gdms.gdmstopology.function;
 
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.gdms.data.DataSourceFactory;
+import org.gdms.data.schema.DefaultMetadata;
 import org.gdms.data.schema.Metadata;
+import org.gdms.data.types.Type;
+import org.gdms.data.types.TypeFactory;
 import org.gdms.data.values.Value;
+import org.gdms.data.values.ValueFactory;
 import org.gdms.driver.DataSet;
+import org.gdms.driver.DiskBufferDriver;
 import org.gdms.driver.DriverException;
 import org.gdms.gdmstopology.centrality.GraphAnalyzer;
+import org.gdms.gdmstopology.graphcreator.WeightedGraphCreator;
+import org.gdms.gdmstopology.model.GraphSchema;
+import org.gdms.gdmstopology.parse.GraphFunctionParser;
 import org.gdms.gdmstopology.utils.ArrayConcatenator;
 import org.gdms.sql.function.FunctionException;
 import org.gdms.sql.function.FunctionSignature;
@@ -47,7 +59,12 @@ import org.gdms.sql.function.table.AbstractTableFunction;
 import org.gdms.sql.function.table.TableArgument;
 import org.gdms.sql.function.table.TableDefinition;
 import org.gdms.sql.function.table.TableFunctionSignature;
+import org.javanetworkanalyzer.alg.Dijkstra;
+import org.javanetworkanalyzer.data.VWBetw;
+import org.javanetworkanalyzer.model.Edge;
+import org.javanetworkanalyzer.model.WeightedKeyedGraph;
 import org.orbisgis.progress.ProgressMonitor;
+import org.slf4j.LoggerFactory;
 
 /**
  * Function for calculating distances (shortest path lengths).
@@ -112,12 +129,57 @@ public class ST_Distance extends AbstractTableFunction {
      */
     private static final String DESCRIPTION =
             SHORT_DESCRIPTION + LONG_DESCRIPTION;
+    /**
+     * Specifies the weight column (or 1 in the case of an unweighted graph).
+     */
+    private String weightsColumn;
+    private static final org.slf4j.Logger LOGGER =
+            LoggerFactory.getLogger(ST_Distance.class);
 
     @Override
     public DataSet evaluate(DataSourceFactory dsf, DataSet[] tables,
                             Value[] values, ProgressMonitor pm) throws
             FunctionException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        // REQUIRED PARAMETERS
+
+        // FIRST PARAMETER: Recover the DataSet. There is only one table.
+        final DataSet edges = tables[0];
+
+        // SECOND PARAMETER: Source
+        int source = GraphFunctionParser.parseSource(values[0]);
+
+        // THIRD PARAMETER: Destination
+        int target = GraphFunctionParser.parseTarget(values[1]);
+
+        // FOUR PARAMETER: Either 1 or weight column name.
+        weightsColumn = GraphFunctionParser.parseWeight(values[2]);
+
+        WeightedKeyedGraph<VWBetw, Edge> graph =
+                new WeightedGraphCreator<VWBetw, Edge>(
+                edges,
+                GraphSchema.DIRECT,
+                VWBetw.class,
+                Edge.class,
+                weightsColumn).prepareGraph();
+
+        Dijkstra<VWBetw, Edge> dijkstra = new Dijkstra<VWBetw, Edge>(graph);
+
+        double distance = dijkstra.oneToOne(graph.getVertex(source),
+                                            graph.getVertex(target));
+
+        DiskBufferDriver output = null;
+        try {
+            output = new DiskBufferDriver(dsf, getMetadata(null));
+            output.addValues(ValueFactory.createValue(source),
+                             ValueFactory.createValue(target),
+                             ValueFactory.createValue(distance));
+            output.writingFinished();
+            output.open();
+        } catch (DriverException ex) {
+            LOGGER.error(ex.toString());
+        }
+
+        return output;
     }
 
     @Override
@@ -201,6 +263,12 @@ public class ST_Distance extends AbstractTableFunction {
 
     @Override
     public Metadata getMetadata(Metadata[] tables) throws DriverException {
-        return GraphAnalyzer.MD;
+        return new DefaultMetadata(
+                new Type[]{TypeFactory.createType(Type.INT),
+                           TypeFactory.createType(Type.INT),
+                           TypeFactory.createType(Type.DOUBLE)},
+                new String[]{"source",
+                             "destination",
+                             "distance"});
     }
 }
