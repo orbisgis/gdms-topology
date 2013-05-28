@@ -75,32 +75,39 @@ public class ST_Distance extends AbstractTableFunction {
      * The name of this function.
      */
     private static final String NAME = "ST_Distance";
+    public static final String SOURCE = "source";
+    public static final String DESTINATION = "destination";
+    public static final String DISTANCE = "distance";
+    public static final String DIRECTED = "directed";
+    public static final String REVERSED = "reversed";
+    public static final String UNDIRECTED = "undirected";
     /**
      * The SQL order of this function.
      */
     private static final String SQL_ORDER = "SELECT * FROM ST_Distance("
                                             + "output.edges, "
-                                            + "source_dest_table OR source[, destination], "
-                                            + "'weights_column' OR 1"
-                                            + "[, orientation]);";
+                                            + "source_dest_table OR source[, destination]"
+                                            + "[, 'weights_column']"
+                                            + "[, 'orientation']);";
     /**
      * Short description of this function.
      */
     private static final String SHORT_DESCRIPTION =
-            "Calculates the distance from a set of sources to a set of targets.";
+            "Calculates the distance from one or more sources to one or more "
+            + "targets.";
     /**
      * Long description of this function.
      */
     private static final String LONG_DESCRIPTION =
             "<p><i>Note</i>: This function use Dijkstra's algorithm to "
-            + "calculate the shortest path lengths from a set of sources "
-            + "to a set of target. We assume the graph is connected. "
+            + "calculate the shortest path lengths from one or more sources "
+            + "to one or more targets. We assume the graph is connected. "
             + "<p> Example usage: "
             + "<center> "
             + "<code>SELECT * FROM ST_Distance("
             + "edges, "
-            + "source_dest_table OR source[, destination], "
-            + "'weights_column' OR 1"
+            + "source_dest_table OR source[, destination]"
+            + "[, 'weights_column']"
             + "[, orientation]);</code> </center> "
             + "<p> Required parameters: "
             + "<ul> "
@@ -108,35 +115,53 @@ public class ST_Distance extends AbstractTableFunction {
             + "this is the <code>output.edges</code> table "
             + "produced by <code>ST_Graph</code>, with an additional "
             + "column specifying the weight of each edge. "
-            + "<li> <code>'weights_column'</code> - either a string specifying "
-            + "the name of the column of the input table that gives the weight "
-            + "of each edge, or 1 if the graph is to be considered unweighted. "
-            + "</ul>"
-            + "<p> Optional parameter: "
+            + "<li> <code>source_dest_table OR source[, destination]</code> - "
+            + "The user may specify "
+            + "<ul> <li> a source and a destination"
+            + "<li> a single source (implicitly towards all possible "
+            + "destinations"
+            + "<li> a table of sources (under column '" + SOURCE + "') "
+            + "and destinations (under column '" + DESTINATION + "') </ul></ul>"
+            + "<p> Optional parameters: "
             + "<ul> "
-            + "<li> <code>orientation</code> - an integer specifying the "
+            + "<li> <code>'weights_column'</code> - a string specifying "
+            + "the name of the column of the input table that gives the weight "
+            + "of each edge. If omitted, the graph is considered to be unweighted. "
+            + "<li> <code>orientation</code> - a string specifying the "
             + "orientation of the graph: "
             + "<ul> "
-            + "<li> 1 if the graph is directed, "
-            + "<li> 2 if it is directed and we wish to reverse the orientation "
-            + "of the edges. "
-            + "<li> 3 if the graph is undirected, "
-            + "</ul> The default orientation is directed. </ul>";
+            + "<li> '" + DIRECTED + "' "
+            + "<li> '" + REVERSED + "' "
+            + "<li> '" + UNDIRECTED + "'."
+            + "</ul> The default orientation is " + DIRECTED + ". </ul>";
     /**
      * Description of this function.
      */
     private static final String DESCRIPTION =
             SHORT_DESCRIPTION + LONG_DESCRIPTION;
+    /**
+     * Source node id.
+     */
     private int source = -1;
+    /**
+     * Destination node id.
+     */
     private int destination = -1;
+    /**
+     * Table of sources and destinations.
+     */
     private DataSet sourceDestinationTable = null;
+    /**
+     * Weight column name.
+     */
     private String weightsColumn = null;
+    /**
+     * Orientation string.
+     */
     private String orientation = null;
-    private static final org.slf4j.Logger LOGGER =
-            LoggerFactory.getLogger(ST_Distance.class);
-    public static final String SOURCE = "source";
-    public static final String DESTINATION = "destination";
-    public static final String DISTANCE = "distance";
+    /**
+     * Output metadata.
+     */
     private static final Metadata md = new DefaultMetadata(
             new Type[]{TypeFactory.createType(Type.INT),
                        TypeFactory.createType(Type.INT),
@@ -144,6 +169,11 @@ public class ST_Distance extends AbstractTableFunction {
             new String[]{SOURCE,
                          DESTINATION,
                          DISTANCE});
+    /**
+     * Logger.
+     */
+    private static final org.slf4j.Logger LOGGER =
+            LoggerFactory.getLogger(ST_Distance.class);
 
     @Override
     public DataSet evaluate(DataSourceFactory dsf, DataSet[] tables,
@@ -162,7 +192,7 @@ public class ST_Distance extends AbstractTableFunction {
         // Compute and return results.
         DiskBufferDriver results = null;
         try {
-            results = compute(graph, dsf);
+            results = compute(dsf, graph);
         } catch (DriverException ex) {
             LOGGER.error(ex.toString());
         }
@@ -285,6 +315,12 @@ public class ST_Distance extends AbstractTableFunction {
         return md;
     }
 
+    /**
+     * Parse all possible arguments for {@link ST_Distance}.
+     *
+     * @param tables Input table(s)
+     * @param values Arguments
+     */
     private void parseArguments(DataSet[] tables, Value[] values) {
         // (source_dest_table, ...)
         if (tables.length == 2) {
@@ -305,6 +341,12 @@ public class ST_Distance extends AbstractTableFunction {
         }
     }
 
+    /**
+     * Parse the optional arguments.
+     *
+     * @param values   Arguments array
+     * @param argIndex Index of the first optional argument
+     */
     private void parseOptionalArguments(Value[] values, int argIndex) {
         if (values.length > argIndex) {
             while (values.length > argIndex) {
@@ -315,12 +357,18 @@ public class ST_Distance extends AbstractTableFunction {
         }
     }
 
+    /**
+     * Parse possible String arguments for {@link ST_Distance}, namely weight
+     * and orientation.
+     *
+     * @param value A given argument to parse.
+     */
     private void parseStringArguments(Value value) {
         if (value.getType() == Type.STRING) {
             String v = value.getAsString();
-            if (v.equals("directed")
-                || v.equals("reversed")
-                || v.equals("undirected")) {
+            if (v.equals(DIRECTED)
+                || v.equals(REVERSED)
+                || v.equals(UNDIRECTED)) {
                 orientation = v;
             } else {
                 LOGGER.info("Setting weights column name to {}.", v);
@@ -332,16 +380,24 @@ public class ST_Distance extends AbstractTableFunction {
         }
     }
 
+    /**
+     * Prepare the JGraphT graph from the given edges table.
+     *
+     * @param edges Edges table
+     *
+     * @return JGraphT graph
+     */
     private KeyedGraph<VWBetw, Edge> prepareGraph(final DataSet edges) {
         KeyedGraph<VWBetw, Edge> graph;
 
+        // Get the graph orientation.
         int graphType = -1;
         if (orientation != null) {
-            graphType = orientation.equals("directed")
+            graphType = orientation.equals(DIRECTED)
                     ? GraphSchema.DIRECT
-                    : orientation.equals("reversed")
+                    : orientation.equals(REVERSED)
                     ? GraphSchema.DIRECT_REVERSED
-                    : orientation.equals("undirected")
+                    : orientation.equals(UNDIRECTED)
                     ? GraphSchema.UNDIRECT
                     : -1;
         } else if (graphType == -1) {
@@ -349,6 +405,7 @@ public class ST_Distance extends AbstractTableFunction {
             graphType = GraphSchema.DIRECT;
         }
 
+        // Create the graph.
         if (weightsColumn != null) {
             graph = new WeightedGraphCreator<VWBetw, Edge>(
                     edges,
@@ -357,10 +414,6 @@ public class ST_Distance extends AbstractTableFunction {
                     Edge.class,
                     weightsColumn).prepareGraph();
         } else {
-//            graph = new GraphCreator<VUBetw, Edge>(edges,
-//                                                   graphType,
-//                                                   VUBetw.class,
-//                                                   Edge.class).prepareGraph();
             throw new UnsupportedOperationException(
                     "ST_Distance has not yet been implemented for "
                     + "unweighted graphs.");
@@ -368,31 +421,46 @@ public class ST_Distance extends AbstractTableFunction {
         return graph;
     }
 
-    private DiskBufferDriver compute(
-            KeyedGraph<VWBetw, Edge> graph,
-            DataSourceFactory dsf) throws DriverException {
+    /**
+     * Compute the distances and write them to a table.
+     *
+     * @param dsf   Data source factory
+     * @param graph JGraphT graph
+     *
+     * @return The requested distances
+     *
+     * @throws DriverException
+     */
+    private DiskBufferDriver compute(DataSourceFactory dsf,
+                                     KeyedGraph<VWBetw, Edge> graph)
+            throws DriverException {
 
+        // Initialize the output.
         DiskBufferDriver output = new DiskBufferDriver(dsf, getMetadata(null));
+
         if (graph == null) {
             LOGGER.error("Null graph.");
         } else {
+            // Get a Dijkstra algo for the distance calculation.
             Dijkstra<VWBetw, Edge> dijkstra = new Dijkstra<VWBetw, Edge>(graph);
 
-            // (source, destination, ...)
+            // (source, destination, ...) (One-to-one)
             if (source != -1 && destination != -1) {
                 double distance =
                         dijkstra.oneToOne(graph.getVertex(source),
                                           graph.getVertex(destination));
                 storeValue(source, destination, distance, output);
-            } // (source, ...)
+            } // (source, ...) (One-to-ALL)
             else if (source != -1 && destination == -1) {
                 // TODO: Replace this by calculate().
                 Map<VWBetw, Double> distances =
                         dijkstra.oneToMany(graph.getVertex(source),
                                            graph.vertexSet());
                 storeValues(source, distances, output);
-            } // (source_dest_table, ...)
+            } // (source_dest_table, ...) (Many-to-many)
             else if (sourceDestinationTable != null) {
+                // Make sure the source-destination table has columns named
+                // SOURCE and DESTINATION.
                 Metadata metadata = sourceDestinationTable.getMetadata();
                 int sourceIndex = metadata.getFieldIndex(SOURCE);
                 int targetIndex = metadata.getFieldIndex(DESTINATION);
@@ -405,6 +473,9 @@ public class ST_Distance extends AbstractTableFunction {
                             "The source-destination table must contain "
                             + "a column named \'" + DESTINATION + "\'.");
                 } else {
+
+                    // Prepare the source-destination map from the source-
+                    // destination table.
                     Map<VWBetw, Set<VWBetw>> sourceDestinationMap =
                             prepareSourceDestinationMap(graph,
                                                         sourceIndex,
@@ -414,6 +485,7 @@ public class ST_Distance extends AbstractTableFunction {
                                 "No sources/destinations requested.");
                     }
 
+                    // Do One-to-Many many times!
                     for (Entry<VWBetw, Set<VWBetw>> e
                          : sourceDestinationMap.entrySet()) {
                         Map<VWBetw, Double> distances =
@@ -422,52 +494,89 @@ public class ST_Distance extends AbstractTableFunction {
                     }
                 }
             }
-
+            // Clean-up
             output.writingFinished();
             output.open();
         }
         return output;
     }
 
+    /**
+     * Prepare the source-destination map (to which we will apply Dijkstra) from
+     * the source-destination table.
+     *
+     * @param graph            JGraphT graph
+     * @param sourceIndex      Index of the source column
+     * @param destinationIndex Index of the destination column.
+     *
+     * @return The source-destination map
+     *
+     * @throws DriverException
+     */
     private Map<VWBetw, Set<VWBetw>> prepareSourceDestinationMap(
             KeyedGraph<VWBetw, Edge> graph,
             int sourceIndex,
-            int targetIndex) throws DriverException {
-        // Prepare the source-destination map.
+            int destinationIndex) throws DriverException {
+        // Initialize the map.
         Map<VWBetw, Set<VWBetw>> map =
                 new HashMap<VWBetw, Set<VWBetw>>();
+        // Go throught the source-destination table and insert each
+        // pair into the map.
         for (int i = 0;
              i < sourceDestinationTable.getRowCount();
              i++) {
             Value[] row = sourceDestinationTable.getRow(i);
 
-            source = row[sourceIndex].getAsInt();
-            VWBetw sourceVertex = graph.getVertex(source);
-            destination = row[targetIndex].getAsInt();
-            VWBetw destinationVertex = graph.getVertex(destination);
+            VWBetw sourceVertex = graph.getVertex(
+                    row[sourceIndex].getAsInt());
+            VWBetw destinationVertex = graph.getVertex(
+                    row[destinationIndex].getAsInt());
 
             Set<VWBetw> targets = map.get(sourceVertex);
+            // Lazy initialize if the destinations set is null.
             if (targets == null) {
                 targets = new HashSet<VWBetw>();
                 map.put(sourceVertex, targets);
             }
+            // Add the destination.
             targets.add(destinationVertex);
         }
         return map;
     }
 
+    /**
+     * Store the distances from the given source to each destination contained
+     * in the map mapping each destination to its distance from the source.
+     *
+     * @param source Source
+     * @param map    Distances map
+     * @param output Driver
+     *
+     * @throws DriverException
+     */
     private void storeValues(int source,
-                             Map<VWBetw, Double> distances,
+                             Map<VWBetw, Double> map,
                              DiskBufferDriver output) throws DriverException {
-        for (Entry<VWBetw, Double> e : distances.entrySet()) {
+        for (Entry<VWBetw, Double> e : map.entrySet()) {
             storeValue(source, e.getKey().getID(), e.getValue(), output);
         }
     }
 
-    private void storeValue(int source, int target, double distance,
+    /**
+     * Store the distance from the given source to the given destination in the
+     * given driver.
+     *
+     * @param source      Source
+     * @param destination Destination
+     * @param distance    d(source, destination)
+     * @param output      Driver
+     *
+     * @throws DriverException
+     */
+    private void storeValue(int source, int destination, double distance,
                             DiskBufferDriver output) throws DriverException {
         output.addValues(ValueFactory.createValue(source),
-                         ValueFactory.createValue(target),
+                         ValueFactory.createValue(destination),
                          ValueFactory.createValue(distance));
     }
 }

@@ -68,10 +68,6 @@ public class ST_DistanceTest extends TopologySetupTest {
 
     private static final Logger LOGGER =
             LoggerFactory.getLogger(ST_DistanceTest.class);
-//    private static final int[] EDGE_ORIENTATIONS =
-//            new int[]{GraphCreator.DIRECTED_EDGE,
-//                      GraphCreator.REVERSED_EDGE,
-//                      GraphCreator.UNDIRECTED_EDGE};
     private static final double[] EDGE_WEIGHTS =
             new double[]{10.0, 1.0, 2.0, 2.0, 2.0, 4.0, 6.0, 5.0, 7.0};
     private static final double TOLERANCE = 0.0;
