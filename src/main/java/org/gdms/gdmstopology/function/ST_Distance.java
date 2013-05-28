@@ -32,10 +32,11 @@
  */
 package org.gdms.gdmstopology.function;
 
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.Set;
 import org.gdms.data.DataSourceFactory;
 import org.gdms.data.schema.DefaultMetadata;
 import org.gdms.data.schema.Metadata;
@@ -46,15 +47,12 @@ import org.gdms.data.values.ValueFactory;
 import org.gdms.driver.DataSet;
 import org.gdms.driver.DiskBufferDriver;
 import org.gdms.driver.DriverException;
-import org.gdms.gdmstopology.centrality.GraphAnalyzer;
 import org.gdms.gdmstopology.graphcreator.WeightedGraphCreator;
 import org.gdms.gdmstopology.model.GraphSchema;
 import org.gdms.gdmstopology.parse.GraphFunctionParser;
 import org.gdms.gdmstopology.utils.ArrayConcatenator;
 import org.gdms.sql.function.FunctionException;
-import org.gdms.sql.function.FunctionSignature;
 import org.gdms.sql.function.ScalarArgument;
-import org.gdms.sql.function.executor.ExecutorFunctionSignature;
 import org.gdms.sql.function.table.AbstractTableFunction;
 import org.gdms.sql.function.table.TableArgument;
 import org.gdms.sql.function.table.TableDefinition;
@@ -62,7 +60,7 @@ import org.gdms.sql.function.table.TableFunctionSignature;
 import org.javanetworkanalyzer.alg.Dijkstra;
 import org.javanetworkanalyzer.data.VWBetw;
 import org.javanetworkanalyzer.model.Edge;
-import org.javanetworkanalyzer.model.WeightedKeyedGraph;
+import org.javanetworkanalyzer.model.KeyedGraph;
 import org.orbisgis.progress.ProgressMonitor;
 import org.slf4j.LoggerFactory;
 
@@ -129,57 +127,46 @@ public class ST_Distance extends AbstractTableFunction {
      */
     private static final String DESCRIPTION =
             SHORT_DESCRIPTION + LONG_DESCRIPTION;
-    /**
-     * Specifies the weight column (or 1 in the case of an unweighted graph).
-     */
-    private String weightsColumn;
+    private int source = -1;
+    private int destination = -1;
+    private DataSet sourceDestinationTable = null;
+    private String weightsColumn = null;
+    private String orientation = null;
     private static final org.slf4j.Logger LOGGER =
             LoggerFactory.getLogger(ST_Distance.class);
+    public static final String SOURCE = "source";
+    public static final String DESTINATION = "destination";
+    public static final String DISTANCE = "distance";
+    private static final Metadata md = new DefaultMetadata(
+            new Type[]{TypeFactory.createType(Type.INT),
+                       TypeFactory.createType(Type.INT),
+                       TypeFactory.createType(Type.DOUBLE)},
+            new String[]{SOURCE,
+                         DESTINATION,
+                         DISTANCE});
 
     @Override
     public DataSet evaluate(DataSourceFactory dsf, DataSet[] tables,
                             Value[] values, ProgressMonitor pm) throws
             FunctionException {
-        // REQUIRED PARAMETERS
 
-        // FIRST PARAMETER: Recover the DataSet. There is only one table.
+        // Recover the edges.
         final DataSet edges = tables[0];
 
-        // SECOND PARAMETER: Source
-        int source = GraphFunctionParser.parseSource(values[0]);
+        // Recover all other parameters.
+        parseArguments(tables, values);
 
-        // THIRD PARAMETER: Destination
-        int target = GraphFunctionParser.parseTarget(values[1]);
+        // Prepare the graph.
+        KeyedGraph<VWBetw, Edge> graph = prepareGraph(edges);
 
-        // FOUR PARAMETER: Either 1 or weight column name.
-        weightsColumn = GraphFunctionParser.parseWeight(values[2]);
-
-        WeightedKeyedGraph<VWBetw, Edge> graph =
-                new WeightedGraphCreator<VWBetw, Edge>(
-                edges,
-                GraphSchema.DIRECT,
-                VWBetw.class,
-                Edge.class,
-                weightsColumn).prepareGraph();
-
-        Dijkstra<VWBetw, Edge> dijkstra = new Dijkstra<VWBetw, Edge>(graph);
-
-        double distance = dijkstra.oneToOne(graph.getVertex(source),
-                                            graph.getVertex(target));
-
-        DiskBufferDriver output = null;
+        // Compute and return results.
+        DiskBufferDriver results = null;
         try {
-            output = new DiskBufferDriver(dsf, getMetadata(null));
-            output.addValues(ValueFactory.createValue(source),
-                             ValueFactory.createValue(target),
-                             ValueFactory.createValue(distance));
-            output.writingFinished();
-            output.open();
+            results = compute(graph, dsf);
         } catch (DriverException ex) {
             LOGGER.error(ex.toString());
         }
-
-        return output;
+        return results;
     }
 
     @Override
@@ -214,61 +201,273 @@ public class ST_Distance extends AbstractTableFunction {
      * @return An array of all possible signatures of this function.
      */
     @Override
-    public FunctionSignature[] getFunctionSignatures() {
+    public TableFunctionSignature[] getFunctionSignatures() {
         return ArrayConcatenator.
-                concatenate(unweightedFunctionSignatures(),
-                            weightedFunctionSignatures());
+                concatenate(sourceDestinationSignatures(),
+                            sourceSignatures(),
+                            sourceDestinationTableSignatures());
     }
 
     /**
-     * Returns all possible function signatures for unweighted graph analyzers.
+     * Returns all possible function signatures for finding all distances from a
+     * given source.
      *
-     * @return Unweighted function signatures.
+     * @return Source signatures
      */
-    private FunctionSignature[] unweightedFunctionSignatures() {
-        return possibleFunctionSignatures(ScalarArgument.INT);
+    private TableFunctionSignature[] sourceSignatures() {
+        return new TableFunctionSignature[]{
+            // (s)
+            new TableFunctionSignature(TableDefinition.GEOMETRY,
+                                       ScalarArgument.INT),
+            // (s,w) OR (s,o)
+            new TableFunctionSignature(TableDefinition.GEOMETRY,
+                                       ScalarArgument.INT,
+                                       ScalarArgument.STRING),
+            // (s,w,o) OR (s,o,w)
+            new TableFunctionSignature(TableDefinition.GEOMETRY,
+                                       ScalarArgument.INT,
+                                       ScalarArgument.STRING,
+                                       ScalarArgument.STRING)
+        };
     }
 
     /**
-     * Returns all possible function signatures for weighted graph analyzers.
+     * Returns all possible function signatures for finding the distance from a
+     * given source to a given destination.
      *
-     * @return Weighted function signatures.
+     * @return Source-destination signatures
      */
-    private FunctionSignature[] weightedFunctionSignatures() {
-        return possibleFunctionSignatures(ScalarArgument.STRING);
-    }
-
-    /**
-     * Returns all possible function signatures according to whether the graph
-     * analyzer is weighted or unweighted.
-     *
-     * @return Possible function signatures according to weight.
-     */
-    private FunctionSignature[] possibleFunctionSignatures(
-            ScalarArgument weight) {
-        return new FunctionSignature[]{
-            //            
-            //            + "output.edges, "
-            //            + "source_dest_table OR source[, destination], "
-            //            + "'weights_column' OR 1"
-            //            + "[, orientation]);
-            // For now, just take care of the source, destination case, 
-            // no orientation.
-            // (output.edges, source, destination, weight)
+    private TableFunctionSignature[] sourceDestinationSignatures() {
+        return new TableFunctionSignature[]{
+            // (s,d)
+            new TableFunctionSignature(TableDefinition.GEOMETRY,
+                                       ScalarArgument.INT,
+                                       ScalarArgument.INT),
+            // (s,d,w) OR (s,d,o)
             new TableFunctionSignature(TableDefinition.GEOMETRY,
                                        ScalarArgument.INT,
                                        ScalarArgument.INT,
-                                       weight)};
+                                       ScalarArgument.STRING),
+            // (s,d,w,o) OR (s,d,o,w)
+            new TableFunctionSignature(TableDefinition.GEOMETRY,
+                                       ScalarArgument.INT,
+                                       ScalarArgument.INT,
+                                       ScalarArgument.STRING,
+                                       ScalarArgument.STRING)
+        };
+    }
+
+    /**
+     * Returns all possible function signatures for finding the distances from
+     * the given sources to the given destinations.
+     *
+     * @return Source-destination signatures
+     */
+    private TableFunctionSignature[] sourceDestinationTableSignatures() {
+        return new TableFunctionSignature[]{
+            // (s_d_t)
+            new TableFunctionSignature(TableDefinition.GEOMETRY,
+                                       TableArgument.ANY),
+            // (s_d_t,w) OR (s_d_t,o)
+            new TableFunctionSignature(TableDefinition.GEOMETRY,
+                                       TableArgument.ANY,
+                                       ScalarArgument.STRING),
+            // (s_d_t,w,o) OR (s_d_t,o,w)
+            new TableFunctionSignature(TableDefinition.GEOMETRY,
+                                       TableArgument.ANY,
+                                       ScalarArgument.STRING,
+                                       ScalarArgument.STRING)
+        };
     }
 
     @Override
     public Metadata getMetadata(Metadata[] tables) throws DriverException {
-        return new DefaultMetadata(
-                new Type[]{TypeFactory.createType(Type.INT),
-                           TypeFactory.createType(Type.INT),
-                           TypeFactory.createType(Type.DOUBLE)},
-                new String[]{"source",
-                             "destination",
-                             "distance"});
+        return md;
+    }
+
+    private void parseArguments(DataSet[] tables, Value[] values) {
+        // (source_dest_table, ...)
+        if (tables.length == 2) {
+            sourceDestinationTable = tables[1];
+            parseOptionalArguments(values, 0);
+        } else {
+            source = GraphFunctionParser.parseSource(values[0]);
+            if (values.length > 1) {
+                // (source, destination, ...)
+                if (values[1].getType() == Type.INT) {
+                    destination = GraphFunctionParser.parseTarget(values[1]);
+                    parseOptionalArguments(values, 2);
+                } // (source, ...)
+                else {
+                    parseOptionalArguments(values, 1);
+                }
+            }
+        }
+    }
+
+    private void parseOptionalArguments(Value[] values, int argIndex) {
+        if (values.length > argIndex) {
+            while (values.length > argIndex) {
+                parseStringArguments(values[argIndex++]);
+            }
+        } else if (orientation == null) {
+            LOGGER.warn("Assuming an unweighted graph.");
+        }
+    }
+
+    private void parseStringArguments(Value value) {
+        if (value.getType() == Type.STRING) {
+            String v = value.getAsString();
+            if (v.equals("directed")
+                || v.equals("reversed")
+                || v.equals("undirected")) {
+                orientation = v;
+            } else {
+                LOGGER.info("Setting weights column name to {}.", v);
+                weightsColumn = v;
+            }
+        } else {
+            throw new IllegalArgumentException("Weights and orientation "
+                                               + "must be specified as strings.");
+        }
+    }
+
+    private KeyedGraph<VWBetw, Edge> prepareGraph(final DataSet edges) {
+        KeyedGraph<VWBetw, Edge> graph;
+
+        int graphType = -1;
+        if (orientation != null) {
+            graphType = orientation.equals("directed")
+                    ? GraphSchema.DIRECT
+                    : orientation.equals("reversed")
+                    ? GraphSchema.DIRECT_REVERSED
+                    : orientation.equals("undirected")
+                    ? GraphSchema.UNDIRECT
+                    : -1;
+        } else if (graphType == -1) {
+            LOGGER.warn("Assuming a directed graph.");
+            graphType = GraphSchema.DIRECT;
+        }
+
+        if (weightsColumn != null) {
+            graph = new WeightedGraphCreator<VWBetw, Edge>(
+                    edges,
+                    graphType,
+                    VWBetw.class,
+                    Edge.class,
+                    weightsColumn).prepareGraph();
+        } else {
+//            graph = new GraphCreator<VUBetw, Edge>(edges,
+//                                                   graphType,
+//                                                   VUBetw.class,
+//                                                   Edge.class).prepareGraph();
+            throw new UnsupportedOperationException(
+                    "ST_Distance has not yet been implemented for "
+                    + "unweighted graphs.");
+        }
+        return graph;
+    }
+
+    private DiskBufferDriver compute(
+            KeyedGraph<VWBetw, Edge> graph,
+            DataSourceFactory dsf) throws DriverException {
+
+        DiskBufferDriver output = new DiskBufferDriver(dsf, getMetadata(null));
+        if (graph == null) {
+            LOGGER.error("Null graph.");
+        } else {
+            Dijkstra<VWBetw, Edge> dijkstra = new Dijkstra<VWBetw, Edge>(graph);
+
+            // (source, destination, ...)
+            if (source != -1 && destination != -1) {
+                double distance =
+                        dijkstra.oneToOne(graph.getVertex(source),
+                                          graph.getVertex(destination));
+                storeValue(source, destination, distance, output);
+            } // (source, ...)
+            else if (source != -1 && destination == -1) {
+                // TODO: Replace this by calculate().
+                Map<VWBetw, Double> distances =
+                        dijkstra.oneToMany(graph.getVertex(source),
+                                           graph.vertexSet());
+                storeValues(source, distances, output);
+            } // (source_dest_table, ...)
+            else if (sourceDestinationTable != null) {
+                Metadata metadata = sourceDestinationTable.getMetadata();
+                int sourceIndex = metadata.getFieldIndex(SOURCE);
+                int targetIndex = metadata.getFieldIndex(DESTINATION);
+                if (sourceIndex == -1) {
+                    throw new IllegalArgumentException(
+                            "The source-destination table must contain "
+                            + "a column named \'" + SOURCE + "\'.");
+                } else if (targetIndex == -1) {
+                    throw new IllegalArgumentException(
+                            "The source-destination table must contain "
+                            + "a column named \'" + DESTINATION + "\'.");
+                } else {
+                    Map<VWBetw, Set<VWBetw>> sourceDestinationMap =
+                            prepareSourceDestinationMap(graph,
+                                                        sourceIndex,
+                                                        targetIndex);
+                    if (sourceDestinationMap.isEmpty()) {
+                        LOGGER.error(
+                                "No sources/destinations requested.");
+                    }
+
+                    for (Entry<VWBetw, Set<VWBetw>> e
+                         : sourceDestinationMap.entrySet()) {
+                        Map<VWBetw, Double> distances =
+                                dijkstra.oneToMany(e.getKey(), e.getValue());
+                        storeValues(e.getKey().getID(), distances, output);
+                    }
+                }
+            }
+
+            output.writingFinished();
+            output.open();
+        }
+        return output;
+    }
+
+    private Map<VWBetw, Set<VWBetw>> prepareSourceDestinationMap(
+            KeyedGraph<VWBetw, Edge> graph,
+            int sourceIndex,
+            int targetIndex) throws DriverException {
+        // Prepare the source-destination map.
+        Map<VWBetw, Set<VWBetw>> map =
+                new HashMap<VWBetw, Set<VWBetw>>();
+        for (int i = 0;
+             i < sourceDestinationTable.getRowCount();
+             i++) {
+            Value[] row = sourceDestinationTable.getRow(i);
+
+            source = row[sourceIndex].getAsInt();
+            VWBetw sourceVertex = graph.getVertex(source);
+            destination = row[targetIndex].getAsInt();
+            VWBetw destinationVertex = graph.getVertex(destination);
+
+            Set<VWBetw> targets = map.get(sourceVertex);
+            if (targets == null) {
+                targets = new HashSet<VWBetw>();
+                map.put(sourceVertex, targets);
+            }
+            targets.add(destinationVertex);
+        }
+        return map;
+    }
+
+    private void storeValues(int source,
+                             Map<VWBetw, Double> distances,
+                             DiskBufferDriver output) throws DriverException {
+        for (Entry<VWBetw, Double> e : distances.entrySet()) {
+            storeValue(source, e.getKey().getID(), e.getValue(), output);
+        }
+    }
+
+    private void storeValue(int source, int target, double distance,
+                            DiskBufferDriver output) throws DriverException {
+        output.addValues(ValueFactory.createValue(source),
+                         ValueFactory.createValue(target),
+                         ValueFactory.createValue(distance));
     }
 }

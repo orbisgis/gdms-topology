@@ -33,10 +33,13 @@
 package org.gdms.gdmstopology.function;
 
 import com.vividsolutions.jts.io.ParseException;
+import java.util.HashMap;
+import java.util.Map;
 import org.gdms.data.DataSource;
 import org.gdms.data.DataSourceCreationException;
 import org.gdms.data.NoSuchTableException;
 import org.gdms.data.schema.DefaultMetadata;
+import org.gdms.data.schema.Metadata;
 import org.gdms.data.types.Type;
 import org.gdms.data.types.TypeFactory;
 import org.gdms.data.values.Value;
@@ -45,23 +48,17 @@ import org.gdms.driver.DataSet;
 import org.gdms.driver.DriverException;
 import org.gdms.driver.memory.MemoryDataSetDriver;
 import org.gdms.gdmstopology.TopologySetupTest;
-import org.gdms.gdmstopology.graphcreator.GraphCreator;
-import org.gdms.gdmstopology.graphcreator.GraphCreatorTest;
-import org.gdms.gdmstopology.graphcreator.WeightedGraphCreator;
 import org.gdms.gdmstopology.model.GraphSchema;
 import org.gdms.sql.function.FunctionException;
 import org.javanetworkanalyzer.data.VBetw;
-import org.javanetworkanalyzer.data.VWBetw;
 import org.javanetworkanalyzer.model.Edge;
 import org.javanetworkanalyzer.model.KeyedGraph;
 import org.javanetworkanalyzer.model.UndirectedG;
-import org.javanetworkanalyzer.model.WeightedKeyedGraph;
 import org.junit.Test;
 import org.orbisgis.progress.NullProgressMonitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import static org.junit.Assert.*;
-
 
 /**
  *
@@ -70,40 +67,138 @@ import static org.junit.Assert.*;
 public class ST_DistanceTest extends TopologySetupTest {
 
     private static final Logger LOGGER =
-            LoggerFactory.getLogger(GraphCreatorTest.class);
-    private static final int[] EDGE_ORIENTATIONS =
-            new int[]{GraphCreator.DIRECTED_EDGE,
-                      GraphCreator.REVERSED_EDGE,
-                      GraphCreator.UNDIRECTED_EDGE};
+            LoggerFactory.getLogger(ST_DistanceTest.class);
+//    private static final int[] EDGE_ORIENTATIONS =
+//            new int[]{GraphCreator.DIRECTED_EDGE,
+//                      GraphCreator.REVERSED_EDGE,
+//                      GraphCreator.UNDIRECTED_EDGE};
     private static final double[] EDGE_WEIGHTS =
-            new double[]{1.0, 1.0, 0.7, 1.0, 0.49, 1.0};
+            new double[]{10.0, 1.0, 2.0, 2.0, 2.0, 4.0, 6.0, 5.0, 7.0};
     private static final double TOLERANCE = 0.0;
+    private static final int numberOfNodes = 5;
 
     @Test
-    public void weightedDirected() throws Exception {
+    public void sourceTargetWeights() throws Exception {
 
         DataSet newEdges = introduceWeights(prepareEdges(), EDGE_WEIGHTS);
 
         DataSet[] tables = new DataSet[]{newEdges};
 
-        int source = 1;
-        int target = 6;
-        
-        DataSet result = new ST_Distance().evaluate(dsf,
-                                                      tables,
-                                                      new Value[]{
-                               ValueFactory.createValue(source),
-                               ValueFactory.createValue(target),
-                               ValueFactory.createValue(GraphSchema.WEIGHT)},
-                                                      new NullProgressMonitor());
-              
-        assertTrue(result.getRowCount() == 1);
-        Value[] row = result.getRow(0);
-        assertEquals(source, row[0].getAsInt());
-        assertEquals(target, row[1].getAsInt());
-        assertEquals(3.49, row[2].getAsDouble(), TOLERANCE);
-        
+        Map<Integer, Map<Integer, Double>> expected = expectedDirectedDistances();
+
+        for (int i = 1; i < numberOfNodes + 1; i++) {
+            for (int j = 1; j < numberOfNodes + 1; j++) {
+                DataSet result = new ST_Distance().evaluate(
+                        dsf,
+                        tables,
+                        new Value[]{ValueFactory.createValue(i),
+                                    ValueFactory.createValue(j),
+                                    ValueFactory.createValue(GraphSchema.WEIGHT)},
+                        new NullProgressMonitor());
+                // Check result.
+
+                assertTrue(result.getRowCount() == 1);
+
+                Metadata md = result.getMetadata();
+                int sourceIndex = md.getFieldIndex(ST_Distance.SOURCE);
+                int destinationIndex = md.getFieldIndex(ST_Distance.DESTINATION);
+                int distanceIndex = md.getFieldIndex(ST_Distance.DISTANCE);
+
+                Value[] row = result.getRow(0);
+                int source = row[sourceIndex].getAsInt();
+                int destination = row[destinationIndex].getAsInt();
+                double distance = row[distanceIndex].getAsInt();
+
+                assertEquals(expected.get(source).get(destination),
+                             distance,
+                             TOLERANCE);
+
+                print(result);
+            }
+        }
+    }
+
+    @Test
+    public void sourceWeights() throws Exception {
+
+        DataSet newEdges = introduceWeights(prepareEdges(), EDGE_WEIGHTS);
+
+        DataSet[] tables = new DataSet[]{newEdges};
+
+        Map<Integer, Map<Integer, Double>> expected = expectedDirectedDistances();
+
+        for (int i = 1; i < numberOfNodes + 1; i++) {
+            DataSet result = new ST_Distance().evaluate(
+                    dsf,
+                    tables,
+                    new Value[]{ValueFactory.createValue(i),
+                                ValueFactory.createValue(GraphSchema.WEIGHT)},
+                    new NullProgressMonitor());
+            // Check result.
+            print(result);
+
+            Metadata md = result.getMetadata();
+            int sourceIndex = md.getFieldIndex(ST_Distance.SOURCE);
+            int destinationIndex = md.getFieldIndex(ST_Distance.DESTINATION);
+            int distanceIndex = md.getFieldIndex(ST_Distance.DISTANCE);
+            for (int j = 0; j < numberOfNodes; j++) {
+                Value[] row = result.getRow(j);
+                int source = row[sourceIndex].getAsInt();
+                int destination = row[destinationIndex].getAsInt();
+                double distance = row[distanceIndex].getAsInt();
+                assertEquals(expected.get(source).get(destination),
+                             distance,
+                             TOLERANCE);
+            }
+        }
+    }
+
+    @Test
+    public void sourceTargetTableWeights() throws Exception {
+
+        DataSet newEdges = introduceWeights(prepareEdges(), EDGE_WEIGHTS);
+
+        MemoryDataSetDriver sourceDestTable = new MemoryDataSetDriver(
+                new String[]{ST_Distance.SOURCE, ST_Distance.DESTINATION},
+                new Type[]{TypeFactory.createType(Type.INT),
+                           TypeFactory.createType(Type.INT)});
+        // Add all possible combinations.
+        for (int i = 1; i < numberOfNodes + 1; i++) {
+            for (int j = 1; j < numberOfNodes + 1; j++) {
+                sourceDestTable.addValues(new Value[]{
+                    ValueFactory.createValue(i),
+                    ValueFactory.createValue(j)});
+            }
+        }
+
+        DataSet[] tables = new DataSet[]{newEdges, sourceDestTable};
+
+        DataSet result = new ST_Distance().evaluate(
+                dsf,
+                tables,
+                new Value[]{ValueFactory.createValue(GraphSchema.WEIGHT)},
+                new NullProgressMonitor());
+
         print(result);
+
+        Map<Integer, Map<Integer, Double>> expected = expectedDirectedDistances();
+
+        Metadata md = result.getMetadata();
+        int sourceIndex = md.getFieldIndex(ST_Distance.SOURCE);
+        int destinationIndex = md.getFieldIndex(ST_Distance.DESTINATION);
+        int distanceIndex = md.getFieldIndex(ST_Distance.DISTANCE);
+
+        for (int i = 1; i < numberOfNodes + 1; i++) {
+            for (int j = 0; j < numberOfNodes; j++) {
+                Value[] row = result.getRow(j);
+                int source = row[sourceIndex].getAsInt();
+                int destination = row[destinationIndex].getAsInt();
+                double distance = row[distanceIndex].getAsInt();
+                assertEquals(expected.get(source).get(destination),
+                             distance,
+                             TOLERANCE);
+            }
+        }
     }
 
     private DataSet prepareEdges() throws FunctionException, DriverException,
@@ -111,28 +206,40 @@ public class ST_DistanceTest extends TopologySetupTest {
         MemoryDataSetDriver data = initializeDriver();
         data.addValues(new Value[]{
             ValueFactory.createValue(
-            wktReader.read("LINESTRING(1 1, 2 2)")),
+            wktReader.read("LINESTRING(1 2, 2 3)")),
             ValueFactory.createValue(1)});
         data.addValues(new Value[]{
             ValueFactory.createValue(
-            wktReader.read("LINESTRING(2 2, 3 1)")),
+            wktReader.read("LINESTRING(2 3, 4 3)")),
             ValueFactory.createValue(2)});
         data.addValues(new Value[]{
             ValueFactory.createValue(
-            wktReader.read("LINESTRING(3 1, 4 2)")),
+            wktReader.read("LINESTRING(2 3, 2 1)")),
             ValueFactory.createValue(3)});
         data.addValues(new Value[]{
             ValueFactory.createValue(
-            wktReader.read("LINESTRING(2 2, 3 3)")),
+            wktReader.read("LINESTRING(2 1, 4 1)")),
             ValueFactory.createValue(4)});
         data.addValues(new Value[]{
             ValueFactory.createValue(
-            wktReader.read("LINESTRING(3 3, 4 2)")),
+            wktReader.read("LINESTRING(2 1, 2 3)")),
             ValueFactory.createValue(5)});
         data.addValues(new Value[]{
             ValueFactory.createValue(
-            wktReader.read("LINESTRING(4 2, 5 2)")),
+            wktReader.read("LINESTRING(4 3, 4 1)")),
             ValueFactory.createValue(6)});
+        data.addValues(new Value[]{
+            ValueFactory.createValue(
+            wktReader.read("LINESTRING(4 1, 4 3)")),
+            ValueFactory.createValue(7)});
+        data.addValues(new Value[]{
+            ValueFactory.createValue(
+            wktReader.read("LINESTRING(1 2, 2 1)")),
+            ValueFactory.createValue(8)});
+        data.addValues(new Value[]{
+            ValueFactory.createValue(
+            wktReader.read("LINESTRING(4 1, 1 2)")),
+            ValueFactory.createValue(9)});
 
         DataSet[] tables = new DataSet[]{data};
 
@@ -265,5 +372,53 @@ public class ST_DistanceTest extends TopologySetupTest {
         LOGGER.debug("\tWEIGHTED EDGES");
         print(newEdges);
         return newEdges;
+    }
+
+    private Map<Integer, Map<Integer, Double>> expectedDirectedDistances() {
+        Map<Integer, Map<Integer, Double>> distances =
+                new HashMap<Integer, Map<Integer, Double>>();
+
+        Map<Integer, Double> dFromOne = new HashMap<Integer, Double>();
+        dFromOne.put(1, 0.0);
+        dFromOne.put(2, 7.0);
+        dFromOne.put(3, 8.0);
+        dFromOne.put(4, 5.0);
+        dFromOne.put(5, 7.0);
+
+        Map<Integer, Double> dFromTwo = new HashMap<Integer, Double>();
+        dFromTwo.put(1, 11.0);
+        dFromTwo.put(2, 0.0);
+        dFromTwo.put(3, 1.0);
+        dFromTwo.put(4, 2.0);
+        dFromTwo.put(5, 4.0);
+
+        Map<Integer, Double> dFromThree = new HashMap<Integer, Double>();
+        dFromThree.put(1, 11.0);
+        dFromThree.put(2, 18.0);
+        dFromThree.put(3, 0.0);
+        dFromThree.put(4, 16.0);
+        dFromThree.put(5, 4.0);
+
+        Map<Integer, Double> dFromFour = new HashMap<Integer, Double>();
+        dFromFour.put(1, 9.0);
+        dFromFour.put(2, 2.0);
+        dFromFour.put(3, 3.0);
+        dFromFour.put(4, 0.0);
+        dFromFour.put(5, 2.0);
+
+        Map<Integer, Double> dFromFive = new HashMap<Integer, Double>();
+        dFromFive.put(1, 7.0);
+        dFromFive.put(2, 14.0);
+        dFromFive.put(3, 6.0);
+        dFromFive.put(4, 12.0);
+        dFromFive.put(5, 0.0);
+
+        distances.put(1, dFromOne);
+        distances.put(2, dFromTwo);
+        distances.put(3, dFromThree);
+        distances.put(4, dFromFour);
+        distances.put(5, dFromFive);
+
+        return distances;
     }
 }
