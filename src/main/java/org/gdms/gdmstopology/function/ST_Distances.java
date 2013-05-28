@@ -69,12 +69,12 @@ import org.slf4j.LoggerFactory;
  *
  * @author Adam Gouge
  */
-public class ST_Distance extends AbstractTableFunction {
+public class ST_Distances extends AbstractTableFunction {
 
     /**
      * The name of this function.
      */
-    private static final String NAME = "ST_Distance";
+    private static final String NAME = "ST_Distances";
     public static final String SOURCE = "source";
     public static final String DESTINATION = "destination";
     public static final String DISTANCE = "distance";
@@ -84,7 +84,7 @@ public class ST_Distance extends AbstractTableFunction {
     /**
      * The SQL order of this function.
      */
-    private static final String SQL_ORDER = "SELECT * FROM ST_Distance("
+    private static final String SQL_ORDER = "SELECT * FROM " + NAME + "("
                                             + "output.edges, "
                                             + "source_dest_table OR source[, destination]"
                                             + "[, 'weights_column']"
@@ -173,7 +173,7 @@ public class ST_Distance extends AbstractTableFunction {
      * Logger.
      */
     private static final org.slf4j.Logger LOGGER =
-            LoggerFactory.getLogger(ST_Distance.class);
+            LoggerFactory.getLogger(ST_Distances.class);
 
     @Override
     public DataSet evaluate(DataSourceFactory dsf, DataSet[] tables,
@@ -316,7 +316,7 @@ public class ST_Distance extends AbstractTableFunction {
     }
 
     /**
-     * Parse all possible arguments for {@link ST_Distance}.
+     * Parse all possible arguments for {@link ST_Distances}.
      *
      * @param tables Input table(s)
      * @param values Arguments
@@ -358,8 +358,8 @@ public class ST_Distance extends AbstractTableFunction {
     }
 
     /**
-     * Parse possible String arguments for {@link ST_Distance}, namely weight
-     * and orientation.
+     * Parse possible String arguments for {@link ST_Distances}, namely weight and
+     * orientation.
      *
      * @param value A given argument to parse.
      */

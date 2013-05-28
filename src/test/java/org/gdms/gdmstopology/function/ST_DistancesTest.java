@@ -64,10 +64,10 @@ import static org.junit.Assert.*;
  *
  * @author Adam Gouge
  */
-public class ST_DistanceTest extends TopologySetupTest {
+public class ST_DistancesTest extends TopologySetupTest {
 
     private static final Logger LOGGER =
-            LoggerFactory.getLogger(ST_DistanceTest.class);
+            LoggerFactory.getLogger(ST_DistancesTest.class);
     private static final double[] EDGE_WEIGHTS =
             new double[]{10.0, 1.0, 2.0, 2.0, 2.0, 4.0, 6.0, 5.0, 7.0};
     private static final double TOLERANCE = 0.0;
@@ -84,7 +84,7 @@ public class ST_DistanceTest extends TopologySetupTest {
 
         for (int i = 1; i < numberOfNodes + 1; i++) {
             for (int j = 1; j < numberOfNodes + 1; j++) {
-                DataSet result = new ST_Distance().evaluate(
+                DataSet result = new ST_Distances().evaluate(
                         dsf,
                         tables,
                         new Value[]{ValueFactory.createValue(i),
@@ -96,9 +96,9 @@ public class ST_DistanceTest extends TopologySetupTest {
                 assertTrue(result.getRowCount() == 1);
 
                 Metadata md = result.getMetadata();
-                int sourceIndex = md.getFieldIndex(ST_Distance.SOURCE);
-                int destinationIndex = md.getFieldIndex(ST_Distance.DESTINATION);
-                int distanceIndex = md.getFieldIndex(ST_Distance.DISTANCE);
+                int sourceIndex = md.getFieldIndex(ST_Distances.SOURCE);
+                int destinationIndex = md.getFieldIndex(ST_Distances.DESTINATION);
+                int distanceIndex = md.getFieldIndex(ST_Distances.DISTANCE);
 
                 Value[] row = result.getRow(0);
                 int source = row[sourceIndex].getAsInt();
@@ -124,7 +124,7 @@ public class ST_DistanceTest extends TopologySetupTest {
         Map<Integer, Map<Integer, Double>> expected = expectedDirectedDistances();
 
         for (int i = 1; i < numberOfNodes + 1; i++) {
-            DataSet result = new ST_Distance().evaluate(
+            DataSet result = new ST_Distances().evaluate(
                     dsf,
                     tables,
                     new Value[]{ValueFactory.createValue(i),
@@ -134,9 +134,9 @@ public class ST_DistanceTest extends TopologySetupTest {
             print(result);
 
             Metadata md = result.getMetadata();
-            int sourceIndex = md.getFieldIndex(ST_Distance.SOURCE);
-            int destinationIndex = md.getFieldIndex(ST_Distance.DESTINATION);
-            int distanceIndex = md.getFieldIndex(ST_Distance.DISTANCE);
+            int sourceIndex = md.getFieldIndex(ST_Distances.SOURCE);
+            int destinationIndex = md.getFieldIndex(ST_Distances.DESTINATION);
+            int distanceIndex = md.getFieldIndex(ST_Distances.DISTANCE);
             for (int j = 0; j < numberOfNodes; j++) {
                 Value[] row = result.getRow(j);
                 int source = row[sourceIndex].getAsInt();
@@ -155,7 +155,7 @@ public class ST_DistanceTest extends TopologySetupTest {
         DataSet newEdges = introduceWeights(prepareEdges(), EDGE_WEIGHTS);
 
         MemoryDataSetDriver sourceDestTable = new MemoryDataSetDriver(
-                new String[]{ST_Distance.SOURCE, ST_Distance.DESTINATION},
+                new String[]{ST_Distances.SOURCE, ST_Distances.DESTINATION},
                 new Type[]{TypeFactory.createType(Type.INT),
                            TypeFactory.createType(Type.INT)});
         // Add all possible combinations.
@@ -169,7 +169,7 @@ public class ST_DistanceTest extends TopologySetupTest {
 
         DataSet[] tables = new DataSet[]{newEdges, sourceDestTable};
 
-        DataSet result = new ST_Distance().evaluate(
+        DataSet result = new ST_Distances().evaluate(
                 dsf,
                 tables,
                 new Value[]{ValueFactory.createValue(GraphSchema.WEIGHT)},
@@ -180,9 +180,9 @@ public class ST_DistanceTest extends TopologySetupTest {
         Map<Integer, Map<Integer, Double>> expected = expectedDirectedDistances();
 
         Metadata md = result.getMetadata();
-        int sourceIndex = md.getFieldIndex(ST_Distance.SOURCE);
-        int destinationIndex = md.getFieldIndex(ST_Distance.DESTINATION);
-        int distanceIndex = md.getFieldIndex(ST_Distance.DISTANCE);
+        int sourceIndex = md.getFieldIndex(ST_Distances.SOURCE);
+        int destinationIndex = md.getFieldIndex(ST_Distances.DESTINATION);
+        int distanceIndex = md.getFieldIndex(ST_Distances.DISTANCE);
 
         for (int i = 1; i < numberOfNodes + 1; i++) {
             for (int j = 0; j < numberOfNodes; j++) {

@@ -34,6 +34,7 @@ import org.gdms.gdmstopology.function.ST_BlockIdentity;
 import org.gdms.gdmstopology.centrality.ST_GraphAnalysis;
 import org.gdms.gdmstopology.centrality.ST_StrahlerStreamOrder;
 import org.gdms.gdmstopology.function.ST_ConnectedComponents;
+import org.gdms.gdmstopology.function.ST_Distances;
 import org.gdms.gdmstopology.function.ST_FindReachableEdges;
 import org.gdms.gdmstopology.function.ST_Graph;
 import org.gdms.gdmstopology.function.ST_MFindReachableEdges;
@@ -51,8 +52,10 @@ import org.osgi.framework.BundleContext;
 /**
  * Activator, register GDMS Sql function related to topology
  */
-public class Activator implements BundleActivator {    
-    private BundleContext context;        
+public class Activator implements BundleActivator {
+
+    private BundleContext context;
+
     @Override
     public void start(BundleContext context) throws Exception {
         this.context = context;
@@ -72,18 +75,21 @@ public class Activator implements BundleActivator {
         reg(new ST_ConnectedComponents());
         reg(new ST_GraphAnalysis());
         reg(new ST_StrahlerStreamOrder());
+        reg(new ST_Distances());
     }
+
     private void reg(Function gdmsFunc) {
         // Dict for visual hint for service list 
         // inspect service capability #id
-        Dictionary<String,String> prop = new Hashtable<String, String>();
-        prop.put("name",gdmsFunc.getName()); 
+        Dictionary<String, String> prop = new Hashtable<String, String>();
+        prop.put("name", gdmsFunc.getName());
         context.registerService(Function.class,
-                gdmsFunc,
-                prop);
+                                gdmsFunc,
+                                prop);
     }
+
     @Override
     public void stop(BundleContext context) throws Exception {
         System.out.println("Activator of org.gdms.gdmstopology stopping..");
-    }    
+    }
 }
