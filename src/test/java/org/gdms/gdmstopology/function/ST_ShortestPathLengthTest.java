@@ -94,9 +94,9 @@ public class ST_ShortestPathLengthTest extends TopologySetupTest {
                 tables,
                 new Value[]{ValueFactory.createValue(2),
                             ValueFactory.createValue(5),
-                            ValueFactory.createValue(GraphSchema.WEIGHT),
                             ValueFactory.createValue("reversed - "
-                                                     + "edge_orientation")},
+                                                     + "edge_orientation"),
+                            ValueFactory.createValue(GraphSchema.WEIGHT)},
                 new NullProgressMonitor());
 
         print(result);

@@ -200,7 +200,8 @@ public class GraphCreator<V extends VId, E extends Edge> {
     private KeyedGraph<V, E> loadEdges(KeyedGraph<V, E> graph) {
         if (edgeOrientationIndex == -1 && globalOrientation != UNDIRECTED) {
             LOGGER.warn("Assuming all edges are oriented by their "
-                        + "geometric coordinates.");
+                        + "geometric coordinates. You should specify "
+                        + "individual edge orientations.");
         }
         for (Value[] row : dataSet) {
             loadEdge(row, graph);
@@ -228,7 +229,8 @@ public class GraphCreator<V extends VId, E extends Edge> {
             // Directed graphs are either directed pseudographs or directed
             // weighted pseudographs and must specify an orientation for each
             // individual edge. If no orientations are specified, every edge
-            // is considered to be directed.
+            // is considered to be directed with orientation given by the
+            // geometry.
             int edgeOrientation = (edgeOrientationIndex == -1)
                     ? DIRECTED_EDGE
                     : row[edgeOrientationIndex].getAsInt();

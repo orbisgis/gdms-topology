@@ -78,22 +78,44 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
     /**
      * The name of this function.
      */
-    private static final String NAME = "ST_Distances";
+    private static final String NAME = "ST_ShortestPathLength";
     public static final String SOURCE = "source";
     public static final String DESTINATION = "destination";
     public static final String DISTANCE = "distance";
     public static final String DIRECTED = "directed";
     public static final String REVERSED = "reversed";
     public static final String UNDIRECTED = "undirected";
+    private static final String EDGE_ORIENTATION_COLUMN = "edge_orientation_column";
+    private static final String POSSIBLE_ORIENTATIONS =
+            "[, '" + DIRECTED + " - " + EDGE_ORIENTATION_COLUMN + "' "
+            + "| '" + REVERSED + " - " + EDGE_ORIENTATION_COLUMN + "' "
+            + "| '" + UNDIRECTED + "']";
     public static final String SEPARATOR = "-";
     /**
      * The SQL order of this function.
      */
-    private static final String SQL_ORDER = "SELECT * FROM " + NAME + "("
-                                            + "output.edges, "
-                                            + "source_dest_table OR source[, destination]"
-                                            + "[, 'weights_column']"
-                                            + "[, 'orientation']);";
+    private static final String SQL_ORDER =
+            "-- Compute the distance from " + SOURCE
+            + " to " + DESTINATION + "."
+            + "\n(1) SELECT * FROM " + NAME + "("
+            + "output.edges, "
+            + "source, destination"
+            + "[, 'weights_column']"
+            + POSSIBLE_ORIENTATIONS + ");"
+            + "\n-- Compute the distance from " + SOURCE
+            + " to all reachable nodes."
+            + "\n(2) SELECT * FROM " + NAME + "("
+            + "output.edges, "
+            + "source"
+            + "[, 'weights_column']"
+            + POSSIBLE_ORIENTATIONS + ");"
+            + "\n-- Compute the distances from the " + SOURCE + "s to the "
+            + DESTINATION + "s in the source-destination table."
+            + "\n(3) SELECT * FROM " + NAME + "("
+            + "output.edges, "
+            + "source_dest_table"
+            + "[, 'weights_column']"
+            + POSSIBLE_ORIENTATIONS + ");";
     /**
      * Short description of this function.
      */
@@ -111,7 +133,7 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
             + "<center> "
             + "<code>SELECT * FROM ST_Distance("
             + "edges, "
-            + "source_dest_table OR source[, destination]"
+            + "source_dest_table | source[, destination]"
             + "[, 'weights_column']"
             + "[, orientation]);</code> </center> "
             + "<p> Required parameters: "
@@ -135,10 +157,12 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
             + "<li> <code>orientation</code> - a string specifying the "
             + "orientation of the graph: "
             + "<ul> "
-            + "<li> '" + DIRECTED + "' "
-            + "<li> '" + REVERSED + "' "
+            + "<li> '" + DIRECTED + " - " + EDGE_ORIENTATION_COLUMN + "' "
+            + "<li> '" + REVERSED + " - " + EDGE_ORIENTATION_COLUMN + "' "
             + "<li> '" + UNDIRECTED + "'."
-            + "</ul> The default orientation is " + DIRECTED + ". </ul>";
+            + "</ul> The default orientation is " + DIRECTED + " with edge "
+            + "orientations given by the geometries, though edge orientations "
+            + "should most definitely be provided by the user. </ul>";
     /**
      * Description of this function.
      */
@@ -406,9 +430,10 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
                                          + "column {}.",
                                          edgeOrientationColumnName);
                         }
-                        LOGGER.info("Global orientation = {}, edge orientation "
-                                    + "column name = {}.", globalOrientation,
-                                    edgeOrientationColumnName);
+                        LOGGER.info(
+                                "Global orientation = '{}', edge orientation "
+                                + "column name = '{}'.", globalOrientation,
+                                edgeOrientationColumnName);
                         // TODO: Throw an exception if no edge orientations are given.
                     } else {
                         throw new IllegalArgumentException(
@@ -422,7 +447,7 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
                 LOGGER.warn("Edge orientations are ignored for undirected "
                             + "graphs.");
             } else {
-                LOGGER.info("Setting weights column name to {}.", v);
+                LOGGER.info("Weights column name = '{}'.", v);
                 weightsColumn = v;
             }
         } else {
