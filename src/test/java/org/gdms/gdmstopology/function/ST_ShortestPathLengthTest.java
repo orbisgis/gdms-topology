@@ -72,7 +72,7 @@ public class ST_ShortestPathLengthTest extends TopologySetupTest {
     private static final int[] EDGE_ORIENTATIONS =
             new int[]{1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
     private static final double[] EDGE_WEIGHTS =
-            new double[]{10.0, 1.0, 2.0, 2.0, 2.0, 4.0, 6.0, 5.0, 7.0};
+            new double[]{10.0, 1.0, 2.0, 2.0, 3.0, 4.0, 6.0, 5.0, 7.0};
     private static final double TOLERANCE = 0.0;
     private static final int numberOfNodes = 5;
 
@@ -104,7 +104,7 @@ public class ST_ShortestPathLengthTest extends TopologySetupTest {
     }
 
     @Test
-    public void sourceTargetWeights() throws Exception {
+    public void sourceTargetWeightsDirected() throws Exception {
 
         DataSet newEdges = introduceWeights(prepareEdges(), EDGE_WEIGHTS);
 
@@ -147,7 +147,7 @@ public class ST_ShortestPathLengthTest extends TopologySetupTest {
     }
 
     @Test
-    public void sourceWeights() throws Exception {
+    public void sourceWeightsDirected() throws Exception {
 
         DataSet newEdges = introduceWeights(prepareEdges(), EDGE_WEIGHTS);
 
@@ -183,7 +183,7 @@ public class ST_ShortestPathLengthTest extends TopologySetupTest {
     }
 
     @Test
-    public void sourceTargetTableWeights() throws Exception {
+    public void sourceTargetTableWeightsDirected() throws Exception {
 
         DataSet newEdges = introduceWeights(prepareEdges(), EDGE_WEIGHTS);
 
@@ -328,13 +328,13 @@ public class ST_ShortestPathLengthTest extends TopologySetupTest {
         for (String name : table.getMetadata().getFieldNames()) {
             metadata += name + "\t";
         }
-        LOGGER.debug(metadata);
+        LOGGER.info(metadata);
         for (int i = 0; i < table.getRowCount(); i++) {
             String row = "";
             for (Value v : table.getRow(i)) {
                 row += v + "\t";
             }
-            LOGGER.debug(row);
+            LOGGER.info(row);
         }
     }
 
@@ -410,8 +410,8 @@ public class ST_ShortestPathLengthTest extends TopologySetupTest {
 
         Map<Integer, Double> dFromOne = new HashMap<Integer, Double>();
         dFromOne.put(1, 0.0);
-        dFromOne.put(2, 7.0);
-        dFromOne.put(3, 8.0);
+        dFromOne.put(2, 8.0);
+        dFromOne.put(3, 9.0);
         dFromOne.put(4, 5.0);
         dFromOne.put(5, 7.0);
 
@@ -424,21 +424,21 @@ public class ST_ShortestPathLengthTest extends TopologySetupTest {
 
         Map<Integer, Double> dFromThree = new HashMap<Integer, Double>();
         dFromThree.put(1, 11.0);
-        dFromThree.put(2, 18.0);
+        dFromThree.put(2, 19.0);
         dFromThree.put(3, 0.0);
         dFromThree.put(4, 16.0);
         dFromThree.put(5, 4.0);
 
         Map<Integer, Double> dFromFour = new HashMap<Integer, Double>();
         dFromFour.put(1, 9.0);
-        dFromFour.put(2, 2.0);
-        dFromFour.put(3, 3.0);
+        dFromFour.put(2, 3.0);
+        dFromFour.put(3, 4.0);
         dFromFour.put(4, 0.0);
         dFromFour.put(5, 2.0);
 
         Map<Integer, Double> dFromFive = new HashMap<Integer, Double>();
         dFromFive.put(1, 7.0);
-        dFromFive.put(2, 14.0);
+        dFromFive.put(2, 15.0);
         dFromFive.put(3, 6.0);
         dFromFive.put(4, 12.0);
         dFromFive.put(5, 0.0);
