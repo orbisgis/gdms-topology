@@ -69,10 +69,39 @@ public class ST_ShortestPathLengthTest extends TopologySetupTest {
 
     private static final Logger LOGGER =
             LoggerFactory.getLogger(ST_ShortestPathLengthTest.class);
+    private static final int[] EDGE_ORIENTATIONS =
+            new int[]{1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
     private static final double[] EDGE_WEIGHTS =
             new double[]{10.0, 1.0, 2.0, 2.0, 2.0, 4.0, 6.0, 5.0, 7.0};
     private static final double TOLERANCE = 0.0;
     private static final int numberOfNodes = 5;
+
+    @Test
+    public void testEdgeOrientationParameter() throws Exception {
+
+        DataSet newEdges =
+                introduceOrientations(introduceWeights(prepareEdges(),
+                                                       EDGE_WEIGHTS),
+                                      EDGE_ORIENTATIONS);
+
+        DataSet[] tables = new DataSet[]{newEdges};
+
+        Map<Integer, Map<Integer, Double>> expected = expectedDirectedDistances();
+
+
+        DataSet result = new ST_ShortestPathLength().evaluate(
+                dsf,
+                tables,
+                new Value[]{ValueFactory.createValue(2),
+                            ValueFactory.createValue(5),
+                            ValueFactory.createValue(GraphSchema.WEIGHT),
+                            ValueFactory.createValue("reversed - "
+                                                     + "edge_orientation")},
+                new NullProgressMonitor());
+
+        print(result);
+
+    }
 
     @Test
     public void sourceTargetWeights() throws Exception {

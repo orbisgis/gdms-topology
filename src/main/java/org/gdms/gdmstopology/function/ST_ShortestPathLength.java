@@ -37,6 +37,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.gdms.data.DataSource;
 import org.gdms.data.DataSourceFactory;
 import org.gdms.data.schema.DefaultMetadata;
 import org.gdms.data.schema.Metadata;
@@ -63,6 +66,7 @@ import org.javanetworkanalyzer.model.Edge;
 import org.javanetworkanalyzer.model.KeyedGraph;
 import org.orbisgis.progress.ProgressMonitor;
 import org.slf4j.LoggerFactory;
+import scala.actors.threadpool.Arrays;
 
 /**
  * Function for calculating distances (shortest path lengths).
@@ -81,6 +85,7 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
     public static final String DIRECTED = "directed";
     public static final String REVERSED = "reversed";
     public static final String UNDIRECTED = "undirected";
+    public static final String SEPARATOR = "-";
     /**
      * The SQL order of this function.
      */
@@ -156,9 +161,13 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
      */
     private String weightsColumn = null;
     /**
-     * Orientation string.
+     * Global orientation string.
      */
-    private String orientation = null;
+    private String globalOrientation = null;
+    /**
+     * Edge orientation string.
+     */
+    private String edgeOrientationColumnName = null;
     /**
      * Output metadata.
      */
@@ -184,7 +193,7 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
         final DataSet edges = tables[0];
 
         // Recover all other parameters.
-        parseArguments(tables, values);
+        parseArguments(edges, tables, values);
 
         // Prepare the graph.
         KeyedGraph<VWBetw, Edge> graph = prepareGraph(edges);
@@ -321,21 +330,21 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
      * @param tables Input table(s)
      * @param values Arguments
      */
-    private void parseArguments(DataSet[] tables, Value[] values) {
+    private void parseArguments(DataSet edges, DataSet[] tables, Value[] values) {
         // (source_dest_table, ...)
         if (tables.length == 2) {
             sourceDestinationTable = tables[1];
-            parseOptionalArguments(values, 0);
+            parseOptionalArguments(edges, values, 0);
         } else {
             source = GraphFunctionParser.parseSource(values[0]);
             if (values.length > 1) {
                 // (source, destination, ...)
                 if (values[1].getType() == Type.INT) {
                     destination = GraphFunctionParser.parseTarget(values[1]);
-                    parseOptionalArguments(values, 2);
+                    parseOptionalArguments(edges, values, 2);
                 } // (source, ...)
                 else {
-                    parseOptionalArguments(values, 1);
+                    parseOptionalArguments(edges, values, 1);
                 }
             }
         }
@@ -347,13 +356,12 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
      * @param values   Arguments array
      * @param argIndex Index of the first optional argument
      */
-    private void parseOptionalArguments(Value[] values, int argIndex) {
+    private void parseOptionalArguments(DataSet edges, Value[] values,
+                                        int argIndex) {
         if (values.length > argIndex) {
             while (values.length > argIndex) {
-                parseStringArguments(values[argIndex++]);
+                parseStringArguments(edges, values[argIndex++]);
             }
-        } else if (orientation == null) {
-            LOGGER.warn("Assuming an unweighted graph.");
         }
     }
 
@@ -363,13 +371,56 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
      *
      * @param value A given argument to parse.
      */
-    private void parseStringArguments(Value value) {
+    private void parseStringArguments(DataSet edges, Value value) {
         if (value.getType() == Type.STRING) {
             String v = value.getAsString();
-            if (v.equalsIgnoreCase(DIRECTED)
-                || v.equalsIgnoreCase(REVERSED)
-                || v.equalsIgnoreCase(UNDIRECTED)) {
-                orientation = v;
+            // See if this is a directed (or reversed graph.
+            if ((v.toLowerCase().contains(DIRECTED)
+                 && !v.toLowerCase().contains(UNDIRECTED))
+                || v.toLowerCase().contains(REVERSED)) {
+                if (!v.contains(SEPARATOR)) {
+                    throw new IllegalArgumentException(
+                            "Please separate either '" + DIRECTED
+                            + "' or '" + REVERSED + "' and the name of the "
+                            + "edge orientation column by a '" + SEPARATOR + "'.");
+                } else {
+                    // Extract the global and edge orientations.
+                    String[] globalAndEdgeOrientations = v.split(SEPARATOR);
+                    if (globalAndEdgeOrientations.length == 2) {
+                        // And remove whitespace.
+                        globalOrientation = globalAndEdgeOrientations[0]
+                                .replaceAll("\\s", "");
+                        edgeOrientationColumnName = globalAndEdgeOrientations[1]
+                                .replaceAll("\\s", "");
+                        try {
+                            // Make sure this column exists.
+                            if (!Arrays.asList(edges.getMetadata().
+                                    getFieldNames())
+                                    .contains(edgeOrientationColumnName)) {
+                                throw new IllegalArgumentException(
+                                        "Column '" + edgeOrientationColumnName
+                                        + "' not found in the edges table.");
+                            }
+                        } catch (DriverException ex) {
+                            LOGGER.error("Problem verifying existence of "
+                                         + "column {}.",
+                                         edgeOrientationColumnName);
+                        }
+                        LOGGER.info("Global orientation = {}, edge orientation "
+                                    + "column name = {}.", globalOrientation,
+                                    edgeOrientationColumnName);
+                        // TODO: Throw an exception if no edge orientations are given.
+                    } else {
+                        throw new IllegalArgumentException(
+                                "You must specify both global and edge orientations for "
+                                + "directed or reversed graphs. Separate them by "
+                                + "a '" + SEPARATOR + "'.");
+                    }
+                }
+            } else if (v.toLowerCase().contains(UNDIRECTED)) {
+                globalOrientation = UNDIRECTED;
+                LOGGER.warn("Edge orientations are ignored for undirected "
+                            + "graphs.");
             } else {
                 LOGGER.info("Setting weights column name to {}.", v);
                 weightsColumn = v;
@@ -392,12 +443,12 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
 
         // Get the graph orientation.
         int graphType = -1;
-        if (orientation != null) {
-            graphType = orientation.equalsIgnoreCase(DIRECTED)
+        if (globalOrientation != null) {
+            graphType = globalOrientation.equalsIgnoreCase(DIRECTED)
                     ? GraphSchema.DIRECT
-                    : orientation.equalsIgnoreCase(REVERSED)
+                    : globalOrientation.equalsIgnoreCase(REVERSED)
                     ? GraphSchema.DIRECT_REVERSED
-                    : orientation.equalsIgnoreCase(UNDIRECTED)
+                    : globalOrientation.equalsIgnoreCase(UNDIRECTED)
                     ? GraphSchema.UNDIRECT
                     : -1;
         } else if (graphType == -1) {
@@ -410,6 +461,7 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
             graph = new WeightedGraphCreator<VWBetw, Edge>(
                     edges,
                     graphType,
+                    edgeOrientationColumnName,
                     VWBetw.class,
                     Edge.class,
                     weightsColumn).prepareGraph();
