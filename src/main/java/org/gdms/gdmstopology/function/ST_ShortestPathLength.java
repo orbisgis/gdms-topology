@@ -37,9 +37,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import org.gdms.data.DataSource;
 import org.gdms.data.DataSourceFactory;
 import org.gdms.data.schema.DefaultMetadata;
 import org.gdms.data.schema.Metadata;
@@ -404,9 +401,11 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
                 || v.toLowerCase().contains(REVERSED)) {
                 if (!v.contains(SEPARATOR)) {
                     throw new IllegalArgumentException(
-                            "Please separate either '" + DIRECTED
-                            + "' or '" + REVERSED + "' and the name of the "
-                            + "edge orientation column by a '" + SEPARATOR + "'.");
+                            "You must specify the name of the edge orientation "
+                            + "column. Enter '" + DIRECTED + " " + SEPARATOR
+                            + " " + EDGE_ORIENTATION_COLUMN + "' or '"
+                            + REVERSED + " " + SEPARATOR + " "
+                            + EDGE_ORIENTATION_COLUMN + "'.");
                 } else {
                     // Extract the global and edge orientations.
                     String[] globalAndEdgeOrientations = v.split(SEPARATOR);
@@ -418,8 +417,8 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
                                 .replaceAll("\\s", "");
                         try {
                             // Make sure this column exists.
-                            if (!Arrays.asList(edges.getMetadata().
-                                    getFieldNames())
+                            if (!Arrays.asList(edges.getMetadata()
+                                    .getFieldNames())
                                     .contains(edgeOrientationColumnName)) {
                                 throw new IllegalArgumentException(
                                         "Column '" + edgeOrientationColumnName
@@ -444,8 +443,10 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
                 }
             } else if (v.toLowerCase().contains(UNDIRECTED)) {
                 globalOrientation = UNDIRECTED;
-                LOGGER.warn("Edge orientations are ignored for undirected "
-                            + "graphs.");
+                if (!v.equalsIgnoreCase(UNDIRECTED)) {
+                    LOGGER.warn("Edge orientations are ignored for undirected "
+                                + "graphs.");
+                }
             } else {
                 LOGGER.info("Weights column name = '{}'.", v);
                 weightsColumn = v;
