@@ -358,17 +358,17 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
     }
 
     /**
-     * Parse possible String arguments for {@link ST_ShortestPathLength}, namely weight and
-     * orientation.
+     * Parse possible String arguments for {@link ST_ShortestPathLength}, namely
+     * weight and orientation.
      *
      * @param value A given argument to parse.
      */
     private void parseStringArguments(Value value) {
         if (value.getType() == Type.STRING) {
             String v = value.getAsString();
-            if (v.equals(DIRECTED)
-                || v.equals(REVERSED)
-                || v.equals(UNDIRECTED)) {
+            if (v.equalsIgnoreCase(DIRECTED)
+                || v.equalsIgnoreCase(REVERSED)
+                || v.equalsIgnoreCase(UNDIRECTED)) {
                 orientation = v;
             } else {
                 LOGGER.info("Setting weights column name to {}.", v);
@@ -393,11 +393,11 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
         // Get the graph orientation.
         int graphType = -1;
         if (orientation != null) {
-            graphType = orientation.equals(DIRECTED)
+            graphType = orientation.equalsIgnoreCase(DIRECTED)
                     ? GraphSchema.DIRECT
-                    : orientation.equals(REVERSED)
+                    : orientation.equalsIgnoreCase(REVERSED)
                     ? GraphSchema.DIRECT_REVERSED
-                    : orientation.equals(UNDIRECTED)
+                    : orientation.equalsIgnoreCase(UNDIRECTED)
                     ? GraphSchema.UNDIRECT
                     : -1;
         } else if (graphType == -1) {
