@@ -76,8 +76,20 @@ public class ST_ShortestPathLengthTest extends TopologySetupTest {
     private static final double TOLERANCE = 0.0;
     private static final int numberOfNodes = 5;
 
-    @Test
-    public void testEdgeOrientationParameter() throws Exception {
+    /**
+     * Test calculating the shortest path length from a source to a destination.
+     *
+     * @param weight            Weight column name
+     * @param orientation       Orientation
+     * @param expectedDistances Expected distances
+     *
+     * @throws Exception
+     */
+    private void oneToOneWeighted(
+            String weight,
+            String orientation,
+            Map<Integer, Map<Integer, Double>> expectedDistances)
+            throws Exception {
 
         DataSet newEdges =
                 introduceOrientations(introduceWeights(prepareEdges(),
@@ -86,32 +98,6 @@ public class ST_ShortestPathLengthTest extends TopologySetupTest {
 
         DataSet[] tables = new DataSet[]{newEdges};
 
-        Map<Integer, Map<Integer, Double>> expected = expectedDirectedDistances();
-
-
-        DataSet result = new ST_ShortestPathLength().evaluate(
-                dsf,
-                tables,
-                new Value[]{ValueFactory.createValue(2),
-                            ValueFactory.createValue(5),
-                            ValueFactory.createValue("reversed - "
-                                                     + "edge_orientation"),
-                            ValueFactory.createValue(GraphSchema.WEIGHT)},
-                new NullProgressMonitor());
-
-        print(result);
-
-    }
-
-    @Test
-    public void sourceTargetWeightsDirected() throws Exception {
-
-        DataSet newEdges = introduceWeights(prepareEdges(), EDGE_WEIGHTS);
-
-        DataSet[] tables = new DataSet[]{newEdges};
-
-        Map<Integer, Map<Integer, Double>> expected = expectedDirectedDistances();
-
         for (int i = 1; i < numberOfNodes + 1; i++) {
             for (int j = 1; j < numberOfNodes + 1; j++) {
                 DataSet result = new ST_ShortestPathLength().evaluate(
@@ -119,7 +105,8 @@ public class ST_ShortestPathLengthTest extends TopologySetupTest {
                         tables,
                         new Value[]{ValueFactory.createValue(i),
                                     ValueFactory.createValue(j),
-                                    ValueFactory.createValue(GraphSchema.WEIGHT)},
+                                    ValueFactory.createValue(weight),
+                                    ValueFactory.createValue(orientation)},
                         new NullProgressMonitor());
                 // Check result.
 
@@ -137,7 +124,7 @@ public class ST_ShortestPathLengthTest extends TopologySetupTest {
                 int destination = row[destinationIndex].getAsInt();
                 double distance = row[distanceIndex].getAsInt();
 
-                assertEquals(expected.get(source).get(destination),
+                assertEquals(expectedDistances.get(source).get(destination),
                              distance,
                              TOLERANCE);
 
@@ -147,20 +134,60 @@ public class ST_ShortestPathLengthTest extends TopologySetupTest {
     }
 
     @Test
-    public void sourceWeightsDirected() throws Exception {
+    public void oneToOneWeightedDirected() throws Exception {
+        oneToOneWeighted(GraphSchema.WEIGHT,
+                         ST_ShortestPathLength.DIRECTED
+                         + ST_ShortestPathLength.SEPARATOR
+                         + GraphSchema.EDGE_ORIENTATION,
+                         expectedDirectedDistances());
+    }
 
-        DataSet newEdges = introduceWeights(prepareEdges(), EDGE_WEIGHTS);
+    @Test
+    public void oneToOneWeightedReversed() throws Exception {
+        oneToOneWeighted(GraphSchema.WEIGHT,
+                         ST_ShortestPathLength.REVERSED
+                         + ST_ShortestPathLength.SEPARATOR
+                         + GraphSchema.EDGE_ORIENTATION,
+                         expectedReversedDistances());
+    }
+
+    @Test
+    public void oneToOneWeightedUndirected() throws Exception {
+        oneToOneWeighted(GraphSchema.WEIGHT,
+                         ST_ShortestPathLength.UNDIRECTED,
+                         expectedUndirectedDistances());
+    }
+
+    /**
+     * Test calculating the distances from a given source node towards all other
+     * nodes.
+     *
+     * @param weight            Weight column name
+     * @param orientation       Orientation
+     * @param expectedDistances Expected distances
+     *
+     * @throws Exception
+     */
+    private void oneToAllWeighted(
+            String weight,
+            String orientation,
+            Map<Integer, Map<Integer, Double>> expectedDistances)
+            throws Exception {
+
+        DataSet newEdges =
+                introduceOrientations(introduceWeights(prepareEdges(),
+                                                       EDGE_WEIGHTS),
+                                      EDGE_ORIENTATIONS);
 
         DataSet[] tables = new DataSet[]{newEdges};
-
-        Map<Integer, Map<Integer, Double>> expected = expectedDirectedDistances();
 
         for (int i = 1; i < numberOfNodes + 1; i++) {
             DataSet result = new ST_ShortestPathLength().evaluate(
                     dsf,
                     tables,
                     new Value[]{ValueFactory.createValue(i),
-                                ValueFactory.createValue(GraphSchema.WEIGHT)},
+                                ValueFactory.createValue(GraphSchema.WEIGHT),
+                                ValueFactory.createValue(orientation)},
                     new NullProgressMonitor());
             // Check result.
             print(result);
@@ -170,12 +197,13 @@ public class ST_ShortestPathLengthTest extends TopologySetupTest {
             int destinationIndex = md.getFieldIndex(
                     ST_ShortestPathLength.DESTINATION);
             int distanceIndex = md.getFieldIndex(ST_ShortestPathLength.DISTANCE);
+
             for (int j = 0; j < numberOfNodes; j++) {
                 Value[] row = result.getRow(j);
                 int source = row[sourceIndex].getAsInt();
                 int destination = row[destinationIndex].getAsInt();
                 double distance = row[distanceIndex].getAsInt();
-                assertEquals(expected.get(source).get(destination),
+                assertEquals(expectedDistances.get(source).get(destination),
                              distance,
                              TOLERANCE);
             }
@@ -183,12 +211,54 @@ public class ST_ShortestPathLengthTest extends TopologySetupTest {
     }
 
     @Test
-    public void sourceTargetTableWeightsDirected() throws Exception {
+    public void oneToAllWeightedDirected() throws Exception {
+        oneToAllWeighted(GraphSchema.WEIGHT,
+                         ST_ShortestPathLength.DIRECTED
+                         + ST_ShortestPathLength.SEPARATOR
+                         + GraphSchema.EDGE_ORIENTATION,
+                         expectedDirectedDistances());
+    }
 
-        DataSet newEdges = introduceWeights(prepareEdges(), EDGE_WEIGHTS);
+    @Test
+    public void oneToAllWeightedReversed() throws Exception {
+        oneToAllWeighted(GraphSchema.WEIGHT,
+                         ST_ShortestPathLength.REVERSED
+                         + ST_ShortestPathLength.SEPARATOR
+                         + GraphSchema.EDGE_ORIENTATION,
+                         expectedReversedDistances());
+    }
+
+    @Test
+    public void oneToAllWeightedUndirected() throws Exception {
+        oneToAllWeighted(GraphSchema.WEIGHT,
+                         ST_ShortestPathLength.UNDIRECTED,
+                         expectedUndirectedDistances());
+    }
+
+    /**
+     * Tests calculating the distances from a table of source nodes and
+     * destination nodes.
+     *
+     * @param weight            Weight column name
+     * @param orientation       Orientation
+     * @param expectedDistances Expected distances
+     *
+     * @throws Exception
+     */
+    private void manyToManyWeighted(
+            String weight,
+            String orientation,
+            Map<Integer, Map<Integer, Double>> expectedDistances)
+            throws Exception {
+
+        DataSet newEdges =
+                introduceOrientations(introduceWeights(prepareEdges(),
+                                                       EDGE_WEIGHTS),
+                                      EDGE_ORIENTATIONS);
 
         MemoryDataSetDriver sourceDestTable = new MemoryDataSetDriver(
-                new String[]{ST_ShortestPathLength.SOURCE, ST_ShortestPathLength.DESTINATION},
+                new String[]{ST_ShortestPathLength.SOURCE,
+                             ST_ShortestPathLength.DESTINATION},
                 new Type[]{TypeFactory.createType(Type.INT),
                            TypeFactory.createType(Type.INT)});
         // Add all possible combinations.
@@ -205,12 +275,11 @@ public class ST_ShortestPathLengthTest extends TopologySetupTest {
         DataSet result = new ST_ShortestPathLength().evaluate(
                 dsf,
                 tables,
-                new Value[]{ValueFactory.createValue(GraphSchema.WEIGHT)},
+                new Value[]{ValueFactory.createValue(weight),
+                            ValueFactory.createValue(orientation)},
                 new NullProgressMonitor());
 
         print(result);
-
-        Map<Integer, Map<Integer, Double>> expected = expectedDirectedDistances();
 
         Metadata md = result.getMetadata();
         int sourceIndex = md.getFieldIndex(ST_ShortestPathLength.SOURCE);
@@ -224,15 +293,51 @@ public class ST_ShortestPathLengthTest extends TopologySetupTest {
                 int source = row[sourceIndex].getAsInt();
                 int destination = row[destinationIndex].getAsInt();
                 double distance = row[distanceIndex].getAsInt();
-                assertEquals(expected.get(source).get(destination),
+                assertEquals(expectedDistances.get(source).get(destination),
                              distance,
                              TOLERANCE);
             }
         }
     }
 
+    @Test
+    public void manyToManyWeightedDirected() throws Exception {
+        manyToManyWeighted(GraphSchema.WEIGHT,
+                           ST_ShortestPathLength.DIRECTED
+                           + ST_ShortestPathLength.SEPARATOR
+                           + GraphSchema.EDGE_ORIENTATION,
+                           expectedDirectedDistances());
+    }
+
+    @Test
+    public void manyToManyWeightedReversed() throws Exception {
+        manyToManyWeighted(GraphSchema.WEIGHT,
+                           ST_ShortestPathLength.REVERSED
+                           + ST_ShortestPathLength.SEPARATOR
+                           + GraphSchema.EDGE_ORIENTATION,
+                           expectedReversedDistances());
+    }
+
+    @Test
+    public void manyToManyWeightedUndirected() throws Exception {
+        manyToManyWeighted(GraphSchema.WEIGHT,
+                           ST_ShortestPathLength.UNDIRECTED,
+                           expectedUndirectedDistances());
+    }
+
     private DataSet prepareEdges() throws FunctionException, DriverException,
             DataSourceCreationException, NoSuchTableException, ParseException {
+        //                   1
+        //           >2 ------------>3
+        //          / |^           ->|^
+        //       10/ / |      9   / / |
+        //        / 2| |3    -----  | |
+        //       /   | |    /      4| |6
+        //      1<---------------   | |
+        //       \   | |  /     7\  | |
+        //       5\  | / /        \ | /
+        //         \ v| /    2     \v|
+        //          > 4 -----------> 5
         MemoryDataSetDriver data = initializeDriver();
         data.addValues(new Value[]{
             ValueFactory.createValue(
@@ -328,13 +433,13 @@ public class ST_ShortestPathLengthTest extends TopologySetupTest {
         for (String name : table.getMetadata().getFieldNames()) {
             metadata += name + "\t";
         }
-        LOGGER.info(metadata);
+        LOGGER.debug(metadata);
         for (int i = 0; i < table.getRowCount(); i++) {
             String row = "";
             for (Value v : table.getRow(i)) {
                 row += v + "\t";
             }
-            LOGGER.info(row);
+            LOGGER.debug(row);
         }
     }
 
@@ -441,6 +546,102 @@ public class ST_ShortestPathLengthTest extends TopologySetupTest {
         dFromFive.put(2, 15.0);
         dFromFive.put(3, 6.0);
         dFromFive.put(4, 12.0);
+        dFromFive.put(5, 0.0);
+
+        distances.put(1, dFromOne);
+        distances.put(2, dFromTwo);
+        distances.put(3, dFromThree);
+        distances.put(4, dFromFour);
+        distances.put(5, dFromFive);
+
+        return distances;
+    }
+
+    private Map<Integer, Map<Integer, Double>> expectedReversedDistances() {
+        Map<Integer, Map<Integer, Double>> distances =
+                new HashMap<Integer, Map<Integer, Double>>();
+
+        Map<Integer, Double> dFromOne = new HashMap<Integer, Double>();
+        dFromOne.put(1, 0.0);
+        dFromOne.put(2, 11.0);
+        dFromOne.put(3, 11.0);
+        dFromOne.put(4, 9.0);
+        dFromOne.put(5, 7.0);
+
+        Map<Integer, Double> dFromTwo = new HashMap<Integer, Double>();
+        dFromTwo.put(1, 8.0);
+        dFromTwo.put(2, 0.0);
+        dFromTwo.put(3, 19.0);
+        dFromTwo.put(4, 3.0);
+        dFromTwo.put(5, 15.0);
+
+        Map<Integer, Double> dFromThree = new HashMap<Integer, Double>();
+        dFromThree.put(1, 9.0);
+        dFromThree.put(2, 1.0);
+        dFromThree.put(3, 0.0);
+        dFromThree.put(4, 4.0);
+        dFromThree.put(5, 6.0);
+
+        Map<Integer, Double> dFromFour = new HashMap<Integer, Double>();
+        dFromFour.put(1, 5.0);
+        dFromFour.put(2, 2.0);
+        dFromFour.put(3, 16.0);
+        dFromFour.put(4, 0.0);
+        dFromFour.put(5, 12.0);
+
+        Map<Integer, Double> dFromFive = new HashMap<Integer, Double>();
+        dFromFive.put(1, 7.0);
+        dFromFive.put(2, 4.0);
+        dFromFive.put(3, 4.0);
+        dFromFive.put(4, 2.0);
+        dFromFive.put(5, 0.0);
+
+        distances.put(1, dFromOne);
+        distances.put(2, dFromTwo);
+        distances.put(3, dFromThree);
+        distances.put(4, dFromFour);
+        distances.put(5, dFromFive);
+
+        return distances;
+    }
+
+    private Map<Integer, Map<Integer, Double>> expectedUndirectedDistances() {
+        Map<Integer, Map<Integer, Double>> distances =
+                new HashMap<Integer, Map<Integer, Double>>();
+
+        Map<Integer, Double> dFromOne = new HashMap<Integer, Double>();
+        dFromOne.put(1, 0.0);
+        dFromOne.put(2, 7.0);
+        dFromOne.put(3, 8.0);
+        dFromOne.put(4, 5.0);
+        dFromOne.put(5, 7.0);
+
+        Map<Integer, Double> dFromTwo = new HashMap<Integer, Double>();
+        dFromTwo.put(1, 7.0);
+        dFromTwo.put(2, 0.0);
+        dFromTwo.put(3, 1.0);
+        dFromTwo.put(4, 2.0);
+        dFromTwo.put(5, 4.0);
+
+        Map<Integer, Double> dFromThree = new HashMap<Integer, Double>();
+        dFromThree.put(1, 8.0);
+        dFromThree.put(2, 1.0);
+        dFromThree.put(3, 0.0);
+        dFromThree.put(4, 3.0);
+        dFromThree.put(5, 4.0);
+
+        Map<Integer, Double> dFromFour = new HashMap<Integer, Double>();
+        dFromFour.put(1, 5.0);
+        dFromFour.put(2, 2.0);
+        dFromFour.put(3, 3.0);
+        dFromFour.put(4, 0.0);
+        dFromFour.put(5, 2.0);
+
+        Map<Integer, Double> dFromFive = new HashMap<Integer, Double>();
+        dFromFive.put(1, 7.0);
+        dFromFive.put(2, 4.0);
+        dFromFive.put(3, 4.0);
+        dFromFive.put(4, 2.0);
         dFromFive.put(5, 0.0);
 
         distances.put(1, dFromOne);
