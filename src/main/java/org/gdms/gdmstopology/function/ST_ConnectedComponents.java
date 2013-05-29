@@ -87,11 +87,6 @@ public class ST_ConnectedComponents extends AbstractTableFunction {
      */
     private static final String DESCRIPTION =
             SHORT_DESCRIPTION + LONG_DESCRIPTION;
-    // OPTIONAL ARGUMENT
-    /**
-     * Specifies the orientation of the graph (default: directed).
-     */
-    private int orientation = GraphSchema.DIRECT;
 
     /**
      * Evaluates the function to calculate the connected components of a graph.
