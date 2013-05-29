@@ -145,8 +145,10 @@ public class WeightedGraphCreator<V extends VId, E extends Edge>
     @Override
     protected E loadEdge(Value[] row, KeyedGraph<V, E> graph) {
         E edge = super.loadEdge(row, graph);
-        double weight = row[weightFieldIndex].getAsDouble();
-        edge.setWeight(weight);
+        if (edge != null) {
+            double weight = row[weightFieldIndex].getAsDouble();
+            edge.setWeight(weight);
+        }
         return edge;
     }
 

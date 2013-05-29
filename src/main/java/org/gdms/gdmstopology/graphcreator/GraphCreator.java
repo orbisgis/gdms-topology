@@ -251,8 +251,10 @@ public class GraphCreator<V extends VId, E extends Edge> {
                     return graph.addEdge(endNode, startNode);
                 }
             } else {
-                throw new IllegalArgumentException(
-                        edgeOrientation + " is not a valid edge orientation.");
+                LOGGER.warn("Edge ({},{}) ignored since {} is not a valid "
+                            + "edge orientation.", startNode, endNode,
+                            edgeOrientation);
+                return null;
             }
         }
     }
