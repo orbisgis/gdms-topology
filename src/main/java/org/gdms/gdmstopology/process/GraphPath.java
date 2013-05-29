@@ -577,46 +577,6 @@ public class GraphPath extends GraphAnalysis {
     }
 
     /**
-     * Compute the shortest path distance between several nodes.
-     *
-     * @param dsf
-     * @param dataSet
-     * @param source
-     * @param target
-     * @param costField
-     * @param graphType
-     * @param pm
-     * @return
-     * @throws GraphException
-     * @throws DriverException
-     */
-    public static DiskBufferDriver getMShortestPathLength(DataSourceFactory dsf, DataSet dataSet, DataSet nodes, String costField, int graphType, ProgressMonitor pm) throws GraphException, DriverException {
-        if (checkMetadata(nodes)) {
-            if (graphType == GraphSchema.DIRECT) {
-                DWMultigraphDataSource dwMultigraphDataSource = new DWMultigraphDataSource(dsf, dataSet, pm);
-                dwMultigraphDataSource.setWeightFieldIndex(costField);
-                return computeDistanceBetweenSeveralNodes(dsf, dwMultigraphDataSource, nodes, pm);
-            } else if (graphType == GraphSchema.DIRECT_REVERSED) {
-                DWMultigraphDataSource dwMultigraphDataSource = new DWMultigraphDataSource(dsf, dataSet, pm);
-                dwMultigraphDataSource.setWeightFieldIndex(costField);
-                EdgeReversedGraphDataSource edgeReversedGraph = new EdgeReversedGraphDataSource(dwMultigraphDataSource);
-                return computeDistanceBetweenSeveralNodes(dsf, edgeReversedGraph, nodes, pm);
-            } else if (graphType == GraphSchema.UNDIRECT) {
-                WMultigraphDataSource wMultigraphDataSource = new WMultigraphDataSource(dsf, dataSet, pm);
-                wMultigraphDataSource.setWeightFieldIndex(costField);
-                return computeDistanceBetweenSeveralNodes(dsf, wMultigraphDataSource, nodes, pm);
-            } else {
-                throw new GraphException("Only 3 type of graphs are allowed."
-                        + "1 if the path is computing using a directed graph.\n"
-                        + "2 if the path is computing using a directed graph and edges are reversed\n"
-                        + "3 if the path is computing using a undirected.");
-            }
-        } else {
-            throw new GraphException("The table nodes must contains the field id, source and target");
-        }
-    }
-
-    /**
      * Query the dataset using an alphanumeric index
      *
      * @param fieldToQuery

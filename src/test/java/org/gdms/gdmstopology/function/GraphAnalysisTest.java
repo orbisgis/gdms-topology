@@ -33,11 +33,8 @@
 package org.gdms.gdmstopology.function;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import org.gdms.data.DataSource;
-import org.gdms.data.DataSourceIterator;
 import org.gdms.data.types.Type;
 import org.gdms.data.types.TypeFactory;
 import org.gdms.data.values.Value;
@@ -325,74 +322,7 @@ public class GraphAnalysisTest extends TopologySetupTest {
 //        printResult(result, 6, source, target);
 //    }
 
-    @Test
-    public void testST_ShortestPathLength() throws Exception {
-        ST_ShortestPathLength sT_ShortestPathLength = new ST_ShortestPathLength();
-        DataSource ds = dsf.getDataSource(GRAPH2D_EDGES);
-        ds.open();
-        DataSet[] tables = new DataSet[]{ds};
-        int source = 3;
-        DataSet result = sT_ShortestPathLength.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source),
-                    ValueFactory.createValue("length")}, new NullProgressMonitor());
-        assertTrue(result.getRowCount() == 4);
-        HashMap<Integer, Double> results = new HashMap<Integer, Double>();
-        results.put(5, 133.4541119636259);
-        results.put(6, 51.35172830587107);
-        results.put(1, (211.6687715105811 + 51.35172830587107));
-        results.put(4, (211.6687715105811 + 51.35172830587107) + 56.32051136131489);
-        for (int i = 0; i < result.getRowCount(); i++) {
-            int key = result.getInt(i, 0);
-            double cost = result.getDouble(i, 1);
-            assertTrue((results.get(key) - cost) == 0);
 
-        }
-        ds.close();
-    }
-
-    @Test
-    public void testST_ShortestPathLengthReverse() throws Exception {
-        ST_ShortestPathLength sT_ShortestPathLength = new ST_ShortestPathLength();
-        DataSource ds = dsf.getDataSource(GRAPH2D_EDGES);
-        ds.open();
-        DataSet[] tables = new DataSet[]{ds};
-        int source = 3;
-        DataSet result = sT_ShortestPathLength.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source),
-                    ValueFactory.createValue("length"), ValueFactory.createValue(2)}, new NullProgressMonitor());
-        assertTrue(result.getRowCount() == 1);
-        HashMap<Integer, Double> results = new HashMap<Integer, Double>();
-        results.put(2, 129.63024338479042);
-        for (int i = 0; i < result.getRowCount(); i++) {
-            int key = result.getInt(i, 0);
-            double cost = result.getDouble(i, 1);
-            assertTrue((results.get(key) - cost) == 0);
-        }
-        ds.close();
-    }
-
-    @Test
-    public void testST_ShortestPathLengthMultiGraph() throws Exception {
-        ST_ShortestPathLength sT_ShortestPathLength = new ST_ShortestPathLength();
-        DataSource ds = dsf.getDataSource(GRAPH2D_EDGES);
-        ds.open();
-        DataSet[] tables = new DataSet[]{ds};
-        int source = 3;
-        DataSet result = sT_ShortestPathLength.evaluate(dsf, tables, new Value[]{ValueFactory.createValue(source),
-                    ValueFactory.createValue("length"),
-                    ValueFactory.createValue(3)}, new NullProgressMonitor());
-        assertTrue(result.getRowCount() == 5);
-        HashMap<Integer, Double> results = new HashMap<Integer, Double>();
-        results.put(2, 129.63024338479042);
-        results.put(5, 133.4541119636259);
-        results.put(6, 51.35172830587107);
-        results.put(1, (211.6687715105811 + 51.35172830587107));
-        results.put(4, (211.6687715105811 + 51.35172830587107) + 56.32051136131489);
-        for (int i = 0; i < result.getRowCount(); i++) {
-            int key = result.getInt(i, 0);
-            double cost = result.getDouble(i, 1);
-            assertTrue((results.get(key) - cost) == 0);
-        }
-        ds.close();
-    }
 
     @Test
     public void testST_MShortestPath() throws Exception {
@@ -483,43 +413,6 @@ public class GraphAnalysisTest extends TopologySetupTest {
         DataSet result = sT_MShortestPath.evaluate(dsf, tables, new Value[]{ValueFactory.createValue("length")},
                 new NullProgressMonitor());
         assertTrue(result.getRowCount() == 5);
-        ds.close();
-    }
-
-    @Test
-    public void testST_MShortestPathLength() throws Exception {
-        ST_MShortestPathLength sT_MShortestPathLength = new ST_MShortestPathLength();
-        DataSource ds = dsf.getDataSource(GRAPH2D_EDGES);
-        ds.open();
-        MemoryDataSetDriver nodes = new MemoryDataSetDriver(new String[]{"id", "source", "target"},
-                new Type[]{
-                    TypeFactory.createType(Type.INT),
-                    TypeFactory.createType(Type.INT), TypeFactory.createType(Type.INT)});
-
-        nodes.addValues(new Value[]{
-                    ValueFactory.createValue(1),
-                    ValueFactory.createValue(2),
-                    ValueFactory.createValue(4)});
-
-        DataSet[] tables = new DataSet[]{ds, nodes};
-        DataSet result = sT_MShortestPathLength.evaluate(dsf, tables, new Value[]{ValueFactory.createValue("length")},
-                new NullProgressMonitor());
-        assertTrue(result.getRowCount() == 1);
-
-        HashSet<Integer> pathList = new HashSet<Integer>();
-        pathList.add(1);
-        pathList.add(3);
-        pathList.add(4);
-        pathList.add(6);
-
-        double sum = 0;
-        for (Value[] row : ds) {
-            if (pathList.contains(row[1].getAsInt())) {
-                sum += row[0].getAsGeometry().getLength();
-            }
-        }
-        assertEquals(result.getDouble(0, 1), sum, 0.000001);
-
         ds.close();
     }
 

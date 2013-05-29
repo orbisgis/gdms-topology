@@ -74,11 +74,29 @@ public class WeightedGraphCreator<V extends VId, E extends Edge>
      */
     public WeightedGraphCreator(DataSet dataSet,
                                 int orientation,
+                                String edgeOrientationColumnName,
                                 Class<? extends V> vertexClass,
                                 Class<? extends E> edgeClass,
                                 String weightColumnName) {
-        super(dataSet, orientation, vertexClass, edgeClass);
+        super(dataSet, orientation, edgeOrientationColumnName,
+              vertexClass, edgeClass);
         this.weightColumnName = weightColumnName;
+    }
+
+    /**
+     * Constructs a new {@link WeightedGraphCreator}.
+     *
+     * @param dataSet           The data set.
+     * @param globalOrientation The globalOrientation.
+     *
+     */
+    public WeightedGraphCreator(DataSet dataSet,
+                                int orientation,
+                                Class<? extends V> vertexClass,
+                                Class<? extends E> edgeClass,
+                                String weightColumnName) {
+        this(dataSet, orientation, null, vertexClass,
+             edgeClass, weightColumnName);
     }
 
     @Override
@@ -127,8 +145,10 @@ public class WeightedGraphCreator<V extends VId, E extends Edge>
     @Override
     protected E loadEdge(Value[] row, KeyedGraph<V, E> graph) {
         E edge = super.loadEdge(row, graph);
-        double weight = row[weightFieldIndex].getAsDouble();
-        edge.setWeight(weight);
+        if (edge != null) {
+            double weight = row[weightFieldIndex].getAsDouble();
+            edge.setWeight(weight);
+        }
         return edge;
     }
 

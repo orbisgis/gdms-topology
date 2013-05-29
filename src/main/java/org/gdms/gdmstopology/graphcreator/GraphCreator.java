@@ -34,9 +34,11 @@ package org.gdms.gdmstopology.graphcreator;
 
 import org.gdms.data.indexes.IndexException;
 import org.gdms.data.schema.Metadata;
+import org.gdms.data.types.Type;
 import org.gdms.data.values.Value;
 import org.gdms.driver.DataSet;
 import org.gdms.driver.DriverException;
+import org.gdms.gdmstopology.function.ST_ShortestPathLength;
 import org.gdms.gdmstopology.model.GraphException;
 import org.gdms.gdmstopology.model.GraphSchema;
 import org.javanetworkanalyzer.data.VId;
@@ -77,6 +79,7 @@ public class GraphCreator<V extends VId, E extends Edge> {
     protected int startNodeIndex = -1;
     protected int endNodeIndex = -1;
     protected int edgeOrientationIndex = -1;
+    protected final String edgeOrientationColumnName;
     public static final int DIRECTED_EDGE = 1;
     public static final int REVERSED_EDGE = -1;
     public static final int UNDIRECTED_EDGE = 0;
@@ -122,12 +125,27 @@ public class GraphCreator<V extends VId, E extends Edge> {
      */
     public GraphCreator(DataSet dataSet,
                         int globalOrientation,
+                        String edgeOrientationColumnName,
                         Class<? extends V> vertexClass,
                         Class<? extends E> edgeClass) {
         this.dataSet = dataSet;
         this.globalOrientation = globalOrientation;
+        this.edgeOrientationColumnName = edgeOrientationColumnName;
         this.vertexClass = vertexClass;
         this.edgeClass = edgeClass;
+    }
+
+    /**
+     * Constructs a new {@link GraphCreator}.
+     *
+     * @param dataSet The data set.
+     *
+     */
+    public GraphCreator(DataSet dataSet,
+                        int globalOrientation,
+                        Class<? extends V> vertexClass,
+                        Class<? extends E> edgeClass) {
+        this(dataSet, globalOrientation, null, vertexClass, edgeClass);
     }
 
     /**
@@ -181,7 +199,9 @@ public class GraphCreator<V extends VId, E extends Edge> {
      */
     private KeyedGraph<V, E> loadEdges(KeyedGraph<V, E> graph) {
         if (edgeOrientationIndex == -1 && globalOrientation != UNDIRECTED) {
-            LOGGER.warn("Assuming all edges are directed.");
+            LOGGER.warn("Assuming all edges are oriented by their "
+                        + "geometric coordinates. You should specify "
+                        + "individual edge orientations.");
         }
         for (Value[] row : dataSet) {
             loadEdge(row, graph);
@@ -209,7 +229,8 @@ public class GraphCreator<V extends VId, E extends Edge> {
             // Directed graphs are either directed pseudographs or directed
             // weighted pseudographs and must specify an orientation for each
             // individual edge. If no orientations are specified, every edge
-            // is considered to be directed.
+            // is considered to be directed with orientation given by the
+            // geometry.
             int edgeOrientation = (edgeOrientationIndex == -1)
                     ? DIRECTED_EDGE
                     : row[edgeOrientationIndex].getAsInt();
@@ -232,8 +253,10 @@ public class GraphCreator<V extends VId, E extends Edge> {
                     return graph.addEdge(endNode, startNode);
                 }
             } else {
-                throw new IllegalArgumentException(
-                        edgeOrientation + " is not a valid edge orientation.");
+                LOGGER.warn("Edge ({},{}) ignored since {} is not a valid "
+                            + "edge orientation.", startNode, endNode,
+                            edgeOrientation);
+                return null;
             }
         }
     }
@@ -274,10 +297,28 @@ public class GraphCreator<V extends VId, E extends Edge> {
             verifyIndex(endNodeIndex, GraphSchema.END_NODE);
             // For directed graphs, also get the edge orientation index.
             if (globalOrientation != GraphSchema.UNDIRECT) {
-                edgeOrientationIndex = md.getFieldIndex(
-                        GraphSchema.EDGE_ORIENTATION);
-                // We don't verify the index because we allow the user to
-                // omit the edge_orientation column.
+                if (edgeOrientationColumnName == null) {
+                    // Default to GraphSchema.EDGE_ORIENTATION.
+                    edgeOrientationIndex = md.getFieldIndex(
+                            GraphSchema.EDGE_ORIENTATION);
+                } else {
+                    edgeOrientationIndex = md.getFieldIndex(
+                            edgeOrientationColumnName);
+                    verifyIndex(edgeOrientationIndex, edgeOrientationColumnName);
+                }
+                // Make sure the orientations are of type int.
+                if (edgeOrientationIndex != -1) {
+                    if (md.getFieldType(edgeOrientationIndex).getTypeCode() != Type.INT) {
+                        throw new IllegalArgumentException(
+                                "Edge orientations must be represented by integers "
+                                + DIRECTED_EDGE + " (" + ST_ShortestPathLength.DIRECTED
+                                + "), " + REVERSED_EDGE + " (" + ST_ShortestPathLength.REVERSED
+                                + ") or " + UNDIRECTED_EDGE + " (" + ST_ShortestPathLength.UNDIRECTED
+                                + ").");
+                    }
+                }
+                // TODO: The edge orientation index could still be -1 here since
+                // we didn't verify it in the default case.
             }
         } catch (DriverException ex) {
             LOGGER.error(METADATA_ERROR, ex);

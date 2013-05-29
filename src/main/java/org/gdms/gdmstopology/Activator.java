@@ -34,14 +34,13 @@ import org.gdms.gdmstopology.function.ST_BlockIdentity;
 import org.gdms.gdmstopology.centrality.ST_GraphAnalysis;
 import org.gdms.gdmstopology.centrality.ST_StrahlerStreamOrder;
 import org.gdms.gdmstopology.function.ST_ConnectedComponents;
+import org.gdms.gdmstopology.function.ST_ShortestPathLength;
 import org.gdms.gdmstopology.function.ST_FindReachableEdges;
 import org.gdms.gdmstopology.function.ST_Graph;
 import org.gdms.gdmstopology.function.ST_MFindReachableEdges;
 import org.gdms.gdmstopology.function.ST_MShortestPath;
-import org.gdms.gdmstopology.function.ST_MShortestPathLength;
 import org.gdms.gdmstopology.function.ST_PlanarGraph;
 import org.gdms.gdmstopology.function.ST_ShortestPath;
-import org.gdms.gdmstopology.function.ST_ShortestPathLength;
 import org.gdms.gdmstopology.function.ST_SubGraphStatistics;
 import org.gdms.gdmstopology.function.ST_ToLineNoder;
 import org.gdms.sql.function.Function;
@@ -51,8 +50,10 @@ import org.osgi.framework.BundleContext;
 /**
  * Activator, register GDMS Sql function related to topology
  */
-public class Activator implements BundleActivator {    
-    private BundleContext context;        
+public class Activator implements BundleActivator {
+
+    private BundleContext context;
+
     @Override
     public void start(BundleContext context) throws Exception {
         this.context = context;
@@ -62,9 +63,7 @@ public class Activator implements BundleActivator {
         reg(new ST_Graph());
         reg(new ST_PlanarGraph());
         reg(new ST_ShortestPath());
-        reg(new ST_ShortestPathLength());
         reg(new ST_ToLineNoder());
-        reg(new ST_MShortestPathLength());
         reg(new ST_FindReachableEdges());
         reg(new ST_MFindReachableEdges());
         reg(new ST_MShortestPath());
@@ -72,18 +71,21 @@ public class Activator implements BundleActivator {
         reg(new ST_ConnectedComponents());
         reg(new ST_GraphAnalysis());
         reg(new ST_StrahlerStreamOrder());
+        reg(new ST_ShortestPathLength());
     }
+
     private void reg(Function gdmsFunc) {
         // Dict for visual hint for service list 
         // inspect service capability #id
-        Dictionary<String,String> prop = new Hashtable<String, String>();
-        prop.put("name",gdmsFunc.getName()); 
+        Dictionary<String, String> prop = new Hashtable<String, String>();
+        prop.put("name", gdmsFunc.getName());
         context.registerService(Function.class,
-                gdmsFunc,
-                prop);
+                                gdmsFunc,
+                                prop);
     }
+
     @Override
     public void stop(BundleContext context) throws Exception {
         System.out.println("Activator of org.gdms.gdmstopology stopping..");
-    }    
+    }
 }
