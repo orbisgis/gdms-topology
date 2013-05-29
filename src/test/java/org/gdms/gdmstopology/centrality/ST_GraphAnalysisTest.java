@@ -33,13 +33,20 @@
 package org.gdms.gdmstopology.centrality;
 
 import org.gdms.data.DataSource;
+import org.gdms.data.DataSourceCreationException;
+import org.gdms.data.NoSuchTableException;
+import org.gdms.data.schema.DefaultMetadata;
+import org.gdms.data.types.Type;
+import org.gdms.data.types.TypeFactory;
 import org.gdms.data.values.Value;
 import org.gdms.data.values.ValueFactory;
 import org.gdms.driver.DataSet;
 import org.gdms.driver.DriverException;
+import org.gdms.driver.memory.MemoryDataSetDriver;
 import org.gdms.gdmstopology.TopologySetupTest;
+import org.gdms.gdmstopology.function.ST_ShortestPathLength;
+import org.gdms.gdmstopology.graphcreator.GraphCreator;
 import org.gdms.gdmstopology.model.GraphSchema;
-import org.gdms.sql.function.FunctionException;
 import org.junit.Test;
 import org.orbisgis.progress.NullProgressMonitor;
 import org.slf4j.Logger;
@@ -63,297 +70,240 @@ public class ST_GraphAnalysisTest extends TopologySetupTest {
     private static final Logger LOGGER =
             LoggerFactory.getLogger(ST_GraphAnalysisTest.class);
 
-    /**
-     * Evaluates {@link ST_GraphAnalysis} on the given datasource considered as
-     * a(n) (un)weighted graph with the given edge orientation.
-     *
-     * @param ds          Datasource
-     * @param weight      1 or weight column name
-     * @param orientation Orientation
-     *
-     * @see GraphSchema.DIRECT, GraphSchema.DIRECT_REVERSED,
-     * GraphSchema.UNDIRECT
-     */
-    private DataSet evaluate(DataSource ds, Value weight, int orientation) {
-        try {
-            ds.open();
-        } catch (DriverException ex) {
-            LOGGER.info("Could not open datasource.");
-        }
-        DataSet[] tables = new DataSet[]{ds};
-        DataSet result = null;
-        try {
-            result = new ST_GraphAnalysis()
-                    .evaluate(dsf,
-                              tables,
-                              new Value[]{weight,
-                ValueFactory.createValue(orientation)
-            },
-                              new NullProgressMonitor());
-        } catch (FunctionException ex) {
-            LOGGER.error("Impossible to perform graph analysis.");
-        }
-        try {
-            ds.close();
-        } catch (DriverException ex) {
-            LOGGER.info("Could not close datasource.");
-        }
-        return result;
+    private DataSet unweightedAnalysis(String orientation)
+            throws Exception {
+        return new ST_GraphAnalysis()
+                .evaluate(dsf,
+                          prepareTables(),
+                          new Value[]{ValueFactory.createValue(orientation)},
+                          new NullProgressMonitor());
     }
 
     @Test
-    public void unweightedDirectedTest() throws DriverException {
-        DataSet result = null;
-        try {
-            result = evaluate(dsf.getDataSource(GRAPH2D_EDGES),
-                              ValueFactory.createValue(1),
-                              GraphSchema.DIRECT);
-        } catch (Exception ex) {
-        }
-        // CHECK RESULTS
-        if (result != null) {
-            try {
-                for (int i = 0; i < result.getRowCount(); i++) {
-                    Value[] row = result.getRow(i);
-                    int id = row[0].getAsInt();
-                    double betweenness = row[1].getAsDouble();
-                    double closeness = row[2].getAsDouble();
-                    if (id == 2 || id == 4 || id == 5) {
-                        assertEquals(0.0, betweenness, TOLERANCE);
-                    } else if (id == 1 || id == 3) {
-                        assertEquals(1.0, betweenness, TOLERANCE);
-                    } else if (id == 6) {
-                        assertEquals(0.6666666666666666, betweenness, TOLERANCE);
-                    } else {
-                        LOGGER.error("Unexpected vertex {}", id);
-                    }
-                    if (id == 1 || id == 3 || id == 4 || id == 5 || id == 6) {
-                        assertEquals(0.0, closeness, TOLERANCE);
-                    } else if (id == 2) {
-                        assertEquals(0.4166666666666667, closeness, TOLERANCE);
-                    } else {
-                        LOGGER.error("Unexpected vertex {}", id);
-                    }
-                }
-            } catch (DriverException ex) {
-                LOGGER.error("Problem checking results.");
+    public void unweightedDirectedTest() throws Exception {
+
+        DataSet result = unweightedAnalysis(ST_ShortestPathLength.DIRECTED
+                                            + ST_ShortestPathLength.SEPARATOR
+                                            + GraphSchema.EDGE_ORIENTATION);
+
+        for (int i = 0; i < result.getRowCount(); i++) {
+            Value[] row = result.getRow(i);
+            int id = row[0].getAsInt();
+            double betweenness = row[1].getAsDouble();
+            double closeness = row[2].getAsDouble();
+            if (id == 2 || id == 4 || id == 5) {
+                assertEquals(0.0, betweenness, TOLERANCE);
+            } else if (id == 1 || id == 3) {
+                assertEquals(1.0, betweenness, TOLERANCE);
+            } else if (id == 6) {
+                assertEquals(0.6666666666666666, betweenness, TOLERANCE);
+            } else {
+                LOGGER.error("Unexpected vertex {}", id);
             }
-        } else {
-            throw new IllegalStateException("Null results!");
+            if (id == 1 || id == 3 || id == 4 || id == 5 || id == 6) {
+                assertEquals(0.0, closeness, TOLERANCE);
+            } else if (id == 2) {
+                assertEquals(0.4166666666666667, closeness, TOLERANCE);
+            } else {
+                LOGGER.error("Unexpected vertex {}", id);
+            }
         }
     }
 
     @Test
-    public void unweightedReversedTest() {
-        DataSet result = null;
-        try {
-            result = evaluate(dsf.getDataSource(GRAPH2D_EDGES),
-                              ValueFactory.createValue(1),
-                              GraphSchema.DIRECT_REVERSED);
-        } catch (Exception ex) {
-        }
-        // CHECK RESULTS
-        if (result != null) {
-            try {
-                for (int i = 0; i < result.getRowCount(); i++) {
-                    Value[] row = result.getRow(i);
-                    int id = row[0].getAsInt();
-                    double betweenness = row[1].getAsDouble();
-                    double closeness = row[2].getAsDouble();
-                    if (id == 2 || id == 4 || id == 5) {
-                        assertEquals(0.0, betweenness, TOLERANCE);
-                    } else if (id == 3 || id == 6) {
-                        assertEquals(1.0, betweenness, TOLERANCE);
-                    } else if (id == 1) {
-                        assertEquals(0.375, betweenness, TOLERANCE);
-                    } else {
-                        LOGGER.error("Unexpected vertex {}", id);
-                    }
-                    // All vertices have closeness zero.
-                    assertEquals(0.0, closeness, TOLERANCE);
-                }
-            } catch (DriverException ex) {
-                LOGGER.error("Problem checking results.");
+    public void unweightedReversedTest() throws Exception {
+
+        DataSet result = unweightedAnalysis(ST_ShortestPathLength.REVERSED
+                                            + ST_ShortestPathLength.SEPARATOR
+                                            + GraphSchema.EDGE_ORIENTATION);
+
+        for (int i = 0; i < result.getRowCount(); i++) {
+            Value[] row = result.getRow(i);
+            int id = row[0].getAsInt();
+            double betweenness = row[1].getAsDouble();
+            double closeness = row[2].getAsDouble();
+            if (id == 2 || id == 4 || id == 5) {
+                assertEquals(0.0, betweenness, TOLERANCE);
+            } else if (id == 3 || id == 6) {
+                assertEquals(1.0, betweenness, TOLERANCE);
+            } else if (id == 1) {
+                assertEquals(0.375, betweenness, TOLERANCE);
+            } else {
+                LOGGER.error("Unexpected vertex {}", id);
             }
-        } else {
-            throw new IllegalStateException("Null results!");
+            // All vertices have closeness zero.
+            assertEquals(0.0, closeness, TOLERANCE);
         }
     }
 
     @Test
-    public void unweightedUndirectedTest() {
-        DataSet result = null;
-        try {
-            result = evaluate(dsf.getDataSource(GRAPH2D_EDGES),
-                              ValueFactory.createValue(1),
-                              GraphSchema.UNDIRECT);
-        } catch (Exception ex) {
-        }
-        // CHECK RESULTS
-        if (result != null) {
-            try {
-                for (int i = 0; i < result.getRowCount(); i++) {
-                    Value[] row = result.getRow(i);
-                    int id = row[0].getAsInt();
-                    double betweenness = row[1].getAsDouble();
-                    double closeness = row[2].getAsDouble();
-                    if (id == 2 || id == 4 || id == 5) {
-                        assertEquals(0.0, betweenness, TOLERANCE);
-                    } else if (id == 3) {
-                        assertEquals(1.0, betweenness, TOLERANCE);
-                    } else if (id == 6) {
-                        assertEquals(0.75, betweenness, TOLERANCE);
-                    } else if (id == 1) {
-                        assertEquals(0.5, betweenness, TOLERANCE);
-                    } else {
-                        LOGGER.error("Unexpected vertex {}", id);
-                    }
-                    if (id == 3 || id == 6) {
-                        assertEquals(0.625, closeness, TOLERANCE);
-                    } else if (id == 2 || id == 5) {
-                        assertEquals(0.4166666666666667, closeness, TOLERANCE);
-                    } else if (id == 1) {
-                        assertEquals(0.5, closeness, TOLERANCE);
-                    } else if (id == 4) {
-                        assertEquals(0.35714285714285715, closeness, TOLERANCE);
-                    } else {
-                        LOGGER.error("Unexpected vertex {}", id);
-                    }
-                }
-            } catch (DriverException ex) {
-                LOGGER.error("Problem checking results.");
+    public void unweightedUndirectedTest() throws Exception {
+
+        DataSet result = unweightedAnalysis(ST_ShortestPathLength.UNDIRECTED);
+
+        for (int i = 0; i < result.getRowCount(); i++) {
+            Value[] row = result.getRow(i);
+            int id = row[0].getAsInt();
+            double betweenness = row[1].getAsDouble();
+            double closeness = row[2].getAsDouble();
+            if (id == 2 || id == 4 || id == 5) {
+                assertEquals(0.0, betweenness, TOLERANCE);
+            } else if (id == 3) {
+                assertEquals(1.0, betweenness, TOLERANCE);
+            } else if (id == 6) {
+                assertEquals(0.75, betweenness, TOLERANCE);
+            } else if (id == 1) {
+                assertEquals(0.5, betweenness, TOLERANCE);
+            } else {
+                LOGGER.error("Unexpected vertex {}", id);
             }
-        } else {
-            throw new IllegalStateException("Null results!");
+            if (id == 3 || id == 6) {
+                assertEquals(0.625, closeness, TOLERANCE);
+            } else if (id == 2 || id == 5) {
+                assertEquals(0.4166666666666667, closeness, TOLERANCE);
+            } else if (id == 1) {
+                assertEquals(0.5, closeness, TOLERANCE);
+            } else if (id == 4) {
+                assertEquals(0.35714285714285715, closeness, TOLERANCE);
+            } else {
+                LOGGER.error("Unexpected vertex {}", id);
+            }
+        }
+    }
+
+    private DataSet weightedAnalysis(String weight, String orientation)
+            throws Exception {
+        return new ST_GraphAnalysis()
+                .evaluate(dsf,
+                          prepareTables(),
+                          new Value[]{ValueFactory.createValue(weight),
+                                      ValueFactory.createValue(orientation)},
+                          new NullProgressMonitor());
+    }
+
+    @Test
+    public void weightedDirectedTest() throws Exception {
+
+        DataSet result = weightedAnalysis(LENGTH,
+                                          ST_ShortestPathLength.DIRECTED
+                                          + ST_ShortestPathLength.SEPARATOR
+                                          + GraphSchema.EDGE_ORIENTATION);
+
+        for (int i = 0; i < result.getRowCount(); i++) {
+            Value[] row = result.getRow(i);
+            int id = row[0].getAsInt();
+            double betweenness = row[1].getAsDouble();
+            double closeness = row[2].getAsDouble();
+            if (id == 2 || id == 4 || id == 5) {
+                assertEquals(0.0, betweenness, TOLERANCE);
+            } else if (id == 3 || id == 6) {
+                assertEquals(1.0, betweenness, TOLERANCE);
+            } else if (id == 1) {
+                assertEquals(0.75, betweenness, TOLERANCE);
+            } else {
+                LOGGER.error("Unexpected vertex {}", id);
+            }
+            if (id == 1 || id == 3 || id == 4 || id == 5 || id == 6) {
+                assertEquals(0.0, closeness, TOLERANCE);
+            } else if (id == 2) {
+                assertEquals(0.0035327735482214143, closeness, TOLERANCE);
+            } else {
+                LOGGER.error("Unexpected vertex {}", id);
+            }
         }
     }
 
     @Test
-    public void weightedDirectedTest() {
-        DataSet result = null;
-        try {
-            result = evaluate(dsf.getDataSource(GRAPH2D_EDGES),
-                              ValueFactory.createValue(LENGTH),
-                              GraphSchema.DIRECT);
-        } catch (Exception ex) {
-        }
-        // CHECK RESULTS
-        if (result != null) {
-            try {
-                for (int i = 0; i < result.getRowCount(); i++) {
-                    Value[] row = result.getRow(i);
-                    int id = row[0].getAsInt();
-                    double betweenness = row[1].getAsDouble();
-                    double closeness = row[2].getAsDouble();
-                    if (id == 2 || id == 4 || id == 5) {
-                        assertEquals(0.0, betweenness, TOLERANCE);
-                    } else if (id == 3 || id == 6) {
-                        assertEquals(1.0, betweenness, TOLERANCE);
-                    } else if (id == 1) {
-                        assertEquals(0.75, betweenness, TOLERANCE);
-                    } else {
-                        LOGGER.error("Unexpected vertex {}", id);
-                    }
-                    if (id == 1 || id == 3 || id == 4 || id == 5 || id == 6) {
-                        assertEquals(0.0, closeness, TOLERANCE);
-                    } else if (id == 2) {
-                        assertEquals(0.0035327735482214143, closeness, TOLERANCE);
-                    } else {
-                        LOGGER.error("Unexpected vertex {}", id);
-                    }
-                }
-            } catch (DriverException ex) {
-                LOGGER.error("Problem checking results.");
+    public void weightedReversedTest() throws Exception {
+
+        DataSet result = weightedAnalysis(LENGTH,
+                                          ST_ShortestPathLength.REVERSED
+                                          + ST_ShortestPathLength.SEPARATOR
+                                          + GraphSchema.EDGE_ORIENTATION);
+
+        for (int i = 0; i < result.getRowCount(); i++) {
+            Value[] row = result.getRow(i);
+            int id = row[0].getAsInt();
+            double betweenness = row[1].getAsDouble();
+            double closeness = row[2].getAsDouble();
+            if (id == 2 || id == 4 || id == 5) {
+                assertEquals(0.0, betweenness, TOLERANCE);
+            } else if (id == 3 || id == 6) {
+                assertEquals(1.0, betweenness, TOLERANCE);
+            } else if (id == 1) {
+                assertEquals(0.75, betweenness, TOLERANCE);
+            } else {
+                LOGGER.error("Unexpected vertex {}", id);
             }
-        } else {
-            throw new IllegalStateException("Null results!");
+            // All vertices have closeness zero.
+            assertEquals(0.0, closeness, TOLERANCE);
         }
     }
 
     @Test
-    public void weightedReversedTest() {
-        DataSet result = null;
-        try {
-            result = evaluate(dsf.getDataSource(GRAPH2D_EDGES),
-                              ValueFactory.createValue(LENGTH),
-                              GraphSchema.DIRECT_REVERSED);
-        } catch (Exception ex) {
-        }
+    public void weightedUndirectedTest() throws Exception {
+
+        DataSet result = weightedAnalysis(LENGTH,
+                                          ST_ShortestPathLength.UNDIRECTED);
+
         // CHECK RESULTS
-        if (result != null) {
-            try {
-                for (int i = 0; i < result.getRowCount(); i++) {
-                    Value[] row = result.getRow(i);
-                    int id = row[0].getAsInt();
-                    double betweenness = row[1].getAsDouble();
-                    double closeness = row[2].getAsDouble();
-                    if (id == 2 || id == 4 || id == 5) {
-                        assertEquals(0.0, betweenness, TOLERANCE);
-                    } else if (id == 3 || id == 6) {
-                        assertEquals(1.0, betweenness, TOLERANCE);
-                    } else if (id == 1) {
-                        assertEquals(0.75, betweenness, TOLERANCE);
-                    } else {
-                        LOGGER.error("Unexpected vertex {}", id);
-                    }
-                    // All vertices have closeness zero.
-                    assertEquals(0.0, closeness, TOLERANCE);
-                }
-            } catch (DriverException ex) {
-                LOGGER.error("Problem checking results.");
+        for (int i = 0; i < result.getRowCount(); i++) {
+            Value[] row = result.getRow(i);
+            int id = row[0].getAsInt();
+            double betweenness = row[1].getAsDouble();
+            double closeness = row[2].getAsDouble();
+            if (id == 2 || id == 4 || id == 5) {
+                assertEquals(0.0, betweenness, TOLERANCE);
+            } else if (id == 3) {
+                assertEquals(1.0, betweenness, TOLERANCE);
+            } else if (id == 1) {
+                assertEquals(0.5714285714285714, betweenness, TOLERANCE);
+            } else if (id == 6) {
+                assertEquals(0.8571428571428571, betweenness, TOLERANCE);
+            } else {
+                LOGGER.error("Unexpected vertex {}", id);
             }
-        } else {
-            throw new IllegalStateException("Null results!");
+            if (id == 3 || id == 6) {
+                assertEquals(0.0055753940798198886, closeness, TOLERANCE);
+            } else if (id == 1) {
+                assertEquals(0.003787491035823884, closeness, TOLERANCE);
+            } else if (id == 2) {
+                assertEquals(0.0035327735482214143, closeness, TOLERANCE);
+            } else if (id == 4) {
+                assertEquals(0.0032353723348164448, closeness, TOLERANCE);
+            } else if (id == 5) {
+                assertEquals(0.003495002741097083, closeness, TOLERANCE);
+            } else {
+                LOGGER.error("Unexpected vertex {}", id);
+            }
         }
     }
 
-    @Test
-    public void weightedUndirectedTest() {
-        DataSet result = null;
-        try {
-            result = evaluate(dsf.getDataSource(GRAPH2D_EDGES),
-                              ValueFactory.createValue(LENGTH),
-                              GraphSchema.UNDIRECT);
-        } catch (Exception ex) {
+    private DataSet[] prepareTables() throws DataSourceCreationException,
+            NoSuchTableException, DriverException {
+        DataSource edges = dsf.getDataSource(GRAPH2D_EDGES);
+        edges.open();
+        MemoryDataSetDriver newEdges = introduceDefaultOrientations(edges);
+        DataSet[] tables = new DataSet[]{newEdges};
+        return tables;
+    }
+
+    private MemoryDataSetDriver introduceDefaultOrientations(DataSet edges)
+            throws DriverException {
+        DefaultMetadata newMetadata = new DefaultMetadata(edges.getMetadata());
+        newMetadata.addField(GraphSchema.EDGE_ORIENTATION,
+                             TypeFactory.createType(Type.INT));
+        MemoryDataSetDriver newEdges =
+                new MemoryDataSetDriver(newMetadata);
+        for (int i = 0; i < edges.getRowCount(); i++) {
+            Value[] oldRow = edges.getRow(i);
+            final Value[] newRow = new Value[newMetadata.getFieldCount()];
+            System.arraycopy(oldRow, 0, newRow, 0,
+                             newMetadata.getFieldCount() - 1);
+            newRow[newMetadata.getFieldCount() - 1] =
+                    ValueFactory.createValue(GraphCreator.DIRECTED_EDGE);
+            newEdges.addValues(newRow);
         }
-        // CHECK RESULTS
-        if (result != null) {
-            try {
-                for (int i = 0; i < result.getRowCount(); i++) {
-                    Value[] row = result.getRow(i);
-                    int id = row[0].getAsInt();
-                    double betweenness = row[1].getAsDouble();
-                    double closeness = row[2].getAsDouble();
-                    if (id == 2 || id == 4 || id == 5) {
-                        assertEquals(0.0, betweenness, TOLERANCE);
-                    } else if (id == 3) {
-                        assertEquals(1.0, betweenness, TOLERANCE);
-                    } else if (id == 1) {
-                        assertEquals(0.5714285714285714, betweenness, TOLERANCE);
-                    } else if (id == 6) {
-                        assertEquals(0.8571428571428571, betweenness, TOLERANCE);
-                    } else {
-                        LOGGER.error("Unexpected vertex {}", id);
-                    }
-                    if (id == 3 || id == 6) {
-                        assertEquals(0.0055753940798198886, closeness, TOLERANCE);
-                    } else if (id == 1) {
-                        assertEquals(0.003787491035823884, closeness, TOLERANCE);
-                    } else if (id == 2) {
-                        assertEquals(0.0035327735482214143, closeness, TOLERANCE);
-                    } else if (id == 4) {
-                        assertEquals(0.0032353723348164448, closeness, TOLERANCE);
-                    } else if (id == 5) {
-                        assertEquals(0.003495002741097083, closeness, TOLERANCE);
-                    } else {
-                        LOGGER.error("Unexpected vertex {}", id);
-                    }
-                }
-            } catch (DriverException ex) {
-                LOGGER.error("Problem checking results.");
-            }
-        } else {
-            throw new IllegalStateException("Null results!");
-        }
+        return newEdges;
     }
 }
