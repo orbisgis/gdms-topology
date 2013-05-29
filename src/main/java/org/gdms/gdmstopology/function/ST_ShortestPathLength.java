@@ -32,6 +32,7 @@
  */
 package org.gdms.gdmstopology.function;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -63,7 +64,6 @@ import org.javanetworkanalyzer.model.Edge;
 import org.javanetworkanalyzer.model.KeyedGraph;
 import org.orbisgis.progress.ProgressMonitor;
 import org.slf4j.LoggerFactory;
-import scala.actors.threadpool.Arrays;
 
 /**
  * Function for calculating distances (shortest path lengths).
@@ -82,7 +82,7 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
     public static final String DIRECTED = "directed";
     public static final String REVERSED = "reversed";
     public static final String UNDIRECTED = "undirected";
-    private static final String EDGE_ORIENTATION_COLUMN = "edge_orientation_column";
+    public static final String EDGE_ORIENTATION_COLUMN = "edge_orientation_column";
     private static final String POSSIBLE_ORIENTATIONS =
             "[, '" + DIRECTED + " - " + EDGE_ORIENTATION_COLUMN + "' "
             + "| '" + REVERSED + " - " + EDGE_ORIENTATION_COLUMN + "' "
