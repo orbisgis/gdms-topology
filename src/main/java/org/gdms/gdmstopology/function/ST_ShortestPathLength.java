@@ -82,8 +82,8 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
     public static final String DIRECTED = "directed";
     public static final String REVERSED = "reversed";
     public static final String UNDIRECTED = "undirected";
-    private static final String EDGE_ORIENTATION_COLUMN = "edge_orientation_column";
-    private static final String POSSIBLE_ORIENTATIONS =
+    public static final String EDGE_ORIENTATION_COLUMN = "edge_orientation_column";
+    public static final String POSSIBLE_ORIENTATIONS =
             "[, '" + DIRECTED + " - " + EDGE_ORIENTATION_COLUMN + "' "
             + "| '" + REVERSED + " - " + EDGE_ORIENTATION_COLUMN + "' "
             + "| '" + UNDIRECTED + "']";
