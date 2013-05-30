@@ -51,31 +51,7 @@ import org.gdms.sql.function.table.TableFunctionSignature;
 import org.orbisgis.progress.ProgressMonitor;
 
 /**
- * Calculates the connected components of a given graph.
- *
- * <p> Creates a new table called
- * <code>connected_components</code> which lists all the vertices and to which
- * connected component they belong.
- *
- * <p> Example usage: <center>
- * <code>
- * SELECT * FROM ST_ConnectedComponents(input_table, 'weights_column'
- * [, orientation]);
- * </code> </center>
- *
- * <p> Required parameters: <ul> <li>
- * <code>input_table</code> - the input table. Specifically, this is the
- * <code>output_table_prefix.edges</code> table produced by {@link ST_Graph},
- * except that an additional column specifying the weight of each edge must be
- * added.
- * <li>
- * <code>'weights_column'</code> - the weights column.</ul>
- * <p> Optional parameter: <ul> <li>
- * <code>orientation</code> - an integer specifying the orientation of the
- * graph: <ul> <li> 1 if the graph is directed, <li> 2 if it is directed and we
- * wish to reverse the orientation of the edges, <li> 3 if the graph is
- * undirected. </ul> If no orientation is specified, we assume the graph is
- * directed. </ul>
+ * Calculates the connected components of the given <b>undirected</b> graph.
  *
  * @author Adam Gouge
  */
@@ -89,70 +65,28 @@ public class ST_ConnectedComponents extends AbstractTableFunction {
      * The SQL order of this function.
      */
     private static final String SQL_ORDER =
-            "SELECT * FROM ST_ConnectedComponents("
-            + "input_table, "
-            + "'weights_column'"
-            + "[, orientation]);";
+            "SELECT * FROM " + NAME + "(edges);";
     /**
      * Short description of this function.
      */
     private static final String SHORT_DESCRIPTION =
-            "Calculates the connected components of a given graph. ";
+            "Calculates the connected components of the given "
+            + "<b>undirected</b> graph. ";
     /**
      * Long description of this function.
      */
     private static final String LONG_DESCRIPTION =
-            "<p> "
-            + "Creates a new table called "
-            + "<code>connected_components</code> "
-            + "which lists all the vertices and to which "
-            + "connected component they belong. "
-            + "<p> "
-            + "Required parameters: "
-            + "<ul> "
-            + "<li> "
-            + "<code>input_table</code> - the input table. "
-            + "Specifically, this is the "
-            + "<code>output_table_prefix.edges</code> "
-            + "table produced by "
-            + "<code>ST_Graph</code>. "
-            + "<li> "
-            + "<code>'weights_column'</code> - the name of the weights "
-            + "column. </ul>"
-            + "<p> "
-            + "Optional parameter: "
-            + "<ul> "
-            + "<li> "
-            + "<code>orientation</code> - "
-            + "an integer specifying the orientation of the graph: "
-            + "<ul> "
-            + "<li> 1 if the graph is directed, "
-            + "<li> 2 if it is directed and we wish to reverse the "
-            + "orientation of the edges, "
-            + "<li> 3 if the graph is undirected. "
-            + "</ul> " // end orientation list
-            + "If no orientation is specified, we assume the graph is"
-            + "directed. "
-            + "</ul> "; // end required parameters list
+            "<p> Lists every vertex and to which connected component it belongs."
+            + "<p> Required parameter: "
+            + "<ul> <li> "
+            + "<code>output.edges</code> - the input table. Specifically, "
+            + "this is the <code>output.edges</code> table "
+            + "produced by <code>ST_Graph</code>. </ul>";
     /**
      * Description of this function.
      */
     private static final String DESCRIPTION =
             SHORT_DESCRIPTION + LONG_DESCRIPTION;
-    // OPTIONAL ARGUMENT
-    /**
-     * Specifies the orientation of the graph (default: directed).
-     */
-    private int orientation = GraphSchema.DIRECT;
-    /**
-     * An error message to be displayed when {@link #evaluate(
-     * org.gdms.data.DataSourceFactory,
-     * org.gdms.driver.DataSet[],
-     * org.gdms.data.values.Value[],
-     * org.orbisgis.progress.ProgressMonitor) evaluate} fails.
-     */
-    private static final String EVALUATE_ERROR =
-            "Cannot compute the connected components.";
 
     /**
      * Evaluates the function to calculate the connected components of a graph.
@@ -169,52 +103,13 @@ public class ST_ConnectedComponents extends AbstractTableFunction {
             DataSourceFactory dsf,
             DataSet[] tables,
             Value[] values,
-            ProgressMonitor pm)
-            throws FunctionException {
-        try {
-            // Recover the DataSet.
-            final DataSet dataSet = tables[0];
-            // Set the weights column name.
-            final String weightsColumn = values[0].getAsString();
-            // Get the orientation
-            if (values.length > 1) {
-                parseOptionalArgument(values[1]);
-            }
-            // Return a new table listing all the vertices and to which
-            // connected component they belong.
-            return new GraphConnectivityInspector(
-                    dsf,
-                    pm,
-                    dataSet,
-                    orientation,
-                    weightsColumn).prepareDataSet();
-        } catch (Exception ex) {
-            System.out.println(ex);
-            throw new FunctionException(EVALUATE_ERROR, ex);
-        }
-    }
-
-    /**
-     * Parse the optional function argument at the given index.
-     *
-     * @param values Array containing the other arguments.
-     * @param index  The index.
-     *
-     * @throws FunctionException
-     */
-    private void parseOptionalArgument(Value value) throws
-            FunctionException {
-        final int slotType = value.getType();
-        if (slotType == Type.INT) {
-            orientation = GraphFunctionParser.parseOrientation(value);
-            if (!GraphFunctionParser.validOrientation(orientation)) {
-                throw new FunctionException(
-                        "Please enter a valid orientation: 1, 2 or 3.");
-            }
-        } else {
-            throw new FunctionException(
-                    "Please enter an integer orientation.");
-        }
+            ProgressMonitor pm) {
+        // Return a new table listing all the vertices and to which
+        // connected component they belong.
+        return new GraphConnectivityInspector(
+                dsf,
+                pm,
+                tables[0]).prepareDataSet();
     }
 
     /**
@@ -247,18 +142,9 @@ public class ST_ConnectedComponents extends AbstractTableFunction {
     @Override
     public FunctionSignature[] getFunctionSignatures() {
         return new FunctionSignature[]{
-            // No orientation specified.
             new TableFunctionSignature(
             TableDefinition.ANY,
-            TableArgument.GEOMETRY,
-            ScalarArgument.STRING),
-            // Specify orientation.
-            new TableFunctionSignature(
-            TableDefinition.ANY,
-            TableArgument.GEOMETRY,
-            ScalarArgument.STRING,
-            ScalarArgument.INT)
-        };
+            TableArgument.GEOMETRY)};
     }
 
     /**
