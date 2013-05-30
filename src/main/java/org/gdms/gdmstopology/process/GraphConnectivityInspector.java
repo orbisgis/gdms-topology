@@ -32,6 +32,7 @@
  */
 package org.gdms.gdmstopology.process;
 
+import java.util.List;
 import java.util.Set;
 import org.gdms.data.DataSourceFactory;
 import org.gdms.data.schema.DefaultMetadata;
@@ -64,14 +65,9 @@ import org.slf4j.LoggerFactory;
 public class GraphConnectivityInspector extends FunctionHelper {
 
     /**
-     * The data set.
+     * The edges data set.
      */
-    protected final DataSet dataSet;
-    /**
-     * Error message when the inspector cannot be prepared.
-     */
-    protected static final String INSPECTOR_PREP_ERROR =
-            "Could not prepare the connectivity inspector.";
+    protected final DataSet edges;
     /**
      * Metadata for
      * {@link org.gdms.gdmstopology.function.ST_ConnectedComponents}.
@@ -98,22 +94,19 @@ public class GraphConnectivityInspector extends FunctionHelper {
      */
     public GraphConnectivityInspector(DataSourceFactory dsf,
                                       ProgressMonitor pm,
-                                      DataSet dataSet) {
+                                      DataSet edges) {
         super(dsf, pm);
-        this.dataSet = dataSet;
+        this.edges = edges;
     }
 
     /**
      * Returns a JGraphT {@link ConnectivityInspector} on a given graph.
      *
      * @return A {@link ConnectivityInspector} on the given graph.
-     *
-     * @throws DriverException
-     * @throws GraphException
      */
-    private ConnectivityInspector<VUBetw, Edge> getConnectivityInspector() {
+    protected Object getConnectivityInspector() {
         KeyedGraph<VUBetw, Edge> g =
-                new GraphCreator<VUBetw, Edge>(dataSet, GraphSchema.UNDIRECT,
+                new GraphCreator<VUBetw, Edge>(edges, GraphSchema.UNDIRECT,
                                                VUBetw.class, Edge.class)
                 .prepareGraph();
         return new ConnectivityInspector<VUBetw, Edge>(
@@ -127,13 +120,22 @@ public class GraphConnectivityInspector extends FunctionHelper {
 
     @Override
     protected void computeAndStoreResults(DiskBufferDriver driver) {
+        storeResults(
+                ((ConnectivityInspector<VUBetw, Edge>) getConnectivityInspector()).
+                connectedSets(), driver);
+    }
 
-        ConnectivityInspector<VUBetw, Edge> inspector = getConnectivityInspector();
-
-        int connectedComponentNumber = 1;
-
+    /**
+     * Stores each node with its connected component number in the given driver.
+     *
+     * @param connectedSets The connected sets
+     * @param driver        The driver
+     */
+    protected void storeResults(List<Set<VUBetw>> connectedSets,
+                                DiskBufferDriver driver) {
         // Record the connected components in the DiskBufferDriver.
-        for (Set<VUBetw> set : inspector.connectedSets()) {
+        int connectedComponentNumber = 1;
+        for (Set<VUBetw> set : connectedSets) {
             for (VUBetw node : set) {
                 try {
                     driver.addValues(
