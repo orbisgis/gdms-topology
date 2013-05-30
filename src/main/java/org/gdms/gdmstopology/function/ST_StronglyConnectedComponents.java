@@ -43,6 +43,7 @@ import static org.gdms.gdmstopology.function.ST_ShortestPathLength.REVERSED;
 import org.gdms.gdmstopology.process.GraphConnectivityInspector;
 import org.gdms.gdmstopology.process.GraphStrongConnectivityInspector;
 import org.gdms.sql.function.FunctionSignature;
+import org.gdms.sql.function.ScalarArgument;
 import org.gdms.sql.function.table.AbstractTableFunction;
 import org.gdms.sql.function.table.TableArgument;
 import org.gdms.sql.function.table.TableDefinition;
@@ -153,7 +154,8 @@ public class ST_StronglyConnectedComponents extends AbstractTableFunction {
         return new FunctionSignature[]{
             new TableFunctionSignature(
             TableDefinition.ANY,
-            TableArgument.GEOMETRY)};
+            TableArgument.GEOMETRY,
+            ScalarArgument.STRING)};
     }
 
     /**
