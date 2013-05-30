@@ -41,7 +41,6 @@ import static org.gdms.gdmstopology.centrality.GraphAnalyzer.ANALYZER_PREP_ERROR
 import static org.gdms.gdmstopology.centrality.GraphAnalyzer.LOGGER;
 import org.gdms.gdmstopology.graphcreator.GraphCreator;
 import org.gdms.gdmstopology.model.GraphException;
-import org.gdms.gdmstopology.model.GraphSchema;
 import org.javanetworkanalyzer.data.UnweightedPathLengthData;
 import org.javanetworkanalyzer.model.Edge;
 import org.orbisgis.progress.ProgressMonitor;
@@ -53,6 +52,8 @@ import org.orbisgis.progress.ProgressMonitor;
  */
 public class UnweightedGraphAnalyzer
         extends GraphAnalyzer<VUBetw, Edge, UnweightedPathLengthData> {
+
+    protected final String edgeOrientationColumnName;
 
     /**
      * Constructs a new {@link UnweightedGraphAnalyzer}.
@@ -70,10 +71,30 @@ public class UnweightedGraphAnalyzer
     public UnweightedGraphAnalyzer(
             DataSourceFactory dsf,
             DataSet dataSet, ProgressMonitor pm,
-            int orientation)
-            throws DriverException,
-            GraphException {
+            int orientation,
+            String edgeOrientationColumnName) {
         super(dsf, dataSet, pm, orientation);
+        this.edgeOrientationColumnName = edgeOrientationColumnName;
+    }
+
+    /**
+     * Constructs a new {@link UnweightedGraphAnalyzer}.
+     *
+     * @param dsf         The {@link DataSourceFactory} used to parse the data
+     *                    set.
+     * @param dataSet     The data set.
+     * @param pm          The progress monitor used to track the progress of the
+     *                    calculation.
+     * @param orientation The orientation.
+     *
+     * @throws DriverException
+     * @throws GraphException
+     */
+    public UnweightedGraphAnalyzer(
+            DataSourceFactory dsf,
+            DataSet dataSet, ProgressMonitor pm,
+            int orientation) {
+        this(dsf, dataSet, pm, orientation, null);
     }
 
     /**
@@ -85,6 +106,7 @@ public class UnweightedGraphAnalyzer
             return new org.javanetworkanalyzer.analyzers.UnweightedGraphAnalyzer(
                     new GraphCreator(dataSet,
                                      orientation,
+                                     edgeOrientationColumnName,
                                      VUBetw.class,
                                      Edge.class).prepareGraph(),
                     new DefaultProgressMonitor());
