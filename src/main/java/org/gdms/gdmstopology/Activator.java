@@ -41,6 +41,7 @@ import org.gdms.gdmstopology.function.ST_MFindReachableEdges;
 import org.gdms.gdmstopology.function.ST_MShortestPath;
 import org.gdms.gdmstopology.function.ST_PlanarGraph;
 import org.gdms.gdmstopology.function.ST_ShortestPath;
+import org.gdms.gdmstopology.function.ST_StronglyConnectedComponents;
 import org.gdms.gdmstopology.function.ST_SubGraphStatistics;
 import org.gdms.gdmstopology.function.ST_ToLineNoder;
 import org.gdms.sql.function.Function;
@@ -69,6 +70,7 @@ public class Activator implements BundleActivator {
         reg(new ST_MShortestPath());
         reg(new ST_SubGraphStatistics());
         reg(new ST_ConnectedComponents());
+        reg(new ST_StronglyConnectedComponents());
         reg(new ST_GraphAnalysis());
         reg(new ST_StrahlerStreamOrder());
         reg(new ST_ShortestPathLength());

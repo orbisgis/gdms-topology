@@ -32,14 +32,21 @@
  */
 package org.gdms.gdmstopology.centrality;
 
+import java.util.Arrays;
 import org.gdms.data.DataSourceFactory;
 import org.gdms.data.schema.Metadata;
+import org.gdms.data.types.Type;
 import org.gdms.data.values.Value;
 import org.gdms.driver.DataSet;
 import org.gdms.driver.DriverException;
+import org.gdms.gdmstopology.function.ST_ShortestPathLength;
+import static org.gdms.gdmstopology.function.ST_ShortestPathLength.DIRECTED;
+import static org.gdms.gdmstopology.function.ST_ShortestPathLength.REVERSED;
+import static org.gdms.gdmstopology.function.ST_ShortestPathLength.SEPARATOR;
+import static org.gdms.gdmstopology.function.ST_ShortestPathLength.UNDIRECTED;
+import org.gdms.gdmstopology.graphcreator.GraphCreator;
 import org.gdms.gdmstopology.model.GraphException;
 import org.gdms.gdmstopology.model.GraphSchema;
-import org.gdms.gdmstopology.parse.GraphFunctionParser;
 import org.gdms.gdmstopology.utils.ArrayConcatenator;
 import org.gdms.sql.function.FunctionException;
 import org.gdms.sql.function.FunctionSignature;
@@ -48,6 +55,7 @@ import org.gdms.sql.function.executor.ExecutorFunctionSignature;
 import org.gdms.sql.function.table.AbstractTableFunction;
 import org.gdms.sql.function.table.TableArgument;
 import org.orbisgis.progress.ProgressMonitor;
+import org.slf4j.LoggerFactory;
 
 /**
  * SQL function to perform graph analysis on all nodes of a given graph.
@@ -56,30 +64,6 @@ import org.orbisgis.progress.ProgressMonitor;
  * node, all possible shortest paths to all the other nodes (we assume the graph
  * is connected). These calculations are intense and can take a long time to
  * complete.
- *
- * <p> Example usage: <center> {@code EXECUTE ST_GraphAnalysis(
- * input_table,
- * 'weights_column'
- * [,'output_table_prefix']
- * [,orientation]);} </center> or: <center> {@code EXECUTE ST_GraphAnalysis(
- * input_table,
- * 1,
- * [,'output_table_prefix']
- * [,orientation]);} </center>
- *
- * <p> Required parameters: <ul> <li> {@code input_table} - the input table.
- * Specifically, this is the {@code output_table_prefix.edges} table produced by
- * {@link ST_Graph}, with an optional additional column specifying the weight of
- * each edge. <li> {@code 'weights_column'} - either a string specifying the
- * name of the column of the input table that gives the weight of each edge, or
- * 1 if the graph is to be considered unweighted. </ul>
- *
- * <p> Optional parameters: <ul> <li> {@code 'output_table_prefix'} - a string
- * used to prefix the name of the output table. <li> {@code orientation} - an
- * integer specifying the orientation of the graph: <ul> <li> 1 if the graph is
- * directed, <li> 2 if it is directed and we wish to reverse the orientation of
- * the edges. <li> 3 if it is undirected. </ul> The default orientation is
- * directed. </ul>
  *
  * @author Adam Gouge
  */
@@ -92,15 +76,16 @@ public class ST_GraphAnalysis extends AbstractTableFunction {
     /**
      * The SQL order of this function.
      */
-    private static final String SQL_ORDER = "SELECT * FROM ST_GraphAnalysis("
-            + "input_table, "
-            + "'weights_column'"
-            + "[, orientation]);";
+    private static final String SQL_ORDER =
+            "SELECT * FROM " + NAME + "("
+            + "output.edges"
+            + "[, 'weights_column']"
+            + ST_ShortestPathLength.POSSIBLE_ORIENTATIONS + ");";
     /**
      * Short description of this function.
      */
     private static final String SHORT_DESCRIPTION =
-            "Performs graph analysis on all nodes of a given graph.";
+            "Performs graph analysis on all nodes of the given graph.";
     /**
      * Long description of this function.
      */
@@ -111,65 +96,53 @@ public class ST_GraphAnalysis extends AbstractTableFunction {
             + "calculations are intense and can take a long time to complete."
             + "<p> Example usage: "
             + "<center> "
-            + "<code>EXECUTE ST_GraphAnalysis("
-            + "input_table, "
-            + "'weights_column'"
-            + "[, 'output_table_prefix']"
-            + "[, orientation]);</code> </center> "
-            + "or: <center> "
-            + "<code>EXECUTE ST_GraphAnalysis("
-            + "input_table, "
-            + "1"
-            + "[, 'output_table_prefix']"
-            + "[, orientation]);</code> </center>"
-            + "<p> Required parameters: "
+            + "<code>" + SQL_ORDER + "</code> </center> "
+            + "<p> Required parameter: "
             + "<ul> "
-            + "<li> <code>input_table</code> - the input table. Specifically, "
-            + "this is the <code>output_table_prefix.edges</code> table "
+            + "<li> <code>output.edges</code> - the input table. The "
+            + "<code>output_table_prefix.edges</code> table "
             + "produced by <code>ST_Graph</code>, with an optional additional "
-            + "column specifying the weight of each edge. "
-            + "<li> <code>'weights_column'</code> - either a string specifying "
-            + "the name of the column of the input table that gives the weight "
-            + "of each edge, or 1 if the graph is to be considered unweighted. "
-            + "</ul>"
-            + "<p> Optional parameter: "
+            + "column specifying the weight of each edge and an optional "
+            + "additional column specifying the orientation of each edge:"
+            + "<ul><li> " + GraphCreator.DIRECTED_EDGE + " directed"
+            + "<li> " + GraphCreator.REVERSED_EDGE + " reversed"
+            + "<li> " + GraphCreator.UNDIRECTED_EDGE + " undirected. </ul></ul>"
+            + "<p> Optional parameters: "
             + "<ul> "
-            + "<li> <code>orientation</code> - an integer specifying the "
+            + "<li> <code>'weights_column'</code> - a string specifying "
+            + "the name of the column of the input table that gives the weight "
+            + "of each edge. If omitted, the graph is considered to be unweighted. "
+            + "<li> <code>orientation</code> - a string specifying the "
             + "orientation of the graph: "
             + "<ul> "
-            + "<li> 1 if the graph is directed, "
-            + "<li> 2 if it is directed and we wish to reverse the orientation "
-            + "of the edges. "
-            + "<li> 3 if the graph is undirected, "
-            + "</ul> The default orientation is directed. </ul>";
+            + "<li> '" + DIRECTED + " - " + ST_ShortestPathLength.EDGE_ORIENTATION_COLUMN + "' "
+            + "<li> '" + REVERSED + " - " + ST_ShortestPathLength.EDGE_ORIENTATION_COLUMN + "' "
+            + "<li> '" + UNDIRECTED + "'."
+            + "</ul> The default orientation is " + DIRECTED + " with edge "
+            + "orientations given by the geometries, though edge orientations "
+            + "should most definitely be provided by the user. </ul>";
     /**
      * Description of this function.
      */
     private static final String DESCRIPTION =
             SHORT_DESCRIPTION + LONG_DESCRIPTION;
     /**
-     * An error message to be displayed when {@link #evaluate(
-     * org.gdms.data.DataSourceFactory,
-     * org.gdms.driver.DataSet[],
-     * org.gdms.data.values.Value[],
-     * org.orbisgis.progress.ProgressMonitor) evaluate} fails.
+     * Weight column name.
      */
-    private static final String EVALUATE_ERROR =
-            "Cannot perform graph analysis.";
-    /*
-     * The number of required arguments;
-     */
-    private static final int NUMBER_OF_REQUIRED_ARGUMENTS = 1;
-    // REQUIRED ARGUMENT
+    private String weightsColumn = null;
     /**
-     * Specifies the weight column (or 1 in the case of an unweighted graph).
+     * Global orientation string.
      */
-    private String weightsColumn;
-    // OPTIONAL ARGUMENT
+    private String globalOrientation = null;
     /**
-     * Specifies the orientation of the graph.
+     * Edge orientation string.
      */
-    private int orientation = -1;
+    private String edgeOrientationColumnName = null;
+    /**
+     * Logger.
+     */
+    private static final org.slf4j.Logger LOGGER =
+            LoggerFactory.getLogger(ST_GraphAnalysis.class);
 
     /**
      * Evaluates the function to calculate the centrality indices.
@@ -190,53 +163,51 @@ public class ST_GraphAnalysis extends AbstractTableFunction {
             DataSourceFactory dsf,
             DataSet[] tables,
             Value[] values,
-            ProgressMonitor pm)
-            throws FunctionException {
-        try {
-            // REQUIRED PARAMETERS
-
-            // FIRST PARAMETER: Recover the DataSet. There is only one table.
-            final DataSet dataSet = tables[0];
-
-            // SECOND PARAMETER: Either 1 or weight column name.
-            weightsColumn = GraphFunctionParser.parseWeight(values[0]);
-
-            // OPTIONAL PARAMETER: [, orientation]
-            orientation = (values.length == 2)
-                    ? GraphFunctionParser.parseOrientation(values[1])
-                    : GraphSchema.DIRECT;
-            // Take all user-entered values into account when doing
-            // graph analysis.
-            return doAnalysisAccordingToUserInput(dsf, dataSet, pm);
-        } catch (Exception ex) {
-            throw new FunctionException(EVALUATE_ERROR, ex);
-        }
+            ProgressMonitor pm) {
+        final DataSet edges = tables[0];
+        parseArguments(edges, tables, values);
+        return doAnalysisAccordingToUserInput(dsf, edges, pm);
     }
 
     /**
      * Registers closeness centrality according to the SQL arguments provided by
      * the user.
      *
-     * @param dsf     The {@link DataSourceFactory} used to parse the data set.
-     * @param dataSet The input table.
-     * @param pm      The progress monitor used to track the progress of the
-     *                calculation.
+     * @param dsf   The {@link DataSourceFactory} used to parse the data set.
+     * @param edges The edges table.
+     * @param pm    The progress monitor used to track the progress of the
+     *              calculation.
      *
      * @throws GraphException
      * @throws DriverException
      */
     private DataSet doAnalysisAccordingToUserInput(
             DataSourceFactory dsf,
-            DataSet dataSet,
-            ProgressMonitor pm)
-            throws DriverException, GraphException {
+            DataSet edges,
+            ProgressMonitor pm) {
+        // Get the graph orientation.
+        int graphType = -1;
+        if (globalOrientation != null) {
+            graphType = globalOrientation.equalsIgnoreCase(DIRECTED)
+                    ? GraphSchema.DIRECT
+                    : globalOrientation.equalsIgnoreCase(REVERSED)
+                    ? GraphSchema.DIRECT_REVERSED
+                    : globalOrientation.equalsIgnoreCase(UNDIRECTED)
+                    ? GraphSchema.UNDIRECT
+                    : -1;
+        } else if (graphType == -1) {
+            LOGGER.warn("Assuming a directed graph.");
+            graphType = GraphSchema.DIRECT;
+        }
+
         GraphAnalyzer analyzer = (weightsColumn == null)
                 ? // Unweighted graph
                 new UnweightedGraphAnalyzer(
-                dsf, dataSet, pm, orientation)
+                dsf, edges, pm, graphType, edgeOrientationColumnName)
                 : // Weighted graph
                 new WeightedGraphAnalyzer(
-                dsf, dataSet, pm, orientation, weightsColumn);
+                dsf, edges, pm, graphType, edgeOrientationColumnName,
+                weightsColumn);
         return analyzer.prepareDataSet();
     }
 
@@ -346,5 +317,87 @@ public class ST_GraphAnalysis extends AbstractTableFunction {
     @Override
     public Metadata getMetadata(Metadata[] tables) throws DriverException {
         return GraphAnalyzer.MD;
+    }
+
+    /**
+     * Parse all possible arguments for {@link ST_ShortestPathLength}.
+     *
+     * @param tables Input table(s)
+     * @param values Arguments
+     */
+    private void parseArguments(DataSet edges, DataSet[] tables, Value[] values) {
+        int argIndex = 0;
+        while (values.length > argIndex) {
+            parseStringArgument(edges, values[argIndex++]);
+        }
+    }
+
+    /**
+     * Parse possible String arguments, namely weight and orientation.
+     *
+     * @param value A given argument to parse.
+     */
+    // TODO: Unify this with ST_ShortestPathLength#parseStringArgument.
+    private void parseStringArgument(DataSet edges, Value value) {
+        if (value.getType() == Type.STRING) {
+            String v = value.getAsString();
+            // See if this is a directed (or reversed graph.
+            if ((v.toLowerCase().contains(DIRECTED)
+                 && !v.toLowerCase().contains(UNDIRECTED))
+                || v.toLowerCase().contains(REVERSED)) {
+                if (!v.contains(SEPARATOR)) {
+                    throw new IllegalArgumentException(
+                            "Please separate either '" + DIRECTED
+                            + "' or '" + REVERSED + "' and the name of the "
+                            + "edge orientation column by a '" + SEPARATOR + "'.");
+                } else {
+                    // Extract the global and edge orientations.
+                    String[] globalAndEdgeOrientations = v.split(SEPARATOR);
+                    if (globalAndEdgeOrientations.length == 2) {
+                        // And remove whitespace.
+                        globalOrientation = globalAndEdgeOrientations[0]
+                                .replaceAll("\\s", "");
+                        edgeOrientationColumnName = globalAndEdgeOrientations[1]
+                                .replaceAll("\\s", "");
+                        try {
+                            // Make sure this column exists.
+                            if (!Arrays.asList(edges.getMetadata().
+                                    getFieldNames())
+                                    .contains(edgeOrientationColumnName)) {
+                                throw new IllegalArgumentException(
+                                        "Column '" + edgeOrientationColumnName
+                                        + "' not found in the edges table.");
+                            }
+                        } catch (DriverException ex) {
+                            LOGGER.error("Problem verifying existence of "
+                                         + "column {}.",
+                                         edgeOrientationColumnName);
+                        }
+                        LOGGER.info(
+                                "Global orientation = '{}', edge orientation "
+                                + "column name = '{}'.", globalOrientation,
+                                edgeOrientationColumnName);
+                        // TODO: Throw an exception if no edge orientations are given.
+                    } else {
+                        throw new IllegalArgumentException(
+                                "You must specify both global and edge orientations for "
+                                + "directed or reversed graphs. Separate them by "
+                                + "a '" + SEPARATOR + "'.");
+                    }
+                }
+            } else if (v.toLowerCase().contains(UNDIRECTED)) {
+                globalOrientation = UNDIRECTED;
+                if (!v.equalsIgnoreCase(UNDIRECTED)) {
+                    LOGGER.warn("Edge orientations are ignored for undirected "
+                                + "graphs.");
+                }
+            } else {
+                LOGGER.info("Weights column name = '{}'.", v);
+                weightsColumn = v;
+            }
+        } else {
+            throw new IllegalArgumentException("Weights and orientation "
+                                               + "must be specified as strings.");
+        }
     }
 }

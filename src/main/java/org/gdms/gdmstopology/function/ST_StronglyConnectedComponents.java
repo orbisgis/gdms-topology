@@ -34,14 +34,14 @@ package org.gdms.gdmstopology.function;
 
 import org.gdms.data.DataSourceFactory;
 import org.gdms.data.schema.Metadata;
-import org.gdms.data.types.Type;
 import org.gdms.data.values.Value;
 import org.gdms.driver.DataSet;
 import org.gdms.driver.DriverException;
-import org.gdms.gdmstopology.model.GraphSchema;
-import org.gdms.gdmstopology.parse.GraphFunctionParser;
+import static org.gdms.gdmstopology.function.ST_ShortestPathLength.DIRECTED;
+import static org.gdms.gdmstopology.function.ST_ShortestPathLength.EDGE_ORIENTATION_COLUMN;
+import static org.gdms.gdmstopology.function.ST_ShortestPathLength.REVERSED;
 import org.gdms.gdmstopology.process.GraphConnectivityInspector;
-import org.gdms.sql.function.FunctionException;
+import org.gdms.gdmstopology.process.GraphStrongConnectivityInspector;
 import org.gdms.sql.function.FunctionSignature;
 import org.gdms.sql.function.ScalarArgument;
 import org.gdms.sql.function.table.AbstractTableFunction;
@@ -49,34 +49,38 @@ import org.gdms.sql.function.table.TableArgument;
 import org.gdms.sql.function.table.TableDefinition;
 import org.gdms.sql.function.table.TableFunctionSignature;
 import org.orbisgis.progress.ProgressMonitor;
+import org.slf4j.LoggerFactory;
 
 /**
- * Calculates the connected components of the given <b>undirected</b> graph.
+ * Calculates the strongly connected components of the given <b>directed</b>
+ * graph.
  *
  * @author Adam Gouge
  */
-public class ST_ConnectedComponents extends AbstractTableFunction {
+public class ST_StronglyConnectedComponents extends AbstractTableFunction {
 
     /**
      * The name of this function.
      */
-    private static final String NAME = "ST_ConnectedComponents";
+    private static final String NAME = "ST_StronglyConnectedComponents";
     /**
      * The SQL order of this function.
      */
     private static final String SQL_ORDER =
-            "SELECT * FROM " + NAME + "(edges);";
+            "SELECT * FROM " + NAME + "(edges, "
+            + "'" + DIRECTED + " - " + EDGE_ORIENTATION_COLUMN + "' "
+            + "| '" + REVERSED + " - " + EDGE_ORIENTATION_COLUMN + "');";
     /**
      * Short description of this function.
      */
     private static final String SHORT_DESCRIPTION =
-            "Calculates the connected components of the given "
-            + "<b>undirected</b> graph. ";
+            "Calculates the strongly connected components of the given "
+            + "<b>directed</b> graph. ";
     /**
      * Long description of this function.
      */
     private static final String LONG_DESCRIPTION =
-            "<p> Lists every vertex and to which connected component it belongs."
+            "<p> Lists every vertex and to which strongly connected component it belongs."
             + "<p> Required parameter: "
             + "<ul> <li> "
             + "<code>output.edges</code> - the input table. Specifically, "
@@ -87,6 +91,11 @@ public class ST_ConnectedComponents extends AbstractTableFunction {
      */
     private static final String DESCRIPTION =
             SHORT_DESCRIPTION + LONG_DESCRIPTION;
+    /**
+     * Logger.
+     */
+    private static final org.slf4j.Logger LOGGER =
+            LoggerFactory.getLogger(ST_StronglyConnectedComponents.class);
 
     /**
      * Evaluates the function to calculate the connected components of a graph.
@@ -106,10 +115,11 @@ public class ST_ConnectedComponents extends AbstractTableFunction {
             ProgressMonitor pm) {
         // Return a new table listing all the vertices and to which
         // connected component they belong.
-        return new GraphConnectivityInspector(
+        return new GraphStrongConnectivityInspector(
                 dsf,
                 pm,
-                tables[0]).prepareDataSet();
+                tables[0],
+                values[0]).prepareDataSet();
     }
 
     /**
@@ -144,7 +154,8 @@ public class ST_ConnectedComponents extends AbstractTableFunction {
         return new FunctionSignature[]{
             new TableFunctionSignature(
             TableDefinition.ANY,
-            TableArgument.GEOMETRY)};
+            TableArgument.GEOMETRY,
+            ScalarArgument.STRING)};
     }
 
     /**

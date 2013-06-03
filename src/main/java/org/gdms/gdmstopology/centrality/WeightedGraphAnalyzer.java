@@ -57,6 +57,7 @@ public class WeightedGraphAnalyzer
      * The name of the weight column.
      */
     private final String weightColumnName;
+    protected final String edgeOrientationColumnName;
 
     /**
      * Constructs a new {@link WeightedGraphAnalyzer}.
@@ -76,11 +77,33 @@ public class WeightedGraphAnalyzer
             DataSet dataSet,
             ProgressMonitor pm,
             int orientation,
-            String weightColumnName)
-            throws DriverException,
-            GraphException {
+            String edgeOrientationColumnName,
+            String weightColumnName) {
         super(dsf, dataSet, pm, orientation);
+        this.edgeOrientationColumnName = edgeOrientationColumnName;
         this.weightColumnName = weightColumnName;
+    }
+
+    /**
+     * Constructs a new {@link WeightedGraphAnalyzer}.
+     *
+     * @param dsf         The {@link DataSourceFactory} used to parse the data
+     *                    set.
+     * @param dataSet     The data set.
+     * @param pm          The progress monitor used to track the progress of the
+     *                    calculation.
+     * @param orientation The orientation.
+     *
+     * @throws DriverException
+     * @throws GraphException
+     */
+    public WeightedGraphAnalyzer(
+            DataSourceFactory dsf,
+            DataSet dataSet,
+            ProgressMonitor pm,
+            int orientation,
+            String weightColumnName) {
+        this(dsf, dataSet, pm, orientation, null, weightColumnName);
     }
 
     /**
@@ -92,6 +115,7 @@ public class WeightedGraphAnalyzer
             return new org.javanetworkanalyzer.analyzers.WeightedGraphAnalyzer(
                     new WeightedGraphCreator(dataSet,
                                              orientation,
+                                             edgeOrientationColumnName,
                                              VWBetw.class,
                                              Edge.class,
                                              weightColumnName).prepareGraph(),
