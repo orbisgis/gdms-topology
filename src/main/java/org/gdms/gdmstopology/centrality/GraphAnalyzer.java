@@ -32,7 +32,7 @@
  */
 package org.gdms.gdmstopology.centrality;
 
-import org.javanetworkanalyzer.data.VBetw;
+import org.javanetworkanalyzer.data.VCent;
 import java.util.Map;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -58,7 +58,7 @@ import org.orbisgis.progress.ProgressMonitor;
  *
  * @author Adam Gouge
  */
-public abstract class GraphAnalyzer<V extends VBetw, E, S extends PathLengthData>
+public abstract class GraphAnalyzer<V extends VCent, E, S extends PathLengthData>
         extends FunctionHelper {
 
     /**

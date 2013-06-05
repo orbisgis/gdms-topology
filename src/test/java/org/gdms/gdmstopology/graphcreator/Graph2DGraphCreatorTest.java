@@ -38,9 +38,9 @@ import org.gdms.data.DataSourceCreationException;
 import org.gdms.data.NoSuchTableException;
 import org.gdms.driver.DriverException;
 import org.gdms.gdmstopology.TopologySetupTest;
-import org.javanetworkanalyzer.data.VBetw;
-import org.javanetworkanalyzer.data.VUBetw;
-import org.javanetworkanalyzer.data.VWBetw;
+import org.javanetworkanalyzer.data.VCent;
+import org.javanetworkanalyzer.data.VUCent;
+import org.javanetworkanalyzer.data.VWCent;
 import org.javanetworkanalyzer.model.Edge;
 import org.javanetworkanalyzer.model.KeyedGraph;
 import static org.javanetworkanalyzer.graphcreators.GraphCreator.REVERSED;
@@ -67,7 +67,7 @@ public class Graph2DGraphCreatorTest extends TopologySetupTest {
     public void unweightedDirected() {
         try {
             System.out.println("\n***** 2D Unweighted Directed *****");
-            KeyedGraph<? extends VBetw, Edge> graph =
+            KeyedGraph<? extends VCent, Edge> graph =
                     load2DGraph(false, DIRECTED);
             printEdges(graph);
         } catch (Exception ex) {
@@ -78,7 +78,7 @@ public class Graph2DGraphCreatorTest extends TopologySetupTest {
     public void unweightedReversed() {
         try {
             System.out.println("***** 2D Unweighted Reversed *****");
-            KeyedGraph<? extends VBetw, Edge> graph =
+            KeyedGraph<? extends VCent, Edge> graph =
                     load2DGraph(false, REVERSED);
             printEdges(graph);
         } catch (Exception ex) {
@@ -89,7 +89,7 @@ public class Graph2DGraphCreatorTest extends TopologySetupTest {
     public void unweightedUndirected() {
         try {
             System.out.println("***** 2D Unweighted Undirected *****");
-            KeyedGraph<? extends VBetw, Edge> graph =
+            KeyedGraph<? extends VCent, Edge> graph =
                     load2DGraph(false, UNDIRECTED);
             printEdges(graph);
         } catch (Exception ex) {
@@ -100,7 +100,7 @@ public class Graph2DGraphCreatorTest extends TopologySetupTest {
     public void weightedDirected() {
         try {
             System.out.println("***** 2D Weighted Directed *****");
-            KeyedGraph<? extends VBetw, Edge> graph =
+            KeyedGraph<? extends VCent, Edge> graph =
                     load2DGraph(true, DIRECTED);
             printEdges(graph);
         } catch (Exception ex) {
@@ -111,7 +111,7 @@ public class Graph2DGraphCreatorTest extends TopologySetupTest {
     public void weightedReversed() {
         try {
             System.out.println("***** 2D Weighted Reversed *****");
-            KeyedGraph<? extends VBetw, Edge> graph =
+            KeyedGraph<? extends VCent, Edge> graph =
                     load2DGraph(true, REVERSED);
             printEdges(graph);
         } catch (Exception ex) {
@@ -122,7 +122,7 @@ public class Graph2DGraphCreatorTest extends TopologySetupTest {
     public void weightedUndirected() {
         try {
             System.out.println("***** 2D Weighted Undirected *****");
-            KeyedGraph<? extends VBetw, Edge> graph =
+            KeyedGraph<? extends VCent, Edge> graph =
                     load2DGraph(true, UNDIRECTED);
             printEdges(graph);
         } catch (Exception ex) {
@@ -141,7 +141,7 @@ public class Graph2DGraphCreatorTest extends TopologySetupTest {
      *
      * @throws FileNotFoundException
      */
-    private KeyedGraph<? extends VBetw, Edge> load2DGraph(
+    private KeyedGraph<? extends VCent, Edge> load2DGraph(
             boolean weighted,
             int orientation) throws FileNotFoundException,
             NoSuchMethodException,
@@ -150,17 +150,17 @@ public class Graph2DGraphCreatorTest extends TopologySetupTest {
             DriverException {
         DataSource ds = get2DGraphDataSource();
         if (weighted) {
-            return new WeightedGraphCreator<VWBetw, Edge>(
+            return new WeightedGraphCreator<VWCent, Edge>(
                     ds,
                     orientation,
-                    VWBetw.class,
+                    VWCent.class,
                     Edge.class,
                     WEIGHT).prepareGraph();
         } else {
-            return new GraphCreator<VUBetw, Edge>(
+            return new GraphCreator<VUCent, Edge>(
                     ds,
                     orientation,
-                    VUBetw.class,
+                    VUCent.class,
                     Edge.class).prepareGraph();
         }
     }
@@ -171,7 +171,7 @@ public class Graph2DGraphCreatorTest extends TopologySetupTest {
      * @param graph The graph.
      */
     private void printEdges(
-            KeyedGraph<? extends VBetw, Edge> graph) {
+            KeyedGraph<? extends VCent, Edge> graph) {
         if (VERBOSE) {
             for (Edge edge : graph.edgeSet()) {
                 String edgeString = graph.getEdgeSource(edge).getID() + " ";

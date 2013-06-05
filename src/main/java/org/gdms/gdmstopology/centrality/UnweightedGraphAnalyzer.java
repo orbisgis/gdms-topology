@@ -32,7 +32,7 @@
  */
 package org.gdms.gdmstopology.centrality;
 
-import org.javanetworkanalyzer.data.VUBetw;
+import org.javanetworkanalyzer.data.VUCent;
 import org.javanetworkanalyzer.progress.DefaultProgressMonitor;
 import org.gdms.data.DataSourceFactory;
 import org.gdms.driver.DataSet;
@@ -51,7 +51,7 @@ import org.orbisgis.progress.ProgressMonitor;
  * @author Adam Gouge
  */
 public class UnweightedGraphAnalyzer
-        extends GraphAnalyzer<VUBetw, Edge, UnweightedPathLengthData> {
+        extends GraphAnalyzer<VUCent, Edge, UnweightedPathLengthData> {
 
     protected final String edgeOrientationColumnName;
 
@@ -107,7 +107,7 @@ public class UnweightedGraphAnalyzer
                     new GraphCreator(dataSet,
                                      orientation,
                                      edgeOrientationColumnName,
-                                     VUBetw.class,
+                                     VUCent.class,
                                      Edge.class).prepareGraph(),
                     new DefaultProgressMonitor());
         } catch (Exception ex) {

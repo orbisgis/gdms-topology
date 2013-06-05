@@ -47,7 +47,7 @@ import static org.gdms.gdmstopology.function.ST_ShortestPathLength.SEPARATOR;
 import static org.gdms.gdmstopology.function.ST_ShortestPathLength.UNDIRECTED;
 import org.gdms.gdmstopology.graphcreator.GraphCreator;
 import org.gdms.gdmstopology.model.GraphSchema;
-import org.javanetworkanalyzer.data.VUBetw;
+import org.javanetworkanalyzer.data.VUCent;
 import org.javanetworkanalyzer.model.Edge;
 import org.javanetworkanalyzer.model.KeyedGraph;
 import org.jgrapht.DirectedGraph;
@@ -99,12 +99,12 @@ public class GraphStrongConnectivityInspector extends GraphConnectivityInspector
     }
 
     @Override
-    protected StrongConnectivityInspector<VUBetw, Edge> getConnectivityInspector() {
-        return new StrongConnectivityInspector<VUBetw, Edge>(
-                (DirectedGraph<VUBetw, Edge>) prepareGraph());
+    protected StrongConnectivityInspector<VUCent, Edge> getConnectivityInspector() {
+        return new StrongConnectivityInspector<VUCent, Edge>(
+                (DirectedGraph<VUCent, Edge>) prepareGraph());
     }
 
-    protected KeyedGraph<VUBetw, Edge> prepareGraph() {
+    protected KeyedGraph<VUCent, Edge> prepareGraph() {
 
         parseStringArgument(edges, orientationArgument);
 
@@ -123,9 +123,9 @@ public class GraphStrongConnectivityInspector extends GraphConnectivityInspector
             graphType = GraphSchema.DIRECT;
         }
 
-        return new GraphCreator<VUBetw, Edge>(edges, graphType,
+        return new GraphCreator<VUCent, Edge>(edges, graphType,
                                               edgeOrientationColumnName,
-                                              VUBetw.class, Edge.class)
+                                              VUCent.class, Edge.class)
                 .prepareGraph();
     }
 

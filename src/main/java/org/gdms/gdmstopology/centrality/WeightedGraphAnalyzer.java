@@ -32,7 +32,7 @@
  */
 package org.gdms.gdmstopology.centrality;
 
-import org.javanetworkanalyzer.data.VWBetw;
+import org.javanetworkanalyzer.data.VWCent;
 import org.javanetworkanalyzer.progress.DefaultProgressMonitor;
 import org.gdms.data.DataSourceFactory;
 import org.gdms.driver.DataSet;
@@ -51,7 +51,7 @@ import org.orbisgis.progress.ProgressMonitor;
  * @author Adam Gouge
  */
 public class WeightedGraphAnalyzer
-        extends GraphAnalyzer<VWBetw, Edge, WeightedPathLengthData> {
+        extends GraphAnalyzer<VWCent, Edge, WeightedPathLengthData> {
 
     /**
      * The name of the weight column.
@@ -116,7 +116,7 @@ public class WeightedGraphAnalyzer
                     new WeightedGraphCreator(dataSet,
                                              orientation,
                                              edgeOrientationColumnName,
-                                             VWBetw.class,
+                                             VWCent.class,
                                              Edge.class,
                                              weightColumnName).prepareGraph(),
                     new DefaultProgressMonitor());

@@ -48,7 +48,7 @@ import org.gdms.gdmstopology.functionhelpers.FunctionHelper;
 import org.gdms.gdmstopology.graphcreator.GraphCreator;
 import org.gdms.gdmstopology.model.GraphException;
 import org.gdms.gdmstopology.model.GraphSchema;
-import org.javanetworkanalyzer.data.VUBetw;
+import org.javanetworkanalyzer.data.VUCent;
 import org.javanetworkanalyzer.model.Edge;
 import org.javanetworkanalyzer.model.KeyedGraph;
 import org.jgrapht.UndirectedGraph;
@@ -105,12 +105,12 @@ public class GraphConnectivityInspector extends FunctionHelper {
      * @return A {@link ConnectivityInspector} on the given graph.
      */
     protected Object getConnectivityInspector() {
-        KeyedGraph<VUBetw, Edge> g =
-                new GraphCreator<VUBetw, Edge>(edges, GraphSchema.UNDIRECT,
-                                               VUBetw.class, Edge.class)
+        KeyedGraph<VUCent, Edge> g =
+                new GraphCreator<VUCent, Edge>(edges, GraphSchema.UNDIRECT,
+                                               VUCent.class, Edge.class)
                 .prepareGraph();
-        return new ConnectivityInspector<VUBetw, Edge>(
-                (UndirectedGraph<VUBetw, Edge>) g);
+        return new ConnectivityInspector<VUCent, Edge>(
+                (UndirectedGraph<VUCent, Edge>) g);
     }
 
     @Override
@@ -121,7 +121,7 @@ public class GraphConnectivityInspector extends FunctionHelper {
     @Override
     protected void computeAndStoreResults(DiskBufferDriver driver) {
         storeResults(
-                ((ConnectivityInspector<VUBetw, Edge>) getConnectivityInspector()).
+                ((ConnectivityInspector<VUCent, Edge>) getConnectivityInspector()).
                 connectedSets(), driver);
     }
 
@@ -131,12 +131,12 @@ public class GraphConnectivityInspector extends FunctionHelper {
      * @param connectedSets The connected sets
      * @param driver        The driver
      */
-    protected void storeResults(List<Set<VUBetw>> connectedSets,
+    protected void storeResults(List<Set<VUCent>> connectedSets,
                                 DiskBufferDriver driver) {
         // Record the connected components in the DiskBufferDriver.
         int connectedComponentNumber = 1;
-        for (Set<VUBetw> set : connectedSets) {
-            for (VUBetw node : set) {
+        for (Set<VUCent> set : connectedSets) {
+            for (VUCent node : set) {
                 try {
                     driver.addValues(
                             new Value[]{

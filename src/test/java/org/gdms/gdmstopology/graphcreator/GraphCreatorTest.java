@@ -48,9 +48,9 @@ import org.gdms.gdmstopology.TopologySetupTest;
 import org.gdms.gdmstopology.function.ST_Graph;
 import org.gdms.gdmstopology.model.GraphSchema;
 import org.gdms.sql.function.FunctionException;
-import org.javanetworkanalyzer.data.VBetw;
-import org.javanetworkanalyzer.data.VUBetw;
-import org.javanetworkanalyzer.data.VWBetw;
+import org.javanetworkanalyzer.data.VCent;
+import org.javanetworkanalyzer.data.VUCent;
+import org.javanetworkanalyzer.data.VWCent;
 import org.javanetworkanalyzer.model.Edge;
 import org.javanetworkanalyzer.model.KeyedGraph;
 import org.javanetworkanalyzer.model.UndirectedG;
@@ -80,10 +80,10 @@ public class GraphCreatorTest extends TopologySetupTest {
     @Test
     public void unweightedUndirected() throws Exception {
 
-        KeyedGraph<VUBetw, Edge> graph =
-                new GraphCreator<VUBetw, Edge>(prepareEdges(),
+        KeyedGraph<VUCent, Edge> graph =
+                new GraphCreator<VUCent, Edge>(prepareEdges(),
                                                GraphSchema.UNDIRECT,
-                                               VUBetw.class,
+                                               VUCent.class,
                                                Edge.class).prepareGraph();
 
         assertTrue(graph.vertexSet().size() == 4);
@@ -103,10 +103,10 @@ public class GraphCreatorTest extends TopologySetupTest {
 
         DataSet newEdges = introduceOrientations(prepareEdges(),
                                                  EDGE_ORIENTATIONS);
-        KeyedGraph<VUBetw, Edge> graph =
-                new GraphCreator<VUBetw, Edge>(newEdges,
+        KeyedGraph<VUCent, Edge> graph =
+                new GraphCreator<VUCent, Edge>(newEdges,
                                                GraphSchema.DIRECT,
-                                               VUBetw.class,
+                                               VUCent.class,
                                                Edge.class).prepareGraph();
 
         assertTrue(graph.vertexSet().size() == 4);
@@ -126,10 +126,10 @@ public class GraphCreatorTest extends TopologySetupTest {
 
         DataSet newEdges = introduceOrientations(prepareEdges(),
                                                  EDGE_ORIENTATIONS);
-        KeyedGraph<VUBetw, Edge> graph =
-                new GraphCreator<VUBetw, Edge>(newEdges,
+        KeyedGraph<VUCent, Edge> graph =
+                new GraphCreator<VUCent, Edge>(newEdges,
                                                GraphSchema.DIRECT_REVERSED,
-                                               VUBetw.class,
+                                               VUCent.class,
                                                Edge.class).prepareGraph();
 
         assertTrue(graph.vertexSet().size() == 4);
@@ -150,11 +150,11 @@ public class GraphCreatorTest extends TopologySetupTest {
         DataSet newEdges = introduceWeights(prepareEdges(),
                                             EDGE_WEIGHTS);
 
-        WeightedKeyedGraph<VWBetw, Edge> graph =
-                new WeightedGraphCreator<VWBetw, Edge>(
+        WeightedKeyedGraph<VWCent, Edge> graph =
+                new WeightedGraphCreator<VWCent, Edge>(
                 newEdges,
                 GraphSchema.UNDIRECT,
-                VWBetw.class,
+                VWCent.class,
                 Edge.class,
                 GraphSchema.WEIGHT).prepareGraph();
 
@@ -199,11 +199,11 @@ public class GraphCreatorTest extends TopologySetupTest {
                                                        EDGE_WEIGHTS),
                                       EDGE_ORIENTATIONS);
 
-        WeightedKeyedGraph<VWBetw, Edge> graph =
-                new WeightedGraphCreator<VWBetw, Edge>(
+        WeightedKeyedGraph<VWCent, Edge> graph =
+                new WeightedGraphCreator<VWCent, Edge>(
                 newEdges,
                 GraphSchema.DIRECT,
-                VWBetw.class,
+                VWCent.class,
                 Edge.class,
                 GraphSchema.WEIGHT).prepareGraph();
 
@@ -240,11 +240,11 @@ public class GraphCreatorTest extends TopologySetupTest {
                                                        EDGE_WEIGHTS),
                                       EDGE_ORIENTATIONS);
 
-        WeightedKeyedGraph<VWBetw, Edge> graph =
-                new WeightedGraphCreator<VWBetw, Edge>(
+        WeightedKeyedGraph<VWCent, Edge> graph =
+                new WeightedGraphCreator<VWCent, Edge>(
                 newEdges,
                 GraphSchema.DIRECT_REVERSED,
-                VWBetw.class,
+                VWCent.class,
                 Edge.class,
                 GraphSchema.WEIGHT).prepareGraph();
 
@@ -315,7 +315,7 @@ public class GraphCreatorTest extends TopologySetupTest {
      *
      * @param graph The graph.
      */
-    private void print(KeyedGraph<? extends VBetw, Edge> graph) {
+    private void print(KeyedGraph<? extends VCent, Edge> graph) {
         LOGGER.debug("\tGRAPH");
         String leftArrow;
         if (graph instanceof UndirectedG) {
