@@ -59,7 +59,7 @@ import org.gdms.sql.function.table.TableArgument;
 import org.gdms.sql.function.table.TableDefinition;
 import org.gdms.sql.function.table.TableFunctionSignature;
 import org.javanetworkanalyzer.alg.Dijkstra;
-import org.javanetworkanalyzer.data.VWBetw;
+import org.javanetworkanalyzer.data.VWCent;
 import org.javanetworkanalyzer.model.Edge;
 import org.javanetworkanalyzer.model.KeyedGraph;
 import org.orbisgis.progress.ProgressMonitor;
@@ -212,7 +212,7 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
         parseArguments(edges, tables, values);
 
         // Prepare the graph.
-        KeyedGraph<VWBetw, Edge> graph = prepareGraph(edges);
+        KeyedGraph<VWCent, Edge> graph = prepareGraph(edges);
 
         // Compute and return results.
         DiskBufferDriver results = null;
@@ -459,8 +459,8 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
      *
      * @return JGraphT graph
      */
-    private KeyedGraph<VWBetw, Edge> prepareGraph(final DataSet edges) {
-        KeyedGraph<VWBetw, Edge> graph;
+    private KeyedGraph<VWCent, Edge> prepareGraph(final DataSet edges) {
+        KeyedGraph<VWCent, Edge> graph;
 
         // Get the graph orientation.
         int graphType = -1;
@@ -479,11 +479,11 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
 
         // Create the graph.
         if (weightsColumn != null) {
-            graph = new WeightedGraphCreator<VWBetw, Edge>(
+            graph = new WeightedGraphCreator<VWCent, Edge>(
                     edges,
                     graphType,
                     edgeOrientationColumnName,
-                    VWBetw.class,
+                    VWCent.class,
                     Edge.class,
                     weightsColumn).prepareGraph();
         } else {
@@ -505,7 +505,7 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
      * @throws DriverException
      */
     private DiskBufferDriver compute(DataSourceFactory dsf,
-                                     KeyedGraph<VWBetw, Edge> graph)
+                                     KeyedGraph<VWCent, Edge> graph)
             throws DriverException {
 
         // Initialize the output.
@@ -515,7 +515,7 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
             LOGGER.error("Null graph.");
         } else {
             // Get a Dijkstra algo for the distance calculation.
-            Dijkstra<VWBetw, Edge> dijkstra = new Dijkstra<VWBetw, Edge>(graph);
+            Dijkstra<VWCent, Edge> dijkstra = new Dijkstra<VWCent, Edge>(graph);
 
             // (source, destination, ...) (One-to-one)
             if (source != -1 && destination != -1) {
@@ -526,7 +526,7 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
             } // (source, ...) (One-to-ALL)
             else if (source != -1 && destination == -1) {
                 // TODO: Replace this by calculate().
-                Map<VWBetw, Double> distances =
+                Map<VWCent, Double> distances =
                         dijkstra.oneToMany(graph.getVertex(source),
                                            graph.vertexSet());
                 storeValues(source, distances, output);
@@ -549,7 +549,7 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
 
                     // Prepare the source-destination map from the source-
                     // destination table.
-                    Map<VWBetw, Set<VWBetw>> sourceDestinationMap =
+                    Map<VWCent, Set<VWCent>> sourceDestinationMap =
                             prepareSourceDestinationMap(graph,
                                                         sourceIndex,
                                                         targetIndex);
@@ -559,9 +559,9 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
                     }
 
                     // Do One-to-Many many times!
-                    for (Entry<VWBetw, Set<VWBetw>> e
+                    for (Entry<VWCent, Set<VWCent>> e
                          : sourceDestinationMap.entrySet()) {
-                        Map<VWBetw, Double> distances =
+                        Map<VWCent, Double> distances =
                                 dijkstra.oneToMany(e.getKey(), e.getValue());
                         storeValues(e.getKey().getID(), distances, output);
                     }
@@ -586,13 +586,13 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
      *
      * @throws DriverException
      */
-    private Map<VWBetw, Set<VWBetw>> prepareSourceDestinationMap(
-            KeyedGraph<VWBetw, Edge> graph,
+    private Map<VWCent, Set<VWCent>> prepareSourceDestinationMap(
+            KeyedGraph<VWCent, Edge> graph,
             int sourceIndex,
             int destinationIndex) throws DriverException {
         // Initialize the map.
-        Map<VWBetw, Set<VWBetw>> map =
-                new HashMap<VWBetw, Set<VWBetw>>();
+        Map<VWCent, Set<VWCent>> map =
+                new HashMap<VWCent, Set<VWCent>>();
         // Go throught the source-destination table and insert each
         // pair into the map.
         for (int i = 0;
@@ -600,15 +600,15 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
              i++) {
             Value[] row = sourceDestinationTable.getRow(i);
 
-            VWBetw sourceVertex = graph.getVertex(
+            VWCent sourceVertex = graph.getVertex(
                     row[sourceIndex].getAsInt());
-            VWBetw destinationVertex = graph.getVertex(
+            VWCent destinationVertex = graph.getVertex(
                     row[destinationIndex].getAsInt());
 
-            Set<VWBetw> targets = map.get(sourceVertex);
+            Set<VWCent> targets = map.get(sourceVertex);
             // Lazy initialize if the destinations set is null.
             if (targets == null) {
-                targets = new HashSet<VWBetw>();
+                targets = new HashSet<VWCent>();
                 map.put(sourceVertex, targets);
             }
             // Add the destination.
@@ -628,9 +628,9 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
      * @throws DriverException
      */
     private void storeValues(int source,
-                             Map<VWBetw, Double> map,
+                             Map<VWCent, Double> map,
                              DiskBufferDriver output) throws DriverException {
-        for (Entry<VWBetw, Double> e : map.entrySet()) {
+        for (Entry<VWCent, Double> e : map.entrySet()) {
             storeValue(source, e.getKey().getID(), e.getValue(), output);
         }
     }

@@ -50,7 +50,7 @@ import org.gdms.driver.memory.MemoryDataSetDriver;
 import org.gdms.gdmstopology.TopologySetupTest;
 import org.gdms.gdmstopology.model.GraphSchema;
 import org.gdms.sql.function.FunctionException;
-import org.javanetworkanalyzer.data.VBetw;
+import org.javanetworkanalyzer.data.VCent;
 import org.javanetworkanalyzer.model.Edge;
 import org.javanetworkanalyzer.model.KeyedGraph;
 import org.javanetworkanalyzer.model.UndirectedG;
@@ -448,7 +448,7 @@ public class ST_ShortestPathLengthTest extends TopologySetupTest {
      *
      * @param graph The graph.
      */
-    private void print(KeyedGraph<? extends VBetw, Edge> graph) {
+    private void print(KeyedGraph<? extends VCent, Edge> graph) {
         LOGGER.debug("\tGRAPH");
         String leftArrow;
         if (graph instanceof UndirectedG) {
