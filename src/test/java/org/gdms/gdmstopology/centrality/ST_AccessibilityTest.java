@@ -47,6 +47,7 @@ import org.gdms.driver.DriverException;
 import org.gdms.driver.memory.MemoryDataSetDriver;
 import org.gdms.gdmstopology.TopologySetupTest;
 import org.gdms.gdmstopology.function.ST_Graph;
+import org.gdms.gdmstopology.function.ST_ShortestPathLength;
 import org.gdms.gdmstopology.graphcreator.GraphCreator;
 import org.gdms.gdmstopology.model.GraphSchema;
 import org.gdms.sql.function.FunctionException;
@@ -253,6 +254,98 @@ public class ST_AccessibilityTest extends TopologySetupTest {
                     assertEquals(closestDest, 5);
                 }
                 assertEquals(distToClosest, 1.0, TOLERANCE);
+            } else if (id == 4 || id == 5) {
+                assertEquals(closestDest, id);
+                assertEquals(distToClosest, 0.0, TOLERANCE);
+            }
+        }
+    }
+
+    @Test
+    public void testDestinationTable() throws Exception {
+        // Prepare the destination table.
+        MemoryDataSetDriver destTable = new MemoryDataSetDriver(
+                new String[]{
+            ST_ShortestPathLength.DESTINATION},
+                new Type[]{TypeFactory.createType(Type.INT)});
+        destTable.addValues(new Value[]{ValueFactory.createValue(4)});
+        destTable.addValues(new Value[]{ValueFactory.createValue(5)});
+
+        DataSet[] tables = new DataSet[]{prepareEdges(), destTable};
+        
+        DataSet results = new ST_Accessibility()
+                                   .evaluate(dsf,
+                                             tables,
+                                             new Value[]{
+                               ValueFactory.createValue(GraphSchema.WEIGHT),
+                               ValueFactory.createValue(
+                               "directed - " + GraphSchema.EDGE_ORIENTATION)},
+                                             new NullProgressMonitor());
+        // Check results.
+        Metadata md = results.getMetadata();
+        int idIndex = md.getFieldIndex(GraphSchema.ID);
+        int closestDestIndex = md.getFieldIndex(GraphSchema.CLOSEST_DESTINATION);
+        int distToClosestIndex = md.getFieldIndex(
+                GraphSchema.DIST_TO_CLOSEST_DESTINATION);
+        for (int i = 0; i < results.getRowCount(); i++) {
+            Value[] row = results.getRow(i);
+            int id = row[idIndex].getAsInt();
+            int closestDest = row[closestDestIndex].getAsInt();
+            double distToClosest = row[distToClosestIndex].getAsDouble();
+            if (id == 1) {
+                assertEquals(closestDest, 4);
+                assertEquals(distToClosest, 5.0, TOLERANCE);
+            } else if (id == 2) {
+                assertEquals(closestDest, 4);
+                assertEquals(distToClosest, 2.0, TOLERANCE);
+            } else if (id == 3) {
+                assertEquals(closestDest, 5);
+                assertEquals(distToClosest, 4.0, TOLERANCE);
+            } else if (id == 4 || id == 5) {
+                assertEquals(closestDest, id);
+                assertEquals(distToClosest, 0.0, TOLERANCE);
+            }
+        }
+    }
+    
+    @Test
+    public void testOmittedOrientation() throws Exception {
+        // Prepare the destination table.
+        MemoryDataSetDriver destTable = new MemoryDataSetDriver(
+                new String[]{
+            ST_ShortestPathLength.DESTINATION},
+                new Type[]{TypeFactory.createType(Type.INT)});
+        destTable.addValues(new Value[]{ValueFactory.createValue(4)});
+        destTable.addValues(new Value[]{ValueFactory.createValue(5)});
+
+        DataSet[] tables = new DataSet[]{prepareEdges(), destTable};
+        
+        DataSet results = new ST_Accessibility()
+                                   .evaluate(dsf,
+                                             tables,
+                                             new Value[]{
+                               ValueFactory.createValue(GraphSchema.WEIGHT)},
+                                             new NullProgressMonitor());
+        // Check results.
+        Metadata md = results.getMetadata();
+        int idIndex = md.getFieldIndex(GraphSchema.ID);
+        int closestDestIndex = md.getFieldIndex(GraphSchema.CLOSEST_DESTINATION);
+        int distToClosestIndex = md.getFieldIndex(
+                GraphSchema.DIST_TO_CLOSEST_DESTINATION);
+        for (int i = 0; i < results.getRowCount(); i++) {
+            Value[] row = results.getRow(i);
+            int id = row[idIndex].getAsInt();
+            int closestDest = row[closestDestIndex].getAsInt();
+            double distToClosest = row[distToClosestIndex].getAsDouble();
+            if (id == 1) {
+                assertEquals(closestDest, 4);
+                assertEquals(distToClosest, 5.0, TOLERANCE);
+            } else if (id == 2) {
+                assertEquals(closestDest, 4);
+                assertEquals(distToClosest, 2.0, TOLERANCE);
+            } else if (id == 3) {
+                assertEquals(closestDest, 5);
+                assertEquals(distToClosest, 4.0, TOLERANCE);
             } else if (id == 4 || id == 5) {
                 assertEquals(closestDest, id);
                 assertEquals(distToClosest, 0.0, TOLERANCE);
