@@ -488,7 +488,7 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
                     weightsColumn).prepareGraph();
         } else {
             throw new UnsupportedOperationException(
-                    "ST_Distance has not yet been implemented for "
+                    NAME + " has not yet been implemented for "
                     + "unweighted graphs.");
         }
         return graph;

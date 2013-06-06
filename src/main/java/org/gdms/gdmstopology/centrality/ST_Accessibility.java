@@ -53,6 +53,7 @@ import static org.gdms.gdmstopology.function.ST_ShortestPathLength.POSSIBLE_ORIE
 import static org.gdms.gdmstopology.function.ST_ShortestPathLength.REVERSED;
 import static org.gdms.gdmstopology.function.ST_ShortestPathLength.SEPARATOR;
 import static org.gdms.gdmstopology.function.ST_ShortestPathLength.UNDIRECTED;
+import org.gdms.gdmstopology.graphcreator.GraphCreator;
 import org.gdms.gdmstopology.graphcreator.WeightedGraphCreator;
 import org.gdms.gdmstopology.model.GraphSchema;
 import org.gdms.gdmstopology.parse.GraphFunctionParser;
@@ -336,9 +337,12 @@ public class ST_Accessibility extends AbstractTableFunction {
                     Edge.class,
                     weightsColumn).prepareGraph();
         } else {
-            throw new UnsupportedOperationException(
-                    NAME + " has not yet been implemented for "
-                    + "unweighted graphs.");
+            graph = new GraphCreator<VAccess, Edge>(
+                    edges,
+                    graphType,
+                    edgeOrientationColumnName,
+                    VAccess.class,
+                    Edge.class).prepareGraph();
         }
         return graph;
     }

@@ -193,6 +193,13 @@ public class GraphFunctionParser {
         return target;
     }
 
+    /**
+     * Returns an array of destination ids from the given command line argument.
+     *
+     * @param value The {@link Value} argument
+     *
+     * @return An array of destination ids
+     */
     public static int[] parseDestinations(Value value) {
         final int slotType = value.getType();
         if (slotType != Type.STRING) {
