@@ -30,6 +30,7 @@ package org.gdms.gdmstopology;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
+import org.gdms.gdmstopology.centrality.ST_Accessibility;
 import org.gdms.gdmstopology.function.ST_BlockIdentity;
 import org.gdms.gdmstopology.centrality.ST_GraphAnalysis;
 import org.gdms.gdmstopology.centrality.ST_StrahlerStreamOrder;
@@ -74,6 +75,7 @@ public class Activator implements BundleActivator {
         reg(new ST_GraphAnalysis());
         reg(new ST_StrahlerStreamOrder());
         reg(new ST_ShortestPathLength());
+        reg(new ST_Accessibility());
     }
 
     private void reg(Function gdmsFunc) {

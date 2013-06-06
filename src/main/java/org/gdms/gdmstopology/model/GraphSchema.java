@@ -145,6 +145,15 @@ public final class GraphSchema {
      * Specifies the orientation of an edge.
      */
     public static final String EDGE_ORIENTATION = "edge_orientation";
+    /**
+     * Specifies the closest destination.
+     */
+    public static final String CLOSEST_DESTINATION = "closest_destination";
+    /**
+     * Specifies the distance to the closest destination.
+     */
+    public static final String DIST_TO_CLOSEST_DESTINATION =
+            "dist_to_" + CLOSEST_DESTINATION;
 
     /**
      * Empty constructor.
