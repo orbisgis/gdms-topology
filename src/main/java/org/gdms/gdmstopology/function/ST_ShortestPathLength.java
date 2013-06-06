@@ -272,14 +272,17 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
     private TableFunctionSignature[] sourceSignatures() {
         return new TableFunctionSignature[]{
             // (s)
-            new TableFunctionSignature(TableDefinition.GEOMETRY,
+            new TableFunctionSignature(TableDefinition.ANY,
+                                       TableArgument.GEOMETRY,
                                        ScalarArgument.INT),
             // (s,w) OR (s,o)
-            new TableFunctionSignature(TableDefinition.GEOMETRY,
+            new TableFunctionSignature(TableDefinition.ANY,
+                                       TableArgument.GEOMETRY,
                                        ScalarArgument.INT,
                                        ScalarArgument.STRING),
             // (s,w,o) OR (s,o,w)
-            new TableFunctionSignature(TableDefinition.GEOMETRY,
+            new TableFunctionSignature(TableDefinition.ANY,
+                                       TableArgument.GEOMETRY,
                                        ScalarArgument.INT,
                                        ScalarArgument.STRING,
                                        ScalarArgument.STRING)
@@ -295,16 +298,19 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
     private TableFunctionSignature[] sourceDestinationSignatures() {
         return new TableFunctionSignature[]{
             // (s,d)
-            new TableFunctionSignature(TableDefinition.GEOMETRY,
+            new TableFunctionSignature(TableDefinition.ANY,
+                                       TableArgument.GEOMETRY,
                                        ScalarArgument.INT,
                                        ScalarArgument.INT),
             // (s,d,w) OR (s,d,o)
-            new TableFunctionSignature(TableDefinition.GEOMETRY,
+            new TableFunctionSignature(TableDefinition.ANY,
+                                       TableArgument.GEOMETRY,
                                        ScalarArgument.INT,
                                        ScalarArgument.INT,
                                        ScalarArgument.STRING),
             // (s,d,w,o) OR (s,d,o,w)
-            new TableFunctionSignature(TableDefinition.GEOMETRY,
+            new TableFunctionSignature(TableDefinition.ANY,
+                                       TableArgument.GEOMETRY,
                                        ScalarArgument.INT,
                                        ScalarArgument.INT,
                                        ScalarArgument.STRING,
@@ -321,14 +327,17 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
     private TableFunctionSignature[] sourceDestinationTableSignatures() {
         return new TableFunctionSignature[]{
             // (s_d_t)
-            new TableFunctionSignature(TableDefinition.GEOMETRY,
+            new TableFunctionSignature(TableDefinition.ANY,
+                                       TableArgument.GEOMETRY,
                                        TableArgument.ANY),
             // (s_d_t,w) OR (s_d_t,o)
-            new TableFunctionSignature(TableDefinition.GEOMETRY,
+            new TableFunctionSignature(TableDefinition.ANY,
+                                       TableArgument.GEOMETRY,
                                        TableArgument.ANY,
                                        ScalarArgument.STRING),
             // (s_d_t,w,o) OR (s_d_t,o,w)
-            new TableFunctionSignature(TableDefinition.GEOMETRY,
+            new TableFunctionSignature(TableDefinition.ANY,
+                                       TableArgument.GEOMETRY,
                                        TableArgument.ANY,
                                        ScalarArgument.STRING,
                                        ScalarArgument.STRING)

@@ -432,14 +432,17 @@ public class ST_Accessibility extends AbstractTableFunction {
     private TableFunctionSignature[] destinationTableSignatures() {
         return new TableFunctionSignature[]{
             // (d_t)
-            new TableFunctionSignature(TableDefinition.GEOMETRY,
+            new TableFunctionSignature(TableDefinition.ANY,
+                                       TableArgument.GEOMETRY,
                                        TableArgument.ANY),
             // (d_t,w) | (d_t,o)
-            new TableFunctionSignature(TableDefinition.GEOMETRY,
+            new TableFunctionSignature(TableDefinition.ANY,
+                                       TableArgument.GEOMETRY,
                                        TableArgument.ANY,
                                        ScalarArgument.STRING),
             // (d_t,w,o) | (d_t,o,w)
-            new TableFunctionSignature(TableDefinition.GEOMETRY,
+            new TableFunctionSignature(TableDefinition.ANY,
+                                       TableArgument.GEOMETRY,
                                        TableArgument.ANY,
                                        ScalarArgument.STRING,
                                        ScalarArgument.STRING)
@@ -455,14 +458,17 @@ public class ST_Accessibility extends AbstractTableFunction {
     private TableFunctionSignature[] destinationStringSignatures() {
         return new TableFunctionSignature[]{
             // ('d')
-            new TableFunctionSignature(TableDefinition.GEOMETRY,
+            new TableFunctionSignature(TableDefinition.ANY,
+                                       TableArgument.GEOMETRY,
                                        ScalarArgument.STRING),
             // ('d',w) | ('d',o)
-            new TableFunctionSignature(TableDefinition.GEOMETRY,
+            new TableFunctionSignature(TableDefinition.ANY,
+                                       TableArgument.GEOMETRY,
                                        ScalarArgument.STRING,
                                        ScalarArgument.STRING),
             // ('d',w,o) | ('d',o,w)
-            new TableFunctionSignature(TableDefinition.GEOMETRY,
+            new TableFunctionSignature(TableDefinition.ANY,
+                                       TableArgument.GEOMETRY,
                                        ScalarArgument.STRING,
                                        ScalarArgument.STRING,
                                        ScalarArgument.STRING)
