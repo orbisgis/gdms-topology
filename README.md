@@ -19,9 +19,10 @@ Optimized algorithms are provided for computing distances:
 * **Many-to-Many**: Distance matrices
 
 ### Accessibility analysis: `ST_Accessibility`
-Provide a list of destinations and calculate the distance from every node in the
-graph to each of the possible destinations. Choose the closest destination. This
-is particularly useful for generating isochrone accessibility maps.
+The user provides a list of destinations. The function calculates the distance
+from every node in the graph to each of the possible destinations and chooses
+the closest destination. This is particularly useful for generating isochrone
+accessibility maps.
 
 ### Network analysis:[`ST_GraphAnalysis`](https://github.com/irstv/gdms-topology/wiki/Graph-analysis-on-a-transportation-network)
 In order to study the global structure of a network, it is possible to calculate
