@@ -111,8 +111,8 @@ public class GraphFunctionParser {
                 LOGGER.debug("Setting the orientation to be {}.", graphType);
             }
             if (orientation != GraphSchema.DIRECT
-                    && orientation != GraphSchema.DIRECT_REVERSED
-                    && orientation != GraphSchema.UNDIRECT) {
+                && orientation != GraphSchema.DIRECT_REVERSED
+                && orientation != GraphSchema.UNDIRECT) {
                 throw new IllegalArgumentException(
                         "Please enter a valid orientation. "
                         + orientation + " is not valid");
@@ -191,5 +191,30 @@ public class GraphFunctionParser {
         final int target = parseVertex(value);
         LOGGER.debug("Setting the target to be {}.", target);
         return target;
+    }
+
+    /**
+     * Returns an array of destination ids from the given command line argument.
+     *
+     * @param value The {@link Value} argument
+     *
+     * @return An array of destination ids
+     */
+    public static int[] parseDestinations(Value value) {
+        final int slotType = value.getType();
+        if (slotType != Type.STRING) {
+            throw new IllegalArgumentException(
+                    "Please specify the destinations "
+                    + "in a comma-separated string.");
+        } else {
+            String destList = value.getAsString();
+            String[] destStringArray = destList.split(",");
+            int[] destIntArray = new int[destStringArray.length];
+            for (int i = 0; i < destIntArray.length; i++) {
+                String dString = destStringArray[i].replaceAll("\\s", "");
+                destIntArray[i] = Integer.valueOf(dString);
+            }
+            return destIntArray;
+        }
     }
 }
