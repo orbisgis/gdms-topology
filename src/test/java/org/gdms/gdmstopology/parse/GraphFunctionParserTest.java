@@ -45,7 +45,7 @@ public class GraphFunctionParserTest {
 
     @Test
     public void parseDestinationsTest() {
-        int[] actual = GraphFunctionParser.parseDestinations(
+        int[] actual = new GraphFunctionParser().parseDestinationsString(
                 ValueFactory.createValue("2, 34,   217"));
         int[] expected = new int[]{2, 34, 217};
         for (int i = 0; i < expected.length; i++) {

@@ -32,7 +32,6 @@
  */
 package org.gdms.gdmstopology.function;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -84,9 +83,9 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
     public static final String UNDIRECTED = "undirected";
     public static final String EDGE_ORIENTATION_COLUMN = "edge_orientation_column";
     public static final String POSSIBLE_ORIENTATIONS =
-            "[, '" + DIRECTED + " - " + EDGE_ORIENTATION_COLUMN + "' "
+            "'" + DIRECTED + " - " + EDGE_ORIENTATION_COLUMN + "' "
             + "| '" + REVERSED + " - " + EDGE_ORIENTATION_COLUMN + "' "
-            + "| '" + UNDIRECTED + "']";
+            + "| '" + UNDIRECTED + "'";
     public static final String SEPARATOR = "-";
     /**
      * The SQL order of this function.
@@ -98,21 +97,21 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
             + "output.edges, "
             + "source, destination"
             + "[, 'weights_column']"
-            + POSSIBLE_ORIENTATIONS + ");"
+            + "[, " + POSSIBLE_ORIENTATIONS + "]);"
             + "\n-- Compute the distance from " + SOURCE
             + " to all reachable nodes."
             + "\n(2) SELECT * FROM " + NAME + "("
             + "output.edges, "
             + "source"
             + "[, 'weights_column']"
-            + POSSIBLE_ORIENTATIONS + ");"
+            + "[, " + POSSIBLE_ORIENTATIONS + "]);"
             + "\n-- Compute the distances from the " + SOURCE + "s to the "
             + DESTINATION + "s in the source-destination table."
             + "\n(3) SELECT * FROM " + NAME + "("
             + "output.edges, "
             + "source_dest_table"
             + "[, 'weights_column']"
-            + POSSIBLE_ORIENTATIONS + ");";
+            + "[, " + POSSIBLE_ORIENTATIONS + "]);";
     /**
      * Short description of this function.
      */
@@ -356,109 +355,25 @@ public class ST_ShortestPathLength extends AbstractTableFunction {
      * @param values Arguments
      */
     private void parseArguments(DataSet edges, DataSet[] tables, Value[] values) {
+        GraphFunctionParser parser = new GraphFunctionParser();
+        int valuesIndex = 0;
         // (source_dest_table, ...)
         if (tables.length == 2) {
             sourceDestinationTable = tables[1];
-            parseOptionalArguments(edges, values, 0);
+            parser.parseOptionalArguments(edges, values, valuesIndex);
         } else {
-            source = GraphFunctionParser.parseSource(values[0]);
+            source = parser.parseSource(values[valuesIndex++]);
             if (values.length > 1) {
                 // (source, destination, ...)
                 if (values[1].getType() == Type.INT) {
-                    destination = GraphFunctionParser.parseTarget(values[1]);
-                    parseOptionalArguments(edges, values, 2);
-                } // (source, ...)
-                else {
-                    parseOptionalArguments(edges, values, 1);
-                }
+                    destination = parser.parseTarget(values[valuesIndex++]);
+                } // else: (source, ...)
             }
         }
-    }
-
-    /**
-     * Parse the optional arguments.
-     *
-     * @param values   Arguments array
-     * @param argIndex Index of the first optional argument
-     */
-    private void parseOptionalArguments(DataSet edges, Value[] values,
-                                        int argIndex) {
-        if (values.length > argIndex) {
-            while (values.length > argIndex) {
-                parseStringArguments(edges, values[argIndex++]);
-            }
-        }
-    }
-
-    /**
-     * Parse possible String arguments for {@link ST_ShortestPathLength}, namely
-     * weight and orientation.
-     *
-     * @param value A given argument to parse.
-     */
-    private void parseStringArguments(DataSet edges, Value value) {
-        if (value.getType() == Type.STRING) {
-            String v = value.getAsString();
-            // See if this is a directed (or reversed graph.
-            if ((v.toLowerCase().contains(DIRECTED)
-                 && !v.toLowerCase().contains(UNDIRECTED))
-                || v.toLowerCase().contains(REVERSED)) {
-                if (!v.contains(SEPARATOR)) {
-                    throw new IllegalArgumentException(
-                            "You must specify the name of the edge orientation "
-                            + "column. Enter '" + DIRECTED + " " + SEPARATOR
-                            + " " + EDGE_ORIENTATION_COLUMN + "' or '"
-                            + REVERSED + " " + SEPARATOR + " "
-                            + EDGE_ORIENTATION_COLUMN + "'.");
-                } else {
-                    // Extract the global and edge orientations.
-                    String[] globalAndEdgeOrientations = v.split(SEPARATOR);
-                    if (globalAndEdgeOrientations.length == 2) {
-                        // And remove whitespace.
-                        globalOrientation = globalAndEdgeOrientations[0]
-                                .replaceAll("\\s", "");
-                        edgeOrientationColumnName = globalAndEdgeOrientations[1]
-                                .replaceAll("\\s", "");
-                        try {
-                            // Make sure this column exists.
-                            if (!Arrays.asList(edges.getMetadata()
-                                    .getFieldNames())
-                                    .contains(edgeOrientationColumnName)) {
-                                throw new IllegalArgumentException(
-                                        "Column '" + edgeOrientationColumnName
-                                        + "' not found in the edges table.");
-                            }
-                        } catch (DriverException ex) {
-                            LOGGER.error("Problem verifying existence of "
-                                         + "column {}.",
-                                         edgeOrientationColumnName);
-                        }
-                        LOGGER.info(
-                                "Global orientation = '{}', edge orientation "
-                                + "column name = '{}'.", globalOrientation,
-                                edgeOrientationColumnName);
-                        // TODO: Throw an exception if no edge orientations are given.
-                    } else {
-                        throw new IllegalArgumentException(
-                                "You must specify both global and edge orientations for "
-                                + "directed or reversed graphs. Separate them by "
-                                + "a '" + SEPARATOR + "'.");
-                    }
-                }
-            } else if (v.toLowerCase().contains(UNDIRECTED)) {
-                globalOrientation = UNDIRECTED;
-                if (!v.equalsIgnoreCase(UNDIRECTED)) {
-                    LOGGER.warn("Edge orientations are ignored for undirected "
-                                + "graphs.");
-                }
-            } else {
-                LOGGER.info("Weights column name = '{}'.", v);
-                weightsColumn = v;
-            }
-        } else {
-            throw new IllegalArgumentException("Weights and orientation "
-                                               + "must be specified as strings.");
-        }
+        parser.parseOptionalArguments(edges, values, valuesIndex);
+        globalOrientation = parser.getGlobalOrientation();
+        edgeOrientationColumnName = parser.getEdgeOrientationColumnName();
+        weightsColumn = parser.getWeightsColumn();
     }
 
     /**
