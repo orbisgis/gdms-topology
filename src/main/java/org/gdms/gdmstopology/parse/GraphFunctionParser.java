@@ -33,6 +33,8 @@
 package org.gdms.gdmstopology.parse;
 
 import java.util.Arrays;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.gdms.data.types.Type;
 import org.gdms.data.values.Value;
 import org.gdms.driver.DataSet;
@@ -42,7 +44,6 @@ import static org.gdms.gdmstopology.function.ST_ShortestPathLength.DIRECTED;
 import static org.gdms.gdmstopology.function.ST_ShortestPathLength.REVERSED;
 import static org.gdms.gdmstopology.function.ST_ShortestPathLength.SEPARATOR;
 import static org.gdms.gdmstopology.function.ST_ShortestPathLength.UNDIRECTED;
-import org.gdms.gdmstopology.model.GraphSchema;
 import org.gdms.sql.function.FunctionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -122,40 +123,89 @@ public class GraphFunctionParser {
      * @param edges The edges
      * @param value A given argument to parse.
      */
-    private void parseStringArgument(DataSet edges, Value value) {
+    protected void parseStringArgument(DataSet edges, Value value) {
         if (value.getType() != Type.STRING) {
             throw new IllegalArgumentException(
                     "Weights and orientations must be specified as strings.");
         } else {
             String v = value.getAsString();
+            if (!parseOrientation(edges, v)) {
+                if (!parseWeight(v)) {
+                    throw new IllegalArgumentException(
+                            "Unrecognized string argument.");
+                }
+            }
+        }
+    }
+
+    /**
+     * Recovers the global (and edge) orientation(s) from the given string,
+     * making sure the edge orientation column exists in the given data set.
+     *
+     * @param edges Data set
+     * @param v     String
+     *
+     * @return True if the orientations were correctly parsed.
+     *
+     * @throws IllegalArgumentException
+     */
+    protected boolean parseOrientation(DataSet edges, String v) throws
+            IllegalArgumentException {
+        if (isDirectedString(v) || isReversedString(v)) {
             if (isDirectedString(v)) {
                 globalOrientation = DIRECTED;
-                LOGGER.info("Global orientation = '{}'.", globalOrientation);
-                edgeOrientationColumnName =
-                        getEdgeOrientationColumnName(edges, v);
-                LOGGER.info("Edge orientation column name = '{}'.",
-                            edgeOrientationColumnName);
             } else if (isReversedString(v)) {
                 globalOrientation = REVERSED;
-                LOGGER.info("Global orientation = '{}'.", globalOrientation);
-                edgeOrientationColumnName =
-                        getEdgeOrientationColumnName(edges, v);
-                LOGGER.info("Edge orientation column name = '{}'.",
-                            edgeOrientationColumnName);
-            } else if (isUndirectedString(v)) {
-                globalOrientation = UNDIRECTED;
-                if (!v.trim().equalsIgnoreCase(UNDIRECTED)) {
-                    LOGGER.warn("Edge orientations are ignored for undirected "
-                                + "graphs.");
-                }
-                LOGGER.info("Global orientation = '{}'.", globalOrientation);
-            } else if (isWeightsString(v)) {
-                weightsColumn = v;
-                LOGGER.info("Weights column name = '{}'.", v);
-            } else {
-                throw new IllegalArgumentException(
-                        "Unrecognized string argument.");
             }
+            edgeOrientationColumnName =
+                    getEdgeOrientationColumnName(edges, v);
+            LOGGER.info("Global orientation = '{}'.", globalOrientation);
+            LOGGER.info("Edge orientation column name = '{}'.",
+                        edgeOrientationColumnName);
+            return true;
+        } else if (isUndirectedString(v)) {
+            globalOrientation = UNDIRECTED;
+            if (!v.trim().equalsIgnoreCase(UNDIRECTED)) {
+                LOGGER.warn("Edge orientations are ignored for undirected "
+                            + "graphs.");
+            }
+            LOGGER.info("Global orientation = '{}'.", globalOrientation);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Recovers the weight column name from the given string.
+     *
+     * @param v String
+     *
+     * @return True if the weight column name was correctly parsed.
+     */
+    protected boolean parseWeight(String v) {
+        if (isWeightsString(v)) {
+            weightsColumn = v.trim();
+            checkForIllegalCharacters(weightsColumn);
+            LOGGER.info("Weights column name = '{}'.", v);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Makes sure the given string contains only letters, numbers and
+     * underscores.
+     *
+     * @param v String
+     */
+    private void checkForIllegalCharacters(String v) {
+        Matcher m = Pattern.compile("[^_0-9A-Za-z]").matcher(v);
+        String illegalCharacters = "";
+        while (m.find()) {
+            illegalCharacters += "\"" + m.group() + "\", ";
+        }
+        if (!illegalCharacters.equals("")) {
+            LOGGER.warn("Illegal character: " + illegalCharacters);
         }
     }
 
@@ -167,7 +217,7 @@ public class GraphFunctionParser {
      *
      * @return Whether or not the string represents a directed graph.
      */
-    private boolean isDirectedString(String s) {
+    protected boolean isDirectedString(String s) {
         if (s.toLowerCase().contains(DIRECTED)
             && !isUndirectedString(s)) {
             return true;
@@ -182,7 +232,7 @@ public class GraphFunctionParser {
      *
      * @return Whether or not the string represents a reversed graph.
      */
-    private boolean isReversedString(String s) {
+    protected boolean isReversedString(String s) {
         if (s.toLowerCase().contains(REVERSED)) {
             return true;
         }
@@ -196,7 +246,7 @@ public class GraphFunctionParser {
      *
      * @return Whether or not the string represents an undirected graph.
      */
-    private boolean isUndirectedString(String s) {
+    protected boolean isUndirectedString(String s) {
         if (s.toLowerCase().contains(UNDIRECTED)) {
             return true;
         }
@@ -211,7 +261,7 @@ public class GraphFunctionParser {
      * @return Whether or not the string represents a weighted graph, since
      *         weight and orientation are the only optional arguments.
      */
-    private boolean isWeightsString(String s) {
+    protected boolean isWeightsString(String s) {
         return !(isDirectedString(s) || isReversedString(s)
                  || isUndirectedString(s));
     }
@@ -220,17 +270,19 @@ public class GraphFunctionParser {
                                                 String v) {
         if (!v.contains(SEPARATOR)) {
             throw new IllegalArgumentException(
-                    "You must specify the name of the edge orientation "
-                    + "column. Enter "
+                    "Bad orientation format. Enter "
                     + ST_ShortestPathLength.POSSIBLE_ORIENTATIONS + ".");
         } else {
             // Extract the global and edge orientations.
-            String[] globalAndEdgeOrientations = v.split(SEPARATOR);
-            if (globalAndEdgeOrientations.length == 2) {
-                String edgeOrientationColumnName = globalAndEdgeOrientations[1].
-                        trim();
-                checkColumnExistence(edges, edgeOrientationColumnName);
-                return edgeOrientationColumnName;
+            String[] s = v.split(SEPARATOR);
+            if (s.length == 2) {
+                // Return just the edge orientation column name and not the
+                // global orientation.
+                String edgeOrient = s[1].trim();
+                if (!checkColumnExistence(edges, edgeOrient)) {
+                    checkForIllegalCharacters(edgeOrient);
+                }
+                return edgeOrient;
             } else {
                 throw new IllegalArgumentException(
                         "You must specify both global and edge orientations for "
@@ -250,22 +302,29 @@ public class GraphFunctionParser {
      * @throws IllegalArgumentException If the column was not found in the edges
      *                                  table.
      */
-    private void checkColumnExistence(DataSet edges,
-                                      String edgeOrientationColumnName)
+    private boolean checkColumnExistence(DataSet edges,
+                                         String edgeOrientationColumnName)
             throws IllegalArgumentException {
         try {
-            // Make sure this column exists.
-            if (!Arrays.asList(edges.getMetadata()
-                    .getFieldNames())
-                    .contains(edgeOrientationColumnName)) {
-                throw new IllegalArgumentException(
-                        "Column '" + edgeOrientationColumnName
-                        + "' not found in the edges table.");
+            if (edges != null) {
+                // Make sure this column exists.
+                if (!Arrays.asList(edges.getMetadata()
+                        .getFieldNames())
+                        .contains(edgeOrientationColumnName)) {
+                    throw new IllegalArgumentException(
+                            "Column '" + edgeOrientationColumnName
+                            + "' not found in the edges table.");
+                } else {
+                    return true;
+                }
+            } else {
+                LOGGER.error("Null edges column.");
             }
         } catch (DriverException ex) {
             LOGGER.error("Problem verifying existence of column {}.",
                          edgeOrientationColumnName);
         }
+        return false;
     }
 
     /**
