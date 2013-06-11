@@ -204,7 +204,7 @@ public class GraphFunctionParser {
         while (m.find()) {
             illegalCharacters += "\"" + m.group() + "\", ";
         }
-        if (!illegalCharacters.equals("")) {
+        if (!illegalCharacters.isEmpty()) {
             LOGGER.warn("Illegal character: " + illegalCharacters);
         }
     }
