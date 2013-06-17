@@ -33,9 +33,17 @@
 package org.gdms.gdmstopology.parse;
 
 import java.util.Arrays;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.gdms.data.types.Type;
 import org.gdms.data.values.Value;
-import org.gdms.gdmstopology.model.GraphSchema;
+import org.gdms.driver.DataSet;
+import org.gdms.driver.DriverException;
+import org.gdms.gdmstopology.function.ST_ShortestPathLength;
+import static org.gdms.gdmstopology.function.ST_ShortestPathLength.DIRECTED;
+import static org.gdms.gdmstopology.function.ST_ShortestPathLength.REVERSED;
+import static org.gdms.gdmstopology.function.ST_ShortestPathLength.SEPARATOR;
+import static org.gdms.gdmstopology.function.ST_ShortestPathLength.UNDIRECTED;
 import org.gdms.sql.function.FunctionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,97 +56,273 @@ import org.slf4j.LoggerFactory;
  */
 public class GraphFunctionParser {
 
+    /**
+     * Weight column name.
+     */
+    private String weightsColumn = null;
+    /**
+     * Global orientation string.
+     */
+    private String globalOrientation = null;
+    /**
+     * Edge orientation string.
+     */
+    private String edgeOrientationColumnName = null;
+    /**
+     * Logger
+     */
     private static final Logger LOGGER =
             LoggerFactory.getLogger(GraphFunctionParser.class);
 
     /**
-     * Return the name of the weights column or null for unweighted graphs.
+     * Returns the weight column name.
      *
-     * @param value The {@link Value} argument.
-     *
-     * @return The name of the weights column or null for unweighted graphs.
-     *
-     * @throws FunctionException
+     * @return the weight column name
      */
-    public static String parseWeight(Value value) {
-        final int slotType = value.getType();
-        // Make sure it is only initialized once.
-        final String weights;
-        if (slotType == Type.INT) {
-            final int allWeightsOneInt = value.getAsInt();
-            if (allWeightsOneInt == 1) {
-                LOGGER.debug("Setting all weights equal to 1.");
-                weights = null;
-            } else { // We only accept 1 or a string.
-                throw new IllegalArgumentException(
-                        "Either enter 1 to set all weights equal to 1 "
-                        + "or specify the name of the weight column.");
-            }
-        } else if (slotType == Type.STRING) {
-            // Set the weights column name.
-            weights = value.getAsString();
-            LOGGER.debug("Setting the weight column name to be \'{}\'.",
-                         weights);
-        } else {
-            throw new IllegalArgumentException(
-                    "Either enter 1 to set all weights equal to 1 "
-                    + "or specify the name of the weight column.");
-        }
-        return weights;
+    public String getWeightsColumn() {
+        return weightsColumn;
     }
 
     /**
-     * Returns the graph orientation.
+     * Returns the global orientation string.
      *
-     * @param value The {@link Value} argument.
-     *
-     * @return the graph orientation.
-     *
-     * @throws FunctionException
+     * @return The global orientation string
      */
-    public static int parseOrientation(Value value) {
-        final int slotType = value.getType();
-        if (slotType == Type.INT) {
-            final int orientation = value.getAsInt();
-            if (LOGGER.isDebugEnabled()) {
-                String graphType = (orientation == GraphSchema.DIRECT)
-                        ? "directed"
-                        : (orientation == GraphSchema.DIRECT_REVERSED)
-                        ? "reversed"
-                        : (orientation == GraphSchema.UNDIRECT)
-                        ? "undirected"
-                        : "ERROR";
-                LOGGER.debug("Setting the orientation to be {}.", graphType);
-            }
-            if (orientation != GraphSchema.DIRECT
-                && orientation != GraphSchema.DIRECT_REVERSED
-                && orientation != GraphSchema.UNDIRECT) {
-                throw new IllegalArgumentException(
-                        "Please enter a valid orientation. "
-                        + orientation + " is not valid");
-            }
-            return orientation;
-        } else {
-            throw new IllegalArgumentException(
-                    "Please enter an integer orientation.");
+    public String getGlobalOrientation() {
+        return globalOrientation;
+    }
+
+    /**
+     * Returns the edge orientation string.
+     *
+     * @return The edge orientation string
+     */
+    public String getEdgeOrientationColumnName() {
+        return edgeOrientationColumnName;
+    }
+
+    /**
+     * Parse the optional arguments.
+     *
+     * @param values   Arguments array
+     * @param argIndex Index of the first optional argument
+     */
+    public void parseOptionalArguments(DataSet edges, Value[] values,
+                                       int argIndex) {
+        // If more than two optional arguments are given, ignore the extras.
+        int argIndexLimiter = argIndex + 2;
+        while (argIndex < values.length && argIndex < argIndexLimiter) {
+            parseStringArgument(edges, values[argIndex++]);
         }
     }
 
     /**
-     * Returns {@code true} if the given orientation is valid.
+     * Parse possible String arguments for graph functions, namely weight and
+     * orientation.
      *
-     * @param orientation The orientation to be checked.
-     *
-     * @return {@code true} if the given orientation is valid.
+     * @param edges The edges
+     * @param value A given argument to parse.
      */
-    public static boolean validOrientation(int orientation) {
-        final Integer[] possibleOrientations = new Integer[]{
-            GraphSchema.DIRECT,
-            GraphSchema.DIRECT_REVERSED,
-            GraphSchema.UNDIRECT};
-        if (Arrays.asList(possibleOrientations).
-                contains(orientation)) {
+    protected void parseStringArgument(DataSet edges, Value value) {
+        if (value.getType() != Type.STRING) {
+            throw new IllegalArgumentException(
+                    "Weights and orientations must be specified as strings.");
+        } else {
+            String v = value.getAsString();
+            if (!parseOrientation(edges, v)) {
+                if (!parseWeight(v)) {
+                    throw new IllegalArgumentException(
+                            "Unrecognized string argument.");
+                }
+            }
+        }
+    }
+
+    /**
+     * Recovers the global (and edge) orientation(s) from the given string,
+     * making sure the edge orientation column exists in the given data set.
+     *
+     * @param edges Data set
+     * @param v     String
+     *
+     * @return True if the orientations were correctly parsed.
+     *
+     * @throws IllegalArgumentException
+     */
+    protected boolean parseOrientation(DataSet edges, String v) throws
+            IllegalArgumentException {
+        if (isDirectedString(v) || isReversedString(v)) {
+            if (isDirectedString(v)) {
+                globalOrientation = DIRECTED;
+            } else if (isReversedString(v)) {
+                globalOrientation = REVERSED;
+            }
+            edgeOrientationColumnName =
+                    getEdgeOrientationColumnName(edges, v);
+            LOGGER.info("Global orientation = '{}'.", globalOrientation);
+            LOGGER.info("Edge orientation column name = '{}'.",
+                        edgeOrientationColumnName);
             return true;
+        } else if (isUndirectedString(v)) {
+            globalOrientation = UNDIRECTED;
+            if (!v.trim().equalsIgnoreCase(UNDIRECTED)) {
+                LOGGER.warn("Edge orientations are ignored for undirected "
+                            + "graphs.");
+            }
+            LOGGER.info("Global orientation = '{}'.", globalOrientation);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Recovers the weight column name from the given string.
+     *
+     * @param v String
+     *
+     * @return True if the weight column name was correctly parsed.
+     */
+    protected boolean parseWeight(String v) {
+        if (isWeightsString(v)) {
+            weightsColumn = v.trim();
+            checkForIllegalCharacters(weightsColumn);
+            LOGGER.info("Weights column name = '{}'.", v);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Makes sure the given string contains only letters, numbers and
+     * underscores.
+     *
+     * @param v String
+     */
+    private void checkForIllegalCharacters(String v) {
+        Matcher m = Pattern.compile("[^_0-9A-Za-z]").matcher(v);
+        String illegalCharacters = "";
+        while (m.find()) {
+            illegalCharacters += "\"" + m.group() + "\", ";
+        }
+        if (!illegalCharacters.isEmpty()) {
+            LOGGER.warn("Illegal character: " + illegalCharacters);
+        }
+    }
+
+    /**
+     * Returns true if the given string contains the string "directed" but not
+     * "undirected".
+     *
+     * @param s String
+     *
+     * @return Whether or not the string represents a directed graph.
+     */
+    protected boolean isDirectedString(String s) {
+        if (s.toLowerCase().contains(DIRECTED)
+            && !isUndirectedString(s)) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Returns true if the given string contains the string "reversed".
+     *
+     * @param s String
+     *
+     * @return Whether or not the string represents a reversed graph.
+     */
+    protected boolean isReversedString(String s) {
+        if (s.toLowerCase().contains(REVERSED)) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Returns true if the given string contains the string "undirected".
+     *
+     * @param s String
+     *
+     * @return Whether or not the string represents an undirected graph.
+     */
+    protected boolean isUndirectedString(String s) {
+        if (s.toLowerCase().contains(UNDIRECTED)) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Returns true if the given string does not represent a graph orientation.
+     *
+     * @param s String
+     *
+     * @return Whether or not the string represents a weighted graph, since
+     *         weight and orientation are the only optional arguments.
+     */
+    protected boolean isWeightsString(String s) {
+        return !(isDirectedString(s) || isReversedString(s)
+                 || isUndirectedString(s));
+    }
+
+    private String getEdgeOrientationColumnName(DataSet edges,
+                                                String v) {
+        if (!v.contains(SEPARATOR)) {
+            throw new IllegalArgumentException(
+                    "Bad orientation format. Enter "
+                    + ST_ShortestPathLength.POSSIBLE_ORIENTATIONS + ".");
+        } else {
+            // Extract the global and edge orientations.
+            String[] s = v.split(SEPARATOR);
+            if (s.length == 2) {
+                // Return just the edge orientation column name and not the
+                // global orientation.
+                String edgeOrient = s[1].trim();
+                if (!checkColumnExistence(edges, edgeOrient)) {
+                    checkForIllegalCharacters(edgeOrient);
+                }
+                return edgeOrient;
+            } else {
+                throw new IllegalArgumentException(
+                        "You must specify both global and edge orientations for "
+                        + "directed or reversed graphs. Separate them by "
+                        + "a '" + SEPARATOR + "'.");
+            }
+        }
+    }
+
+    /**
+     * Makes sure the edges table contains the given edge orientation column
+     * name.
+     *
+     * @param edges                     Edges table
+     * @param edgeOrientationColumnName edge orientation column name
+     *
+     * @throws IllegalArgumentException If the column was not found in the edges
+     *                                  table.
+     */
+    private boolean checkColumnExistence(DataSet edges,
+                                         String edgeOrientationColumnName)
+            throws IllegalArgumentException {
+        try {
+            if (edges != null) {
+                // Make sure this column exists.
+                if (!Arrays.asList(edges.getMetadata()
+                        .getFieldNames())
+                        .contains(edgeOrientationColumnName)) {
+                    throw new IllegalArgumentException(
+                            "Column '" + edgeOrientationColumnName
+                            + "' not found in the edges table.");
+                } else {
+                    return true;
+                }
+            } else {
+                LOGGER.error("Null edges column.");
+            }
+        } catch (DriverException ex) {
+            LOGGER.error("Problem verifying existence of column {}.",
+                         edgeOrientationColumnName);
         }
         return false;
     }
@@ -152,7 +336,7 @@ public class GraphFunctionParser {
      *
      * @throws FunctionException
      */
-    private static int parseVertex(Value value) {
+    private int parseVertex(Value value) {
         final int slotType = value.getType();
         if (slotType == Type.INT) {
             final int vertex = value.getAsInt();
@@ -172,7 +356,7 @@ public class GraphFunctionParser {
      *
      * @throws FunctionException
      */
-    public static int parseSource(Value value) {
+    public int parseSource(Value value) {
         final int source = parseVertex(value);
         LOGGER.debug("Setting the source to be {}.", source);
         return source;
@@ -187,7 +371,7 @@ public class GraphFunctionParser {
      *
      * @throws FunctionException
      */
-    public static int parseTarget(Value value) {
+    public int parseTarget(Value value) {
         final int target = parseVertex(value);
         LOGGER.debug("Setting the target to be {}.", target);
         return target;
@@ -200,7 +384,7 @@ public class GraphFunctionParser {
      *
      * @return An array of destination ids
      */
-    public static int[] parseDestinations(Value value) {
+    public int[] parseDestinationsString(Value value) {
         final int slotType = value.getType();
         if (slotType != Type.STRING) {
             throw new IllegalArgumentException(

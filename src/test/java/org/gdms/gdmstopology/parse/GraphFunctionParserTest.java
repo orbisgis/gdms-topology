@@ -32,7 +32,11 @@
  */
 package org.gdms.gdmstopology.parse;
 
+import org.gdms.data.types.Type;
+import org.gdms.data.types.TypeFactory;
 import org.gdms.data.values.ValueFactory;
+import org.gdms.driver.memory.MemoryDataSetDriver;
+import org.gdms.gdmstopology.function.ST_ShortestPathLength;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -45,11 +49,85 @@ public class GraphFunctionParserTest {
 
     @Test
     public void parseDestinationsTest() {
-        int[] actual = GraphFunctionParser.parseDestinations(
+        int[] actual = new GraphFunctionParser().parseDestinationsString(
                 ValueFactory.createValue("2, 34,   217"));
         int[] expected = new int[]{2, 34, 217};
         for (int i = 0; i < expected.length; i++) {
             assertTrue(actual[i] == expected[i]);
         }
+    }
+
+    @Test
+    public void testDirectedString() {
+        GraphFunctionParser p = new GraphFunctionParser();
+        String testString = "  diRecTEd - adfasd ";
+        MemoryDataSetDriver edges =
+                new MemoryDataSetDriver(
+                new String[]{"adfasd"},
+                new Type[]{TypeFactory.createType(Type.INT)});
+        
+        assertTrue(p.isDirectedString(testString));
+        assertFalse(p.isReversedString(testString));
+        assertFalse(p.isUndirectedString(testString));
+        assertFalse(p.isWeightsString(testString));
+
+        p.parseStringArgument(edges, ValueFactory.createValue(testString));
+        assertEquals(ST_ShortestPathLength.DIRECTED, p.getGlobalOrientation());
+        assertEquals("adfasd", p.getEdgeOrientationColumnName());
+        assertEquals(null, p.getWeightsColumn());
+    }
+
+    @Test
+    public void testReversedString() {
+        GraphFunctionParser p = new GraphFunctionParser();
+        String testString = "  rEVersEd - bdqesd    ";
+        MemoryDataSetDriver edges =
+                new MemoryDataSetDriver(
+                new String[]{"bdqesd"},
+                new Type[]{TypeFactory.createType(Type.INT)});
+        
+        assertFalse(p.isDirectedString(testString));
+        assertTrue(p.isReversedString(testString));
+        assertFalse(p.isUndirectedString(testString));
+        assertFalse(p.isWeightsString(testString));
+
+        p.parseStringArgument(edges, ValueFactory.createValue(testString));
+        assertEquals(ST_ShortestPathLength.REVERSED, p.getGlobalOrientation());
+        assertEquals("bdqesd", p.getEdgeOrientationColumnName());
+        assertEquals(null, p.getWeightsColumn());
+    }
+
+    @Test
+    public void testUndirectedString() {
+        GraphFunctionParser p = new GraphFunctionParser();
+        String testString = "  UnDiRecTEd - q w98765e4 er2 3  ";
+        assertFalse(p.isDirectedString(testString));
+        assertFalse(p.isReversedString(testString));
+        assertTrue(p.isUndirectedString(testString));
+        assertFalse(p.isWeightsString(testString));
+
+        p.parseStringArgument(null, ValueFactory.createValue(testString));
+        assertEquals(ST_ShortestPathLength.UNDIRECTED, p.getGlobalOrientation());
+        assertEquals(null, p.getEdgeOrientationColumnName());
+        assertEquals(null, p.getWeightsColumn());
+    }
+
+    @Test
+    public void testWeightsString() {
+        GraphFunctionParser p = new GraphFunctionParser();
+        String testString = "  Anything_OtherThanOrientation997_But"
+                            + "NoSPACESorIllegalCharacters";
+
+        assertFalse(p.isDirectedString(testString));
+        assertFalse(p.isReversedString(testString));
+        assertFalse(p.isUndirectedString(testString));
+        assertTrue(p.isWeightsString(testString));
+
+        p.parseStringArgument(null, ValueFactory.createValue(testString));
+        assertEquals(null, p.getGlobalOrientation());
+        assertEquals(null, p.getEdgeOrientationColumnName());
+        assertEquals("Anything_OtherThanOrientation997_But"
+                     + "NoSPACESorIllegalCharacters",
+                     p.getWeightsColumn());
     }
 }

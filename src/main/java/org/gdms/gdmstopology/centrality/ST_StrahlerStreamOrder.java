@@ -32,15 +32,12 @@
  */
 package org.gdms.gdmstopology.centrality;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.gdms.data.DataSourceFactory;
 import org.gdms.data.schema.Metadata;
 import org.gdms.data.values.Value;
 import org.gdms.driver.DataSet;
 import org.gdms.driver.DriverException;
 import org.gdms.gdmstopology.parse.GraphFunctionParser;
-import org.gdms.sql.function.FunctionException;
 import org.gdms.sql.function.FunctionSignature;
 import org.gdms.sql.function.ScalarArgument;
 import org.gdms.sql.function.table.AbstractTableFunction;
@@ -121,7 +118,7 @@ public class ST_StrahlerStreamOrder extends AbstractTableFunction {
         // Recover the DataSet.
         final DataSet dataSet = tables[0];
         // Get the root node.
-        rootNode = GraphFunctionParser.parseSource(values[0]);
+        rootNode = new GraphFunctionParser().parseSource(values[0]);
         // Return a new table listing all the vertices and to which
         // connected component they belong.
         return new StrahlerAnalyzer(dsf, pm, dataSet, rootNode).prepareDataSet();
