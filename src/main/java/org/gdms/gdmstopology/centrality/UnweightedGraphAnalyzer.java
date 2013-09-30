@@ -32,18 +32,18 @@
  */
 package org.gdms.gdmstopology.centrality;
 
-import org.javanetworkanalyzer.data.VUCent;
-import org.javanetworkanalyzer.progress.DefaultProgressMonitor;
 import org.gdms.data.DataSourceFactory;
 import org.gdms.driver.DataSet;
 import org.gdms.driver.DriverException;
-import static org.gdms.gdmstopology.centrality.GraphAnalyzer.ANALYZER_PREP_ERROR;
-import static org.gdms.gdmstopology.centrality.GraphAnalyzer.LOGGER;
 import org.gdms.gdmstopology.graphcreator.GraphCreator;
 import org.gdms.gdmstopology.model.GraphException;
 import org.javanetworkanalyzer.data.UnweightedPathLengthData;
-import org.javanetworkanalyzer.model.Edge;
+import org.javanetworkanalyzer.data.VUCent;
+import org.javanetworkanalyzer.model.EdgeCent;
+import org.javanetworkanalyzer.progress.DefaultProgressMonitor;
 import org.orbisgis.progress.ProgressMonitor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A {@link GraphAnalyzer} for unweighted graphs.
@@ -51,9 +51,11 @@ import org.orbisgis.progress.ProgressMonitor;
  * @author Adam Gouge
  */
 public class UnweightedGraphAnalyzer
-        extends GraphAnalyzer<VUCent, Edge, UnweightedPathLengthData> {
+        extends GraphAnalyzer<VUCent, EdgeCent, UnweightedPathLengthData> {
 
     protected final String edgeOrientationColumnName;
+    private static final Logger LOGGER =
+            LoggerFactory.getLogger(UnweightedGraphAnalyzer.class);
 
     /**
      * Constructs a new {@link UnweightedGraphAnalyzer}.
@@ -101,14 +103,14 @@ public class UnweightedGraphAnalyzer
      * {@inheritDoc}
      */
     @Override
-    protected org.javanetworkanalyzer.analyzers.UnweightedGraphAnalyzer<Edge> prepareAnalyzer() {
+    protected org.javanetworkanalyzer.analyzers.UnweightedGraphAnalyzer<EdgeCent> prepareAnalyzer() {
         try {
             return new org.javanetworkanalyzer.analyzers.UnweightedGraphAnalyzer(
                     new GraphCreator(dataSet,
                                      orientation,
                                      edgeOrientationColumnName,
                                      VUCent.class,
-                                     Edge.class).prepareGraph(),
+                                     EdgeCent.class).prepareGraph(),
                     new DefaultProgressMonitor());
         } catch (Exception ex) {
             LOGGER.trace(ANALYZER_PREP_ERROR, ex);

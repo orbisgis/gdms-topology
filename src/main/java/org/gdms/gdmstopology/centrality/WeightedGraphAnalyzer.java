@@ -32,18 +32,19 @@
  */
 package org.gdms.gdmstopology.centrality;
 
-import org.javanetworkanalyzer.data.VWCent;
-import org.javanetworkanalyzer.progress.DefaultProgressMonitor;
 import org.gdms.data.DataSourceFactory;
 import org.gdms.driver.DataSet;
 import org.gdms.driver.DriverException;
-import static org.gdms.gdmstopology.centrality.GraphAnalyzer.ANALYZER_PREP_ERROR;
-import static org.gdms.gdmstopology.centrality.GraphAnalyzer.LOGGER;
 import org.gdms.gdmstopology.graphcreator.WeightedGraphCreator;
 import org.gdms.gdmstopology.model.GraphException;
+import org.javanetworkanalyzer.data.VWCent;
 import org.javanetworkanalyzer.data.WeightedPathLengthData;
 import org.javanetworkanalyzer.model.Edge;
+import org.javanetworkanalyzer.model.EdgeCent;
+import org.javanetworkanalyzer.progress.DefaultProgressMonitor;
 import org.orbisgis.progress.ProgressMonitor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A {@link GraphAnalyzer} for weighted graphs.
@@ -51,13 +52,15 @@ import org.orbisgis.progress.ProgressMonitor;
  * @author Adam Gouge
  */
 public class WeightedGraphAnalyzer
-        extends GraphAnalyzer<VWCent, Edge, WeightedPathLengthData> {
+        extends GraphAnalyzer<VWCent, EdgeCent, WeightedPathLengthData> {
 
     /**
      * The name of the weight column.
      */
     private final String weightColumnName;
     protected final String edgeOrientationColumnName;
+    private static final Logger LOGGER =
+            LoggerFactory.getLogger(WeightedGraphAnalyzer.class);
 
     /**
      * Constructs a new {@link WeightedGraphAnalyzer}.
@@ -110,14 +113,14 @@ public class WeightedGraphAnalyzer
      * {@inheritDoc}
      */
     @Override
-    protected org.javanetworkanalyzer.analyzers.WeightedGraphAnalyzer<Edge> prepareAnalyzer() {
+    protected org.javanetworkanalyzer.analyzers.WeightedGraphAnalyzer<EdgeCent> prepareAnalyzer() {
         try {
             return new org.javanetworkanalyzer.analyzers.WeightedGraphAnalyzer(
                     new WeightedGraphCreator(dataSet,
                                              orientation,
                                              edgeOrientationColumnName,
                                              VWCent.class,
-                                             Edge.class,
+                                             EdgeCent.class,
                                              weightColumnName).prepareGraph(),
                     new DefaultProgressMonitor());
         } catch (Exception ex) {

@@ -33,10 +33,6 @@
 package org.gdms.gdmstopology.model;
 
 import com.vividsolutions.jts.geom.Geometry;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import org.apache.log4j.Logger;
 import org.gdms.data.DataSourceFactory;
 import org.gdms.data.NoSuchTableException;
 import org.gdms.data.indexes.DefaultAlphaQuery;
@@ -51,6 +47,12 @@ import org.jgrapht.EdgeFactory;
 import org.jgrapht.graph.AbstractGraph;
 import org.jgrapht.graph.ClassBasedEdgeFactory;
 import org.orbisgis.progress.ProgressMonitor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 
 /**
  * A (JGraphT) graph created from an existing data source.
@@ -82,7 +84,8 @@ public final class GDMSGraph
     /**
      * Used to log possible errors encountered when initializing the index.
      */
-    private static final Logger LOGGER = Logger.getLogger(GDMSGraph.class);
+    private static final Logger LOGGER =
+            LoggerFactory.getLogger(GDMSGraph.class);
     /**
      * Used to recover the set of vertices.
      */
