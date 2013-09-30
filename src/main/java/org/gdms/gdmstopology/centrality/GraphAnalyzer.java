@@ -34,8 +34,6 @@ package org.gdms.gdmstopology.centrality;
 
 import org.javanetworkanalyzer.data.VCent;
 import java.util.Map;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 import org.gdms.data.DataSourceFactory;
 import org.gdms.data.schema.DefaultMetadata;
 import org.gdms.data.schema.Metadata;
@@ -49,8 +47,11 @@ import org.gdms.driver.DriverException;
 import org.gdms.gdmstopology.functionhelpers.FunctionHelper;
 import org.gdms.gdmstopology.model.GraphSchema;
 import org.javanetworkanalyzer.data.PathLengthData;
+import org.javanetworkanalyzer.model.EdgeCent;
 import org.jgrapht.Graph;
 import org.orbisgis.progress.ProgressMonitor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Calculates network parameters such as centrality indices on the nodes of a
@@ -58,7 +59,7 @@ import org.orbisgis.progress.ProgressMonitor;
  *
  * @author Adam Gouge
  */
-public abstract class GraphAnalyzer<V extends VCent, E, S extends PathLengthData>
+public abstract class GraphAnalyzer<V extends VCent, E extends EdgeCent, S extends PathLengthData>
         extends FunctionHelper {
 
     /**
@@ -91,18 +92,8 @@ public abstract class GraphAnalyzer<V extends VCent, E, S extends PathLengthData
         GraphSchema.ID,
         GraphSchema.BETWEENNESS_CENTRALITY,
         GraphSchema.CLOSENESS_CENTRALITY});
-    /**
-     * A logger.
-     */
-    protected static final Logger LOGGER;
-
-    /**
-     * Static block to set the logger level.
-     */
-    static {
-        LOGGER = Logger.getLogger(GraphAnalyzer.class);
-        LOGGER.setLevel(Level.TRACE);
-    }
+    private static final Logger LOGGER =
+            LoggerFactory.getLogger(GraphAnalyzer.class);
 
     /**
      * Constructs a new {@link GraphAnalyzer}.
@@ -148,7 +139,7 @@ public abstract class GraphAnalyzer<V extends VCent, E, S extends PathLengthData
         try {
             analyzer.computeAll();
         } catch (Exception ex) {
-            LOGGER.error("Problem doing graph analysis.", ex);
+            throw new IllegalStateException("Problem doing graph analysis.", ex);
         }
 
         Graph<V, E> graph = analyzer.getGraph();
