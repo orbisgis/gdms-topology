@@ -123,6 +123,11 @@ public abstract class GraphAnalyzer<V extends VCent, E extends EdgeCent, S exten
         return MD;
     }
 
+    /**
+     * Returns a {@link DiskBufferDriver} for edge betweenness centrality.
+     *
+     * @return A {@link DiskBufferDriver} for edge betweenness centrality
+     */
     public DiskBufferDriver getEdgesDriver()  {
         DiskBufferDriver edgesDriver = null;
         try {
