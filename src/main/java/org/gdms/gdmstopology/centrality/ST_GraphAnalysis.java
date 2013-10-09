@@ -211,12 +211,13 @@ public class ST_GraphAnalysis extends AbstractExecutorFunction {
                 dsf, edges, pm, graphType, edgeOrientationColumnName,
                 weightsColumn);
 
+        final SourceManager sourceManager = dsf.getSourceManager();
         // Nodes table
         final DiskBufferDriver nodesDriver = analyzer.prepareDataSet();
-        final DiskBufferDriver edgesDriver = analyzer.getEdgesDriver();
-        final SourceManager sourceManager = dsf.getSourceManager();
         sourceManager.register(sourceManager.getUniqueName("node_centrality"),
                 nodesDriver.getFile());
+        // Edges table
+        final DiskBufferDriver edgesDriver = analyzer.getEdgesDriver();
         sourceManager.register(sourceManager.getUniqueName("edge_centrality"),
                 edgesDriver.getFile());
     }
