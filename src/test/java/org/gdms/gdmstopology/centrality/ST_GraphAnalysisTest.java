@@ -51,7 +51,9 @@ import org.junit.Test;
 import org.orbisgis.progress.NullProgressMonitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests {@link ST_GraphAnalysis} on a 2D graph for all combinations of
@@ -62,32 +64,31 @@ import static org.junit.Assert.assertEquals;
 public class ST_GraphAnalysisTest extends TopologySetupTest {
 
     private static final String LENGTH = "length";
-    private static final String UNWEIGHTED_NAME =
-            "output.unweighted.graph_analysis";
-    private static final String WEIGHTED_NAME =
-            "output.weighted.graph_analysis";
     private static final double TOLERANCE = 0.0;
     private static final Logger LOGGER =
             LoggerFactory.getLogger(ST_GraphAnalysisTest.class);
 
-    private DataSet unweightedAnalysis(String orientation)
+    private void unweightedAnalysis(String orientation)
             throws Exception {
-        return new ST_GraphAnalysis()
+        new ST_GraphAnalysis()
                 .evaluate(dsf,
-                          prepareTables(),
-                          new Value[]{ValueFactory.createValue(orientation)},
-                          new NullProgressMonitor());
+                        prepareTables(),
+                        new Value[]{ValueFactory.createValue(orientation)},
+                        new NullProgressMonitor());
     }
 
     @Test
     public void unweightedDirectedTest() throws Exception {
 
-        DataSet result = unweightedAnalysis(ST_ShortestPathLength.DIRECTED
-                                            + ST_ShortestPathLength.SEPARATOR
-                                            + GraphSchema.EDGE_ORIENTATION);
+        unweightedAnalysis(ST_ShortestPathLength.DIRECTED
+                + ST_ShortestPathLength.SEPARATOR
+                + GraphSchema.EDGE_ORIENTATION);
 
-        for (int i = 0; i < result.getRowCount(); i++) {
-            Value[] row = result.getRow(i);
+        DataSource nodes = dsf.getDataSource("node_centrality");
+        nodes.open();
+
+        for (int i = 0; i < nodes.getRowCount(); i++) {
+            Value[] row = nodes.getRow(i);
             int id = row[0].getAsInt();
             double betweenness = row[1].getAsDouble();
             double closeness = row[2].getAsDouble();
@@ -108,17 +109,45 @@ public class ST_GraphAnalysisTest extends TopologySetupTest {
                 LOGGER.error("Unexpected vertex {}", id);
             }
         }
+
+        nodes.close();
+
+        DataSource edges = dsf.getDataSource("edge_centrality");
+        edges.open();
+        assertTrue(edges.getRowCount() == 6);
+        for (int i = 0; i < edges.getRowCount(); i++) {
+            final Value[] row = edges.getRow(i);
+            final int id = row[0].getAsInt();
+            final double betweenness = row[1].getAsDouble();
+            if (id == 1) {
+                assertEquals(3.0 / 4, betweenness, TOLERANCE);
+            } else if (id == 2) {
+                assertEquals(0, betweenness, TOLERANCE);
+            } else if (id == 3) {
+                assertEquals(1, betweenness, TOLERANCE);
+            } else if (id == 4 || id == 5) {
+                assertEquals(1.0 / 4, betweenness, TOLERANCE);
+            } else if (id == 6) {
+                assertEquals(1.0 / 2, betweenness, TOLERANCE);
+            } else {
+                LOGGER.error("Unexpected edge {}", id);
+            }
+        }
+        edges.close();
     }
 
     @Test
     public void unweightedReversedTest() throws Exception {
 
-        DataSet result = unweightedAnalysis(ST_ShortestPathLength.REVERSED
-                                            + ST_ShortestPathLength.SEPARATOR
-                                            + GraphSchema.EDGE_ORIENTATION);
+        unweightedAnalysis(ST_ShortestPathLength.REVERSED
+                + ST_ShortestPathLength.SEPARATOR
+                + GraphSchema.EDGE_ORIENTATION);
 
-        for (int i = 0; i < result.getRowCount(); i++) {
-            Value[] row = result.getRow(i);
+        DataSource nodes = dsf.getDataSource("node_centrality");
+        nodes.open();
+
+        for (int i = 0; i < nodes.getRowCount(); i++) {
+            Value[] row = nodes.getRow(i);
             int id = row[0].getAsInt();
             double betweenness = row[1].getAsDouble();
             double closeness = row[2].getAsDouble();
@@ -134,15 +163,42 @@ public class ST_GraphAnalysisTest extends TopologySetupTest {
             // All vertices have closeness zero.
             assertEquals(0.0, closeness, TOLERANCE);
         }
+
+        nodes.close();
+
+        DataSource edges = dsf.getDataSource("edge_centrality");
+        edges.open();
+        assertTrue(edges.getRowCount() == 6);
+        for (int i = 0; i < edges.getRowCount(); i++) {
+            final Value[] row = edges.getRow(i);
+            final int id = row[0].getAsInt();
+            final double betweenness = row[1].getAsDouble();
+            if (id == 1) {
+                assertEquals(3.0 / 4, betweenness, TOLERANCE);
+            } else if (id == 2) {
+                assertEquals(0, betweenness, TOLERANCE);
+            } else if (id == 3) {
+                assertEquals(1, betweenness, TOLERANCE);
+            } else if (id == 4 || id == 5) {
+                assertEquals(1.0 / 4, betweenness, TOLERANCE);
+            } else if (id == 6) {
+                assertEquals(1.0 / 2, betweenness, TOLERANCE);
+            } else {
+                LOGGER.error("Unexpected edge {}", id);
+            }
+        }
     }
 
     @Test
     public void unweightedUndirectedTest() throws Exception {
 
-        DataSet result = unweightedAnalysis(ST_ShortestPathLength.UNDIRECTED);
+        unweightedAnalysis(ST_ShortestPathLength.UNDIRECTED);
 
-        for (int i = 0; i < result.getRowCount(); i++) {
-            Value[] row = result.getRow(i);
+        DataSource nodes = dsf.getDataSource("node_centrality");
+        nodes.open();
+
+        for (int i = 0; i < nodes.getRowCount(); i++) {
+            Value[] row = nodes.getRow(i);
             int id = row[0].getAsInt();
             double betweenness = row[1].getAsDouble();
             double closeness = row[2].getAsDouble();
@@ -169,28 +225,51 @@ public class ST_GraphAnalysisTest extends TopologySetupTest {
                 LOGGER.error("Unexpected vertex {}", id);
             }
         }
+
+        nodes.close();
+
+        DataSource edges = dsf.getDataSource("edge_centrality");
+        edges.open();
+        assertTrue(edges.getRowCount() == 6);
+        for (int i = 0; i < edges.getRowCount(); i++) {
+            final Value[] row = edges.getRow(i);
+            final int id = row[0].getAsInt();
+            final double betweenness = row[1].getAsDouble();
+            if (id == 1 || id == 2 || id == 6) {
+                assertEquals(1.0 / 5, betweenness, TOLERANCE);
+            } else if (id == 3) {
+                assertEquals(1, betweenness, TOLERANCE);
+            } else if (id == 4 || id == 5) {
+                assertEquals(0, betweenness, TOLERANCE);
+            } else {
+                LOGGER.error("Unexpected edge {}", id);
+            }
+        }
     }
 
-    private DataSet weightedAnalysis(String weight, String orientation)
+    private void weightedAnalysis(String weight, String orientation)
             throws Exception {
-        return new ST_GraphAnalysis()
+        new ST_GraphAnalysis()
                 .evaluate(dsf,
-                          prepareTables(),
-                          new Value[]{ValueFactory.createValue(weight),
-                                      ValueFactory.createValue(orientation)},
-                          new NullProgressMonitor());
+                        prepareTables(),
+                        new Value[]{ValueFactory.createValue(weight),
+                                ValueFactory.createValue(orientation)},
+                        new NullProgressMonitor());
     }
 
     @Test
     public void weightedDirectedTest() throws Exception {
 
-        DataSet result = weightedAnalysis(LENGTH,
-                                          ST_ShortestPathLength.DIRECTED
-                                          + ST_ShortestPathLength.SEPARATOR
-                                          + GraphSchema.EDGE_ORIENTATION);
+        weightedAnalysis(LENGTH,
+                ST_ShortestPathLength.DIRECTED
+                        + ST_ShortestPathLength.SEPARATOR
+                        + GraphSchema.EDGE_ORIENTATION);
 
-        for (int i = 0; i < result.getRowCount(); i++) {
-            Value[] row = result.getRow(i);
+        DataSource nodes = dsf.getDataSource("node_centrality");
+        nodes.open();
+
+        for (int i = 0; i < nodes.getRowCount(); i++) {
+            Value[] row = nodes.getRow(i);
             int id = row[0].getAsInt();
             double betweenness = row[1].getAsDouble();
             double closeness = row[2].getAsDouble();
@@ -211,18 +290,45 @@ public class ST_GraphAnalysisTest extends TopologySetupTest {
                 LOGGER.error("Unexpected vertex {}", id);
             }
         }
+
+        nodes.close();
+
+        DataSource edges = dsf.getDataSource("edge_centrality");
+        edges.open();
+        assertTrue(edges.getRowCount() == 6);
+        for (int i = 0; i < edges.getRowCount(); i++) {
+            final Value[] row = edges.getRow(i);
+            final int id = row[0].getAsInt();
+            final double betweenness = row[1].getAsDouble();
+            if (id == 1) {
+                assertEquals(5.0 / 6, betweenness, TOLERANCE);
+            } else if (id == 2) {
+                assertEquals(1.0 / 3, betweenness, TOLERANCE);
+            } else if (id == 3 || id == 4) {
+                assertEquals(1, betweenness, TOLERANCE);
+            } else if (id == 5) {
+                assertEquals(0, betweenness, TOLERANCE);
+            } else if (id == 6) {
+                assertEquals(2.0 / 3, betweenness, TOLERANCE);
+            } else {
+                LOGGER.error("Unexpected edge {}", id);
+            }
+        }
     }
 
     @Test
     public void weightedReversedTest() throws Exception {
 
-        DataSet result = weightedAnalysis(LENGTH,
-                                          ST_ShortestPathLength.REVERSED
-                                          + ST_ShortestPathLength.SEPARATOR
-                                          + GraphSchema.EDGE_ORIENTATION);
+        weightedAnalysis(LENGTH,
+                ST_ShortestPathLength.REVERSED
+                        + ST_ShortestPathLength.SEPARATOR
+                        + GraphSchema.EDGE_ORIENTATION);
 
-        for (int i = 0; i < result.getRowCount(); i++) {
-            Value[] row = result.getRow(i);
+        DataSource nodes = dsf.getDataSource("node_centrality");
+        nodes.open();
+
+        for (int i = 0; i < nodes.getRowCount(); i++) {
+            Value[] row = nodes.getRow(i);
             int id = row[0].getAsInt();
             double betweenness = row[1].getAsDouble();
             double closeness = row[2].getAsDouble();
@@ -238,17 +344,44 @@ public class ST_GraphAnalysisTest extends TopologySetupTest {
             // All vertices have closeness zero.
             assertEquals(0.0, closeness, TOLERANCE);
         }
+
+        nodes.close();
+
+        DataSource edges = dsf.getDataSource("edge_centrality");
+        edges.open();
+        assertTrue(edges.getRowCount() == 6);
+        for (int i = 0; i < edges.getRowCount(); i++) {
+            final Value[] row = edges.getRow(i);
+            final int id = row[0].getAsInt();
+            final double betweenness = row[1].getAsDouble();
+            if (id == 1) {
+                assertEquals(5.0 / 6, betweenness, TOLERANCE);
+            } else if (id == 2) {
+                assertEquals(1.0 / 3, betweenness, TOLERANCE);
+            } else if (id == 3 || id == 4) {
+                assertEquals(1, betweenness, TOLERANCE);
+            } else if (id == 5) {
+                assertEquals(0, betweenness, TOLERANCE);
+            } else if (id == 6) {
+                assertEquals(2.0 / 3, betweenness, TOLERANCE);
+            } else {
+                LOGGER.error("Unexpected edge {}", id);
+            }
+        }
     }
 
     @Test
     public void weightedUndirectedTest() throws Exception {
 
-        DataSet result = weightedAnalysis(LENGTH,
-                                          ST_ShortestPathLength.UNDIRECTED);
+        weightedAnalysis(LENGTH,
+                ST_ShortestPathLength.UNDIRECTED);
+
+        DataSource nodes = dsf.getDataSource("node_centrality");
+        nodes.open();
 
         // CHECK RESULTS
-        for (int i = 0; i < result.getRowCount(); i++) {
-            Value[] row = result.getRow(i);
+        for (int i = 0; i < nodes.getRowCount(); i++) {
+            Value[] row = nodes.getRow(i);
             int id = row[0].getAsInt();
             double betweenness = row[1].getAsDouble();
             double closeness = row[2].getAsDouble();
@@ -277,6 +410,28 @@ public class ST_GraphAnalysisTest extends TopologySetupTest {
                 LOGGER.error("Unexpected vertex {}", id);
             }
         }
+
+        nodes.close();
+
+        DataSource edges = dsf.getDataSource("edge_centrality");
+        edges.open();
+        assertTrue(edges.getRowCount() == 6);
+        for (int i = 0; i < edges.getRowCount(); i++) {
+            final Value[] row = edges.getRow(i);
+            final int id = row[0].getAsInt();
+            final double betweenness = row[1].getAsDouble();
+            if (id == 1 || id == 2 || id == 6) {
+                assertEquals(5.0 / 9, betweenness, TOLERANCE);
+            } else if (id == 3) {
+                assertEquals(1, betweenness, TOLERANCE);
+            } else if (id == 4) {
+                assertEquals(8.0 / 9, betweenness, TOLERANCE);
+            } else if (id == 5) {
+                assertEquals(0, betweenness, TOLERANCE);
+            } else {
+                LOGGER.error("Unexpected edge {}", id);
+            }
+        }
     }
 
     private DataSet[] prepareTables() throws DataSourceCreationException,
@@ -292,14 +447,14 @@ public class ST_GraphAnalysisTest extends TopologySetupTest {
             throws DriverException {
         DefaultMetadata newMetadata = new DefaultMetadata(edges.getMetadata());
         newMetadata.addField(GraphSchema.EDGE_ORIENTATION,
-                             TypeFactory.createType(Type.INT));
+                TypeFactory.createType(Type.INT));
         MemoryDataSetDriver newEdges =
                 new MemoryDataSetDriver(newMetadata);
         for (int i = 0; i < edges.getRowCount(); i++) {
             Value[] oldRow = edges.getRow(i);
             final Value[] newRow = new Value[newMetadata.getFieldCount()];
             System.arraycopy(oldRow, 0, newRow, 0,
-                             newMetadata.getFieldCount() - 1);
+                    newMetadata.getFieldCount() - 1);
             newRow[newMetadata.getFieldCount() - 1] =
                     ValueFactory.createValue(GraphCreator.DIRECTED_EDGE);
             newEdges.addValues(newRow);

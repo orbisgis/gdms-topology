@@ -76,11 +76,6 @@ public abstract class GraphAnalyzer<V extends VCent, E extends EdgeCent, S exten
     protected static final String ANALYZER_PREP_ERROR =
             "Could not prepare analyzer.";
     /**
-     * Error message when the indices are incorrect.
-     */
-    protected static final String INDICES_ERROR =
-            "Problem with indices.";
-    /**
      * Result metadata.
      */
     public static final Metadata MD = new DefaultMetadata(
@@ -94,6 +89,7 @@ public abstract class GraphAnalyzer<V extends VCent, E extends EdgeCent, S exten
         GraphSchema.CLOSENESS_CENTRALITY});
     private static final Logger LOGGER =
             LoggerFactory.getLogger(GraphAnalyzer.class);
+    private Graph<V, E> graph;
 
     /**
      * Constructs a new {@link GraphAnalyzer}.
@@ -127,6 +123,34 @@ public abstract class GraphAnalyzer<V extends VCent, E extends EdgeCent, S exten
         return MD;
     }
 
+    public DiskBufferDriver getEdgesDriver()  {
+        DiskBufferDriver edgesDriver = null;
+        try {
+            edgesDriver = new DiskBufferDriver(dsf, new DefaultMetadata(
+                    new Type[]{
+                            TypeFactory.createType(Type.INT),
+                            TypeFactory.createType(Type.DOUBLE)},
+                    new String[]{
+                            GraphSchema.ID,
+                            GraphSchema.BETWEENNESS_CENTRALITY}));
+            for (E e : graph.edgeSet()) {
+                edgesDriver.addValues(
+                        ValueFactory.createValue(e.getID()),
+                        ValueFactory.createValue(e.getBetweenness()));
+            }
+        } catch (DriverException e) {
+            LOGGER.error("Could not initialize edges driver", e);
+        }
+
+        try {
+            edgesDriver.writingFinished();
+            edgesDriver.open();
+        } catch (DriverException e) {
+            LOGGER.error("Edges driver could not be opened.", e);
+        }
+        return edgesDriver;
+    }
+
     @Override
     protected void computeAndStoreResults(
             DiskBufferDriver driver) {
@@ -142,7 +166,7 @@ public abstract class GraphAnalyzer<V extends VCent, E extends EdgeCent, S exten
             throw new IllegalStateException("Problem doing graph analysis.", ex);
         }
 
-        Graph<V, E> graph = analyzer.getGraph();
+        graph = analyzer.getGraph();
 
         for (V node : graph.vertexSet()) {
             Value[] valuesToAdd =

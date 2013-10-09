@@ -197,7 +197,7 @@ public class NetworkGraphBuilder {
             int startIndex = edgeMedata.getFieldIndex(GraphSchema.START_NODE);
             int endIndex = edgeMedata.getFieldIndex(GraphSchema.END_NODE);
             // COUNTERS
-            int edgeGID = 0;
+            int edgeGID = 1;
             int nodesGID = 1;
 
             // Go through the DataSet.
