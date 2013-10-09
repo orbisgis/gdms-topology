@@ -79,7 +79,7 @@ public class ST_GraphAnalysis extends AbstractExecutorFunction {
      * The SQL order of this function.
      */
     private static final String SQL_ORDER =
-            "SELECT * FROM " + NAME + "("
+            "EXECUTE " + NAME + "("
             + "output.edges"
             + "[, 'weights_column']"
             + "[, " + POSSIBLE_ORIENTATIONS + "]);";
@@ -215,9 +215,9 @@ public class ST_GraphAnalysis extends AbstractExecutorFunction {
         final DiskBufferDriver nodesDriver = analyzer.prepareDataSet();
         final DiskBufferDriver edgesDriver = analyzer.getEdgesDriver();
         final SourceManager sourceManager = dsf.getSourceManager();
-        sourceManager.register("node_centrality",
+        sourceManager.register(sourceManager.getUniqueName("node_centrality"),
                 nodesDriver.getFile());
-        sourceManager.register("edge_centrality",
+        sourceManager.register(sourceManager.getUniqueName("edge_centrality"),
                 edgesDriver.getFile());
     }
 
