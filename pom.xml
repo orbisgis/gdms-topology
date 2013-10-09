@@ -4,7 +4,7 @@
         <groupId>org.gdms</groupId>
         <artifactId>gdms-topology</artifactId>
         <packaging>bundle</packaging>
-        <version>1.3-SNAPSHOT</version>
+        <version>1.3</version>
         <name>GDMS-Topology</name>
         <description>Tools for network analysis on transportation networks.</description>
         <url>http://www.github.com/agouge/gdms-topology</url>
@@ -39,7 +39,7 @@
                 <dependency>
                         <groupId>org.javanetworkanalyzer</groupId>
                         <artifactId>java-network-analyzer</artifactId>
-                        <version>0.1.1</version>
+                        <version>0.1.2</version>
                 </dependency>
                 <dependency> 
                         <groupId>org.slf4j</groupId>

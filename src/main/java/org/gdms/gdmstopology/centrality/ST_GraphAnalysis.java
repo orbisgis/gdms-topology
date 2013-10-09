@@ -36,6 +36,7 @@ import org.gdms.data.DataSourceFactory;
 import org.gdms.data.schema.Metadata;
 import org.gdms.data.values.Value;
 import org.gdms.driver.DataSet;
+import org.gdms.driver.DiskBufferDriver;
 import org.gdms.driver.DriverException;
 import org.gdms.gdmstopology.function.ST_ShortestPathLength;
 import static org.gdms.gdmstopology.function.ST_ShortestPathLength.DIRECTED;
@@ -47,9 +48,11 @@ import org.gdms.gdmstopology.model.GraphException;
 import org.gdms.gdmstopology.model.GraphSchema;
 import org.gdms.gdmstopology.parse.GraphFunctionParser;
 import org.gdms.gdmstopology.utils.ArrayConcatenator;
+import org.gdms.source.SourceManager;
 import org.gdms.sql.function.FunctionException;
 import org.gdms.sql.function.FunctionSignature;
 import org.gdms.sql.function.ScalarArgument;
+import org.gdms.sql.function.executor.AbstractExecutorFunction;
 import org.gdms.sql.function.executor.ExecutorFunctionSignature;
 import org.gdms.sql.function.table.AbstractTableFunction;
 import org.gdms.sql.function.table.TableArgument;
@@ -66,7 +69,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author Adam Gouge
  */
-public class ST_GraphAnalysis extends AbstractTableFunction {
+public class ST_GraphAnalysis extends AbstractExecutorFunction {
 
     /**
      * The name of this function.
@@ -76,7 +79,7 @@ public class ST_GraphAnalysis extends AbstractTableFunction {
      * The SQL order of this function.
      */
     private static final String SQL_ORDER =
-            "SELECT * FROM " + NAME + "("
+            "EXECUTE " + NAME + "("
             + "output.edges"
             + "[, 'weights_column']"
             + "[, " + POSSIBLE_ORIENTATIONS + "]);";
@@ -158,14 +161,14 @@ public class ST_GraphAnalysis extends AbstractTableFunction {
      * @throws FunctionException
      */
     @Override
-    public DataSet evaluate(
+    public void evaluate(
             DataSourceFactory dsf,
             DataSet[] tables,
             Value[] values,
             ProgressMonitor pm) {
         final DataSet edges = tables[0];
         parseArguments(edges, tables, values);
-        return doAnalysisAccordingToUserInput(dsf, edges, pm);
+        doAnalysisAccordingToUserInput(dsf, edges, pm);
     }
 
     /**
@@ -180,7 +183,7 @@ public class ST_GraphAnalysis extends AbstractTableFunction {
      * @throws GraphException
      * @throws DriverException
      */
-    private DataSet doAnalysisAccordingToUserInput(
+    private void doAnalysisAccordingToUserInput(
             DataSourceFactory dsf,
             DataSet edges,
             ProgressMonitor pm) {
@@ -207,7 +210,16 @@ public class ST_GraphAnalysis extends AbstractTableFunction {
                 new WeightedGraphAnalyzer(
                 dsf, edges, pm, graphType, edgeOrientationColumnName,
                 weightsColumn);
-        return analyzer.prepareDataSet();
+
+        final SourceManager sourceManager = dsf.getSourceManager();
+        // Nodes table
+        final DiskBufferDriver nodesDriver = analyzer.prepareDataSet();
+        sourceManager.register(sourceManager.getUniqueName("node_centrality"),
+                nodesDriver.getFile());
+        // Edges table
+        final DiskBufferDriver edgesDriver = analyzer.getEdgesDriver();
+        sourceManager.register(sourceManager.getUniqueName("edge_centrality"),
+                edgesDriver.getFile());
     }
 
     /**
@@ -311,11 +323,6 @@ public class ST_GraphAnalysis extends AbstractTableFunction {
             weight,
             ScalarArgument.INT,
             ScalarArgument.STRING)};
-    }
-
-    @Override
-    public Metadata getMetadata(Metadata[] tables) throws DriverException {
-        return GraphAnalyzer.MD;
     }
 
     /**

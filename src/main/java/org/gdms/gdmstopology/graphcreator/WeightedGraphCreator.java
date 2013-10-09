@@ -156,11 +156,12 @@ public class WeightedGraphCreator<V extends VId, E extends Edge>
     protected E loadDoubleEdge(Value[] row,
                                KeyedGraph<V, E> graph,
                                final int startNode,
-                               final int endNode) {
+                               final int endNode,
+                               final int edgeID) {
         // In directed graphs, undirected edges are represented
         // by directed edges in both directions.
-        E edgeTo = graph.addEdge(startNode, endNode);
-        E edgeFrom = graph.addEdge(endNode, startNode);
+        E edgeTo = graph.addEdge(startNode, endNode, edgeID);
+        E edgeFrom = graph.addEdge(endNode, startNode, -edgeID);
         double weight = row[weightFieldIndex].getAsDouble();
         edgeTo.setWeight(weight);
         edgeFrom.setWeight(weight);
