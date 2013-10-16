@@ -103,7 +103,7 @@ public class ST_ShortestPath extends AbstractTableFunction {
     private String edgeOrientationColumnName = null;
     private static final org.slf4j.Logger LOGGER =
             LoggerFactory.getLogger(ST_ShortestPath.class);
-    private static final Metadata MD = GraphMetadataFactory.createEdgeMetadataShortestPath();
+    private static final Metadata METADATA = GraphMetadataFactory.createEdgeMetadataShortestPath();
 
     /**
      * Evaluates the function to calculate the shortest path using Dijkstra'
@@ -218,7 +218,7 @@ public class ST_ShortestPath extends AbstractTableFunction {
 
         // A DiskBufferDriver to store the shortest path.
         DiskBufferDriver output =
-                new DiskBufferDriver(dsf, MD);
+                new DiskBufferDriver(dsf, METADATA);
 
         if (graph != null) {
 
@@ -303,15 +303,19 @@ public class ST_ShortestPath extends AbstractTableFunction {
     }
 
     /**
+     * Look up the given {@link Edge}'s {@link Geometry} in the given {@link DataSet}.
      *
-     * @param dsf
-     * @param dataSet
-     * @param geomIndex
-     * @param e
-     * @return
-     * @throws DriverException
+     * @param dsf       DataSourceFactory
+     * @param dataSet   DataSet
+     * @param geomIndex Index of the_geom in dataSet
+     * @param e         Edge
+     * @return The edge's geometry
+     * @throws DriverException If getting an iterator or getting the geometry fail.
      */
-    private Geometry getEdgeGeometry(DataSourceFactory dsf, DataSet dataSet, int geomIndex, Edge e) throws DriverException {
+    private Geometry getEdgeGeometry(DataSourceFactory dsf,
+                                     DataSet dataSet,
+                                     int geomIndex,
+                                     Edge e) throws DriverException {
         // We have to use Math.abs on the id because in directed
         // graphs, an undirected edge could have a negative id.
         // This is used in JNA for the edge betweenness calculation.
@@ -396,7 +400,7 @@ public class ST_ShortestPath extends AbstractTableFunction {
     // TODO: The input 'Metadata[] tables' is never used!
     @Override
     public Metadata getMetadata(Metadata[] tables) throws DriverException {
-        return MD;
+        return METADATA;
     }
 
     /**
