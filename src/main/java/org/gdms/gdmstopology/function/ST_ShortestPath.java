@@ -214,17 +214,8 @@ public class ST_ShortestPath extends AbstractTableFunction {
                 if (geomIndex == -1) {
                     throw new IndexOutOfBoundsException("Geometry field not found.");
                 }
-                // Build an index on id for looking up the row index later.
-                final IndexManager indexManager = dsf.getIndexManager();
-                if (!indexManager.isIndexed(dataSet, GraphSchema.ID)) {
-                    try {
-                        indexManager.buildIndex(dataSet, GraphSchema.ID, pm);
-                    } catch (NoSuchTableException e) {
-                        LOGGER.error("Table not found when building index.");
-                    } catch (IndexException e) {
-                        LOGGER.error("Problem building indices.");
-                    }
-                }
+                // Build an index on the id
+                buildIDIndex(dsf, dataSet, pm);
 
                 // Rebuild the shortest path(s). (Yes, there could be more than
                 // one if they have the same distance!)
@@ -260,7 +251,7 @@ public class ST_ShortestPath extends AbstractTableFunction {
                         }
 
                         output.addValues(
-                                createValue(getEdgeGeometry(dsf, dataSet, geomIndex, e)),
+                                createValue(getEdgeGeometry(dsf, dataSet, geomIndex, e.getID())),
                                 createValue(e.getID()),
                                 createValue(newID++),
                                 createValue(sourceID),
@@ -283,26 +274,46 @@ public class ST_ShortestPath extends AbstractTableFunction {
     }
 
     /**
+     * Build an index on the field "id" of the given dataset.
+     * @param dsf     DataSourceFactory
+     * @param dataSet DataSet
+     * @param pm      ProgressMonitor
+     */
+    public static void buildIDIndex(DataSourceFactory dsf, DataSet dataSet, ProgressMonitor pm) {
+        // Build an index on id for looking up the row index later.
+        final IndexManager indexManager = dsf.getIndexManager();
+        if (!indexManager.isIndexed(dataSet, GraphSchema.ID)) {
+            try {
+                indexManager.buildIndex(dataSet, GraphSchema.ID, pm);
+            } catch (NoSuchTableException e) {
+                LOGGER.error("Table not found when building index.");
+            } catch (IndexException e) {
+                LOGGER.error("Problem building indices.");
+            }
+        }
+    }
+
+    /**
      * Look up the given {@link Edge}'s {@link Geometry} in the given {@link DataSet}.
      *
      * @param dsf       DataSourceFactory
      * @param dataSet   DataSet
      * @param geomIndex Index of the_geom in dataSet
-     * @param e         Edge
+     * @param id        Edge id
      * @return The edge's geometry
      * @throws DriverException If getting an iterator or getting the geometry fail.
      */
-    private Geometry getEdgeGeometry(DataSourceFactory dsf,
-                                     DataSet dataSet,
-                                     int geomIndex,
-                                     Edge e) throws DriverException {
+    public static Geometry getEdgeGeometry(DataSourceFactory dsf,
+                                           DataSet dataSet,
+                                           int geomIndex,
+                                           int id) throws DriverException {
         // We have to use Math.abs on the id because in directed
         // graphs, an undirected edge could have a negative id.
         // This is used in JNA for the edge betweenness calculation.
         // But the geometry remains the same.
         Iterator<Integer> it = dataSet.queryIndex(dsf,
                 new DefaultAlphaQuery(GraphSchema.ID,
-                        createValue(Math.abs(e.getID()))));
+                        createValue(Math.abs(id))));
         // Since the id is unique, we expect the row id to be unique.
         int edgeRowIndex = -1;
         if (it.hasNext()) {
@@ -311,7 +322,7 @@ public class ST_ShortestPath extends AbstractTableFunction {
                 throw new IllegalStateException("Multiple edge ids!");
             }
         } else {
-            throw new IllegalStateException("No row index found for edge " + e.getID()
+            throw new IllegalStateException("No row index found for edge " + id
                     + " (Edge not found).");
         }
         return dataSet.getGeometry(edgeRowIndex, geomIndex);

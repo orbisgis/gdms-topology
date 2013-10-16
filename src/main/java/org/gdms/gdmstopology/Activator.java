@@ -37,6 +37,7 @@ import org.gdms.gdmstopology.centrality.ST_StrahlerStreamOrder;
 import org.gdms.sql.function.Function;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.slf4j.LoggerFactory;
 
 /**
  * Activator, register GDMS Sql function related to topology
@@ -44,11 +45,13 @@ import org.osgi.framework.BundleContext;
 public class Activator implements BundleActivator {
 
     private BundleContext context;
+    private static final org.slf4j.Logger LOGGER =
+            LoggerFactory.getLogger(Activator.class);
 
     @Override
     public void start(BundleContext context) throws Exception {
         this.context = context;
-        System.out.println("Activator of org.gdms.gdmstopology starting..");
+        LOGGER.info("Activator of org.gdms.gdmstopology starting..");
         // Register dummy sql function service
         reg(new ST_BlockIdentity());
         reg(new ST_Graph());
@@ -80,6 +83,6 @@ public class Activator implements BundleActivator {
 
     @Override
     public void stop(BundleContext context) throws Exception {
-        System.out.println("Activator of org.gdms.gdmstopology stopping..");
+        LOGGER.info("Activator of org.gdms.gdmstopology stopping..");
     }
 }

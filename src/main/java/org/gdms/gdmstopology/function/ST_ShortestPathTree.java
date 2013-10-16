@@ -39,6 +39,7 @@ import org.gdms.data.indexes.DefaultAlphaQuery;
 import org.gdms.data.indexes.IndexException;
 import org.gdms.data.indexes.IndexManager;
 import org.gdms.data.schema.Metadata;
+import org.gdms.data.types.Type;
 import org.gdms.data.values.Value;
 import org.gdms.driver.DataSet;
 import org.gdms.driver.DiskBufferDriver;
@@ -81,6 +82,7 @@ public class ST_ShortestPathTree extends AbstractTableFunction {
     private static final org.slf4j.Logger LOGGER =
             LoggerFactory.getLogger(ST_ShortestPathTree.class);
     private static final Metadata METADATA = GraphMetadataFactory.createEdgeMetadataShortestPath();
+    private double radius = Double.POSITIVE_INFINITY;
 
     /**
      * Evaluates the function to calculate the shortest path tree using Dijkstra'
@@ -130,8 +132,12 @@ public class ST_ShortestPathTree extends AbstractTableFunction {
      */
     private void parseArguments(DataSet edges, Value[] values) {
         GraphFunctionParser parser = new GraphFunctionParser();
-        source = parser.parseSource(values[0]);
-        parser.parseOptionalArguments(edges, values, 1);
+        int valuesIndex = 0;
+        source = parser.parseSource(values[valuesIndex++]);
+        if (values[valuesIndex].getType() == Type.FLOAT) {
+            radius = parser.parseRadius(values[valuesIndex++]);
+        }
+        parser.parseOptionalArguments(edges, values, valuesIndex);
         globalOrientation = parser.getGlobalOrientation();
         edgeOrientationColumnName = parser.getEdgeOrientationColumnName();
         weightsColumn = parser.getWeightsColumn();
@@ -201,41 +207,37 @@ public class ST_ShortestPathTree extends AbstractTableFunction {
             // (source, ...) (One-to-all)
             if (source != -1) {
 
-                // Get a Dijkstra algo for the distance calculation.
-                Dijkstra<VWCent, Edge> dijkstra = new Dijkstra<VWCent, Edge>(graph);
-                dijkstra.calculate(graph.getVertex(source));
-
                 // Get the index of the_geom
                 final int geomIndex = dataSet.getSpatialFieldIndex();
                 if (geomIndex == -1) {
                     throw new IndexOutOfBoundsException("Geometry field not found.");
                 }
                 // Build an index on id for looking up the row index later.
-                final IndexManager indexManager = dsf.getIndexManager();
-                if (!indexManager.isIndexed(dataSet, GraphSchema.ID)) {
-                    try {
-                        indexManager.buildIndex(dataSet, GraphSchema.ID, pm);
-                    } catch (NoSuchTableException e) {
-                        LOGGER.error("Table not found when building index.");
-                    } catch (IndexException e) {
-                        LOGGER.error("Problem building indices.");
-                    }
-                }
+                ST_ShortestPath.buildIDIndex(dsf, dataSet, pm);
 
-                final TraversalGraph<VWCent, Edge> shortestPathTree
-                        = dijkstra.reconstructTraversalGraph();
+                // Get a Dijkstra algo for the distance calculation.
+                Dijkstra<VWCent, Edge> dijkstra = new Dijkstra<VWCent, Edge>(graph);
+                final TraversalGraph<VWCent, Edge> shortestPathTree;
+                if (radius < Double.POSITIVE_INFINITY) {
+                    dijkstra.calculate(graph.getVertex(source), radius);
+                    shortestPathTree = dijkstra.reconstructTraversalGraph(radius);
+                } else {
+                    LOGGER.info("Setting the search radius to be +INFINITY.");
+                    dijkstra.calculate(graph.getVertex(source));
+                    shortestPathTree = dijkstra.reconstructTraversalGraph();
+                }
 
                 int newID = 1;
                 for (Edge e : shortestPathTree.edgeSet()) {
                     // Get the corresponding edge in the base graph.
-                    Edge edge = e.getBaseGraphEdge();
+                    final int id = e.getBaseGraphEdge().getID();
                     output.addValues(
-                                createValue(getEdgeGeometry(dsf, dataSet, geomIndex, edge)),
-                                createValue(edge.getID()),
-                                createValue(newID++),
-                                createValue(shortestPathTree.getEdgeSource(edge).getID()),
-                                createValue(shortestPathTree.getEdgeTarget(edge).getID()),
-                                createValue(shortestPathTree.getEdgeWeight(edge)));
+                            createValue(ST_ShortestPath.getEdgeGeometry(dsf, dataSet, geomIndex, id)),
+                            createValue(id),
+                            createValue(newID++),
+                            createValue(shortestPathTree.getEdgeSource(e).getID()),
+                            createValue(shortestPathTree.getEdgeTarget(e).getID()),
+                            createValue(shortestPathTree.getEdgeWeight(e)));
                 }
             } else {
                 LOGGER.error("Source not configured correctly. " +
@@ -248,41 +250,6 @@ public class ST_ShortestPathTree extends AbstractTableFunction {
             LOGGER.error("Null graph.");
         }
         return output;
-    }
-
-    /**
-     * Look up the given {@link Edge}'s {@link Geometry} in the given {@link DataSet}.
-     *
-     * @param dsf       DataSourceFactory
-     * @param dataSet   DataSet
-     * @param geomIndex Index of the_geom in dataSet
-     * @param e         Edge
-     * @return The edge's geometry
-     * @throws DriverException If getting an iterator or getting the geometry fail.
-     */
-    private Geometry getEdgeGeometry(DataSourceFactory dsf,
-                                     DataSet dataSet,
-                                     int geomIndex,
-                                     Edge e) throws DriverException {
-        // We have to use Math.abs on the id because in directed
-        // graphs, an undirected edge could have a negative id.
-        // This is used in JNA for the edge betweenness calculation.
-        // But the geometry remains the same.
-        Iterator<Integer> it = dataSet.queryIndex(dsf,
-                new DefaultAlphaQuery(GraphSchema.ID,
-                        createValue(Math.abs(e.getID()))));
-        // Since the id is unique, we expect the row id to be unique.
-        int edgeRowIndex = -1;
-        if (it.hasNext()) {
-            edgeRowIndex = it.next().intValue();
-            if (it.hasNext()) {
-                throw new IllegalStateException("Multiple edge ids!");
-            }
-        } else {
-            throw new IllegalStateException("No row index found for edge " + e.getID()
-                    + " (Edge not found).");
-        }
-        return dataSet.getGeometry(edgeRowIndex, geomIndex);
     }
 
     /**
@@ -371,6 +338,19 @@ public class ST_ShortestPathTree extends AbstractTableFunction {
                         TableDefinition.GEOMETRY,
                         new TableArgument(TableDefinition.GEOMETRY),
                         ScalarArgument.INT,
+                        ScalarArgument.STRING,
+                        ScalarArgument.STRING),
+                new TableFunctionSignature(
+                        TableDefinition.GEOMETRY,
+                        new TableArgument(TableDefinition.GEOMETRY),
+                        ScalarArgument.INT,
+                        ScalarArgument.DOUBLE,
+                        ScalarArgument.STRING),
+                new TableFunctionSignature(
+                        TableDefinition.GEOMETRY,
+                        new TableArgument(TableDefinition.GEOMETRY),
+                        ScalarArgument.INT,
+                        ScalarArgument.DOUBLE,
                         ScalarArgument.STRING,
                         ScalarArgument.STRING)
         };
