@@ -68,7 +68,8 @@ public class ST_ShortestPathTest extends TopologySetupTest {
                 new Value[]{
                     ValueFactory.createValue(source),
                     ValueFactory.createValue(target),
-                    ValueFactory.createValue("length")
+                    ValueFactory.createValue("length"),
+                    ValueFactory.createValue("undirected")
                 },
                 new NullProgressMonitor());
         assertTrue(result.getRowCount() == 3);
