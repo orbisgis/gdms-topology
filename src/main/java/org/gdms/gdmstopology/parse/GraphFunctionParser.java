@@ -378,6 +378,27 @@ public class GraphFunctionParser {
     }
 
     /**
+     * Returns the radius from the given command line argument.
+     *
+     * @param value The {@link Value} argument.
+     *
+     * @return The radius.
+     *
+     * @throws FunctionException
+     */
+    public double parseRadius(Value value) {
+        final int slotType = value.getType();
+        if (slotType == Type.FLOAT) {
+            final double radius = value.getAsFloat();
+            LOGGER.info("Setting the search radius to be {}.", radius);
+            return radius;
+        } else {
+            throw new IllegalArgumentException(
+                    "Please enter a double radius.");
+        }
+    }
+
+    /**
      * Returns an array of destination ids from the given command line argument.
      *
      * @param value The {@link Value} argument

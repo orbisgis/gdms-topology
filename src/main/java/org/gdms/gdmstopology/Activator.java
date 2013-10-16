@@ -31,23 +31,13 @@ package org.gdms.gdmstopology;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import org.gdms.gdmstopology.centrality.ST_Accessibility;
-import org.gdms.gdmstopology.function.ST_BlockIdentity;
+import org.gdms.gdmstopology.function.*;
 import org.gdms.gdmstopology.centrality.ST_GraphAnalysis;
 import org.gdms.gdmstopology.centrality.ST_StrahlerStreamOrder;
-import org.gdms.gdmstopology.function.ST_ConnectedComponents;
-import org.gdms.gdmstopology.function.ST_ShortestPathLength;
-import org.gdms.gdmstopology.function.ST_FindReachableEdges;
-import org.gdms.gdmstopology.function.ST_Graph;
-import org.gdms.gdmstopology.function.ST_MFindReachableEdges;
-import org.gdms.gdmstopology.function.ST_MShortestPath;
-import org.gdms.gdmstopology.function.ST_PlanarGraph;
-import org.gdms.gdmstopology.function.ST_ShortestPath;
-import org.gdms.gdmstopology.function.ST_StronglyConnectedComponents;
-import org.gdms.gdmstopology.function.ST_SubGraphStatistics;
-import org.gdms.gdmstopology.function.ST_ToLineNoder;
 import org.gdms.sql.function.Function;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.slf4j.LoggerFactory;
 
 /**
  * Activator, register GDMS Sql function related to topology
@@ -55,11 +45,13 @@ import org.osgi.framework.BundleContext;
 public class Activator implements BundleActivator {
 
     private BundleContext context;
+    private static final org.slf4j.Logger LOGGER =
+            LoggerFactory.getLogger(Activator.class);
 
     @Override
     public void start(BundleContext context) throws Exception {
         this.context = context;
-        System.out.println("Activator of org.gdms.gdmstopology starting..");
+        LOGGER.info("Activator of org.gdms.gdmstopology starting..");
         // Register dummy sql function service
         reg(new ST_BlockIdentity());
         reg(new ST_Graph());
@@ -75,6 +67,7 @@ public class Activator implements BundleActivator {
         reg(new ST_GraphAnalysis());
         reg(new ST_StrahlerStreamOrder());
         reg(new ST_ShortestPathLength());
+        reg(new ST_ShortestPathTree());
         reg(new ST_Accessibility());
     }
 
@@ -90,6 +83,6 @@ public class Activator implements BundleActivator {
 
     @Override
     public void stop(BundleContext context) throws Exception {
-        System.out.println("Activator of org.gdms.gdmstopology stopping..");
+        LOGGER.info("Activator of org.gdms.gdmstopology stopping..");
     }
 }

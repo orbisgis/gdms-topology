@@ -99,6 +99,27 @@ public class GraphCreatorTest extends TopologySetupTest {
     }
 
     @Test
+    public void unweightedDirectedDefault() throws Exception {
+
+        KeyedGraph<VUCent, Edge> graph =
+                new GraphCreator<VUCent, Edge>(prepareEdges(),
+                        GraphSchema.DIRECT,
+                        VUCent.class,
+                        Edge.class).prepareGraph();
+
+        assertTrue(graph.vertexSet().size() == 4);
+        assertTrue(graph.edgeSet().size() == 3);
+
+        checkDirectedDefaultOrientations(graph);
+
+        for (Edge edge : graph.edgeSet()) {
+            assertEquals(1.0, graph.getEdgeWeight(edge), TOLERANCE);
+        }
+
+        print(graph);
+    }
+
+    @Test
     public void unweightedDirected() throws Exception {
 
         DataSet newEdges = introduceOrientations(prepareEdges(),
@@ -106,6 +127,7 @@ public class GraphCreatorTest extends TopologySetupTest {
         KeyedGraph<VUCent, Edge> graph =
                 new GraphCreator<VUCent, Edge>(newEdges,
                                                GraphSchema.DIRECT,
+                                               GraphSchema.EDGE_ORIENTATION,
                                                VUCent.class,
                                                Edge.class).prepareGraph();
 
@@ -129,6 +151,7 @@ public class GraphCreatorTest extends TopologySetupTest {
         KeyedGraph<VUCent, Edge> graph =
                 new GraphCreator<VUCent, Edge>(newEdges,
                                                GraphSchema.DIRECT_REVERSED,
+                                               GraphSchema.EDGE_ORIENTATION,
                                                VUCent.class,
                                                Edge.class).prepareGraph();
 
@@ -192,6 +215,39 @@ public class GraphCreatorTest extends TopologySetupTest {
     }
 
     @Test
+    public void weightedDirectedDefault() throws Exception {
+
+
+        WeightedKeyedGraph<VWCent, Edge> graph =
+                new WeightedGraphCreator<VWCent, Edge>(
+                        introduceWeights(prepareEdges(), EDGE_WEIGHTS),
+                        GraphSchema.DIRECT,
+                        VWCent.class,
+                        Edge.class,
+                        GraphSchema.WEIGHT).prepareGraph();
+
+        assertTrue(graph.vertexSet().size() == 4);
+        assertTrue(graph.edgeSet().size() == 3);
+
+        checkDirectedDefaultOrientations(graph);
+
+        assertEquals(EDGE_WEIGHTS[0],
+                graph.getEdgeWeight(graph.getEdge(graph.getVertex(1),
+                        graph.getVertex(2))),
+                TOLERANCE);
+        assertEquals(EDGE_WEIGHTS[1],
+                graph.getEdgeWeight(graph.getEdge(graph.getVertex(2),
+                        graph.getVertex(3))),
+                TOLERANCE);
+        assertEquals(EDGE_WEIGHTS[2],
+                graph.getEdgeWeight(graph.getEdge(graph.getVertex(3),
+                        graph.getVertex(4))),
+                TOLERANCE);
+
+        print(graph);
+    }
+
+    @Test
     public void weightedDirected() throws Exception {
 
         DataSet newEdges =
@@ -203,6 +259,7 @@ public class GraphCreatorTest extends TopologySetupTest {
                 new WeightedGraphCreator<VWCent, Edge>(
                 newEdges,
                 GraphSchema.DIRECT,
+                GraphSchema.EDGE_ORIENTATION,
                 VWCent.class,
                 Edge.class,
                 GraphSchema.WEIGHT).prepareGraph();
@@ -244,6 +301,7 @@ public class GraphCreatorTest extends TopologySetupTest {
                 new WeightedGraphCreator<VWCent, Edge>(
                 newEdges,
                 GraphSchema.DIRECT_REVERSED,
+                GraphSchema.EDGE_ORIENTATION,
                 VWCent.class,
                 Edge.class,
                 GraphSchema.WEIGHT).prepareGraph();
@@ -429,6 +487,15 @@ public class GraphCreatorTest extends TopologySetupTest {
         assertTrue(graph.containsEdge(graph.getVertex(3), graph.getVertex(2)));
         assertTrue(graph.containsEdge(graph.getVertex(3), graph.getVertex(4)));
         assertTrue(graph.containsEdge(graph.getVertex(4), graph.getVertex(3)));
+    }
+
+    private void checkDirectedDefaultOrientations(KeyedGraph graph) {
+        assertTrue(graph.containsEdge(graph.getVertex(1), graph.getVertex(2)));
+        assertFalse(graph.containsEdge(graph.getVertex(2), graph.getVertex(1)));
+        assertTrue(graph.containsEdge(graph.getVertex(2), graph.getVertex(3)));
+        assertFalse(graph.containsEdge(graph.getVertex(3), graph.getVertex(2)));
+        assertTrue(graph.containsEdge(graph.getVertex(3), graph.getVertex(4)));
+        assertFalse(graph.containsEdge(graph.getVertex(4), graph.getVertex(3)));
     }
 
     private void checkUndirectedOrientations(KeyedGraph graph) {
