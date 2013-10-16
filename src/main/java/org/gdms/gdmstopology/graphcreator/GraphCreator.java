@@ -42,14 +42,15 @@ import org.gdms.gdmstopology.function.ST_ShortestPathLength;
 import org.gdms.gdmstopology.model.GraphException;
 import org.gdms.gdmstopology.model.GraphSchema;
 import org.javanetworkanalyzer.data.VId;
-import static org.javanetworkanalyzer.graphcreators.GraphCreator.REVERSED;
-import static org.javanetworkanalyzer.graphcreators.GraphCreator.UNDIRECTED;
 import org.javanetworkanalyzer.model.DirectedPseudoG;
 import org.javanetworkanalyzer.model.Edge;
 import org.javanetworkanalyzer.model.KeyedGraph;
 import org.javanetworkanalyzer.model.PseudoG;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.javanetworkanalyzer.graphcreators.GraphCreator.REVERSED;
+import static org.javanetworkanalyzer.graphcreators.GraphCreator.UNDIRECTED;
 
 /**
  * Creates a graph with a specified globalOrientation from the given
@@ -200,9 +201,11 @@ public class GraphCreator<V extends VId, E extends Edge> {
      */
     private KeyedGraph<V, E> loadEdges(KeyedGraph<V, E> graph) {
         if (edgeOrientationIndex == -1 && globalOrientation != UNDIRECTED) {
-            LOGGER.warn("Assuming all edges are oriented by their "
-                        + "geometric coordinates. You should specify "
-                        + "individual edge orientations.");
+            LOGGER.warn("Assuming all edges are oriented by their " +
+                    "geometric coordinates.  You should specify " +
+                    "individual edge orientations (1, 0 or -1). If you are " +
+                    "obtaining strange results (such as an empty table), " +
+                    "this is most likely the reason why.");
         }
         for (Value[] row : dataSet) {
             loadEdge(row, graph);
@@ -295,7 +298,7 @@ public class GraphCreator<V extends VId, E extends Edge> {
      * @param index        The index.
      * @param missingField The field.
      *
-     * @throws FunctionException
+     * @throws IndexException
      */
     protected void verifyIndex(int index, String missingField) throws
             IndexException {
@@ -307,8 +310,6 @@ public class GraphCreator<V extends VId, E extends Edge> {
 
     /**
      * Recovers the indices from the metadata.
-     *
-     * @param weightColumnName
      */
     protected Metadata initializeIndices() {
         Metadata md = null;
@@ -326,11 +327,7 @@ public class GraphCreator<V extends VId, E extends Edge> {
             verifyIndex(edgeIdIndex, GraphSchema.ID);
             // For directed graphs, also get the edge orientation index.
             if (globalOrientation != GraphSchema.UNDIRECT) {
-                if (edgeOrientationColumnName == null) {
-                    // Default to GraphSchema.EDGE_ORIENTATION.
-                    edgeOrientationIndex = md.getFieldIndex(
-                            GraphSchema.EDGE_ORIENTATION);
-                } else {
+                if (edgeOrientationColumnName != null) {
                     edgeOrientationIndex = md.getFieldIndex(
                             edgeOrientationColumnName);
                     verifyIndex(edgeOrientationIndex, edgeOrientationColumnName);
