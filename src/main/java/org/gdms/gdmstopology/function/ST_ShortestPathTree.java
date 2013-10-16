@@ -58,35 +58,32 @@ import org.javanetworkanalyzer.alg.Dijkstra;
 import org.javanetworkanalyzer.data.VWCent;
 import org.javanetworkanalyzer.model.Edge;
 import org.javanetworkanalyzer.model.KeyedGraph;
+import org.javanetworkanalyzer.model.TraversalGraph;
 import org.orbisgis.progress.ProgressMonitor;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Set;
 
 import static org.gdms.data.values.ValueFactory.createValue;
 
 /**
- * Calculates the shortest path between two vertices of a graph using Dijkstra's
+ * Calculates the shortest path tree from a vertex of a graph using Dijkstra's
  * algorithm.
  *
- * @author Erwan Bocher
  * @author Adam Gouge
  */
-public class ST_ShortestPath extends AbstractTableFunction {
+public class ST_ShortestPathTree extends AbstractTableFunction {
 
     private int source = -1;
-    private int destination = -1;
     private String weightsColumn = null;
     private String globalOrientation = null;
     private String edgeOrientationColumnName = null;
     private static final org.slf4j.Logger LOGGER =
-            LoggerFactory.getLogger(ST_ShortestPath.class);
+            LoggerFactory.getLogger(ST_ShortestPathTree.class);
     private static final Metadata METADATA = GraphMetadataFactory.createEdgeMetadataShortestPath();
 
     /**
-     * Evaluates the function to calculate the shortest path using Dijkstra'
+     * Evaluates the function to calculate the shortest path tree using Dijkstra'
      * algorithm.
      *
      * @param dsf    The {@link DataSourceFactory} used to parse the data set.
@@ -126,7 +123,7 @@ public class ST_ShortestPath extends AbstractTableFunction {
     }
 
     /**
-     * Parse all possible arguments for {@link ST_ShortestPath}.
+     * Parse all possible arguments for {@link ST_ShortestPathTree}.
      *
      * @param edges  Edges input table
      * @param values Arguments
@@ -134,8 +131,7 @@ public class ST_ShortestPath extends AbstractTableFunction {
     private void parseArguments(DataSet edges, Value[] values) {
         GraphFunctionParser parser = new GraphFunctionParser();
         source = parser.parseSource(values[0]);
-        destination = parser.parseTarget(values[1]);
-        parser.parseOptionalArguments(edges, values, 2);
+        parser.parseOptionalArguments(edges, values, 1);
         globalOrientation = parser.getGlobalOrientation();
         edgeOrientationColumnName = parser.getEdgeOrientationColumnName();
         weightsColumn = parser.getWeightsColumn();
@@ -176,7 +172,7 @@ public class ST_ShortestPath extends AbstractTableFunction {
                     weightsColumn).prepareGraph();
         } else {
             throw new UnsupportedOperationException(
-                    "ST_ShortestPath has not yet been implemented for "
+                    "ST_ShortestPathTree has not yet been implemented for "
                             + "unweighted graphs.");
         }
         return graph;
@@ -196,18 +192,18 @@ public class ST_ShortestPath extends AbstractTableFunction {
                                      ProgressMonitor pm)
             throws DriverException {
 
-        // A DiskBufferDriver to store the shortest path.
+        // A DiskBufferDriver to store the shortest path tree.
         DiskBufferDriver output =
                 new DiskBufferDriver(dsf, METADATA);
 
         if (graph != null) {
 
-            // (source, destination, ...) (One-to-one)
-            if (source != -1 && destination != -1) {
+            // (source, ...) (One-to-all)
+            if (source != -1) {
 
                 // Get a Dijkstra algo for the distance calculation.
                 Dijkstra<VWCent, Edge> dijkstra = new Dijkstra<VWCent, Edge>(graph);
-                dijkstra.oneToOne(graph.getVertex(source), graph.getVertex(destination));
+                dijkstra.calculate(graph.getVertex(source));
 
                 // Get the index of the_geom
                 final int geomIndex = dataSet.getSpatialFieldIndex();
@@ -226,52 +222,24 @@ public class ST_ShortestPath extends AbstractTableFunction {
                     }
                 }
 
-                // Rebuild the shortest path(s). (Yes, there could be more than
-                // one if they have the same distance!)
+                final TraversalGraph<VWCent, Edge> shortestPathTree
+                        = dijkstra.reconstructTraversalGraph();
+
                 int newID = 1;
-
-                Set<Edge> predecessorEdges = graph.getVertex(destination).getPredecessorEdges();
-                VWCent previousDestination = graph.getVertex(destination);
-                while (!predecessorEdges.isEmpty()) {
-                    Set<Edge> nextPredecessorEdges = new HashSet<Edge>();
-
-                    for (Edge e : predecessorEdges) {
-
-                        // With undirected graphs, the source and target could
-                        // be switched. This is JGraphT's fault. Here we make
-                        // sure they are in the right order.
-                        final VWCent edgeSource = graph.getEdgeSource(e);
-                        final VWCent edgeTarget = graph.getEdgeTarget(e);
-                        int sourceID = -1;
-                        int targetID = -1;
-                        if (previousDestination.equals(edgeTarget)) {
-                            sourceID = edgeSource.getID();
-                            targetID = edgeTarget.getID();
-                            nextPredecessorEdges.addAll(edgeSource.getPredecessorEdges());
-                            previousDestination = edgeSource;
-                        } else if (previousDestination.equals(edgeSource)) {
-                            sourceID = edgeTarget.getID();
-                            targetID = edgeSource.getID();
-                            nextPredecessorEdges.addAll(edgeTarget.getPredecessorEdges());
-                            previousDestination = edgeTarget;
-                        } else {
-                            throw new IllegalStateException("A vertex has a predecessor " +
-                                    "edge not ending on itself.");
-                        }
-
-                        output.addValues(
-                                createValue(getEdgeGeometry(dsf, dataSet, geomIndex, e)),
-                                createValue(e.getID()),
+                for (Edge e : shortestPathTree.edgeSet()) {
+                    // Get the corresponding edge in the base graph.
+                    Edge edge = e.getBaseGraphEdge();
+                    output.addValues(
+                                createValue(getEdgeGeometry(dsf, dataSet, geomIndex, edge)),
+                                createValue(edge.getID()),
                                 createValue(newID++),
-                                createValue(sourceID),
-                                createValue(targetID),
-                                createValue(graph.getEdgeWeight(e)));
-                    }
-                    predecessorEdges = nextPredecessorEdges;
+                                createValue(shortestPathTree.getEdgeSource(edge).getID()),
+                                createValue(shortestPathTree.getEdgeTarget(edge).getID()),
+                                createValue(shortestPathTree.getEdgeWeight(edge)));
                 }
             } else {
-                LOGGER.error("Source or destination note configured correctly. " +
-                        "Source: " + source + ", Destination: " + destination);
+                LOGGER.error("Source not configured correctly. " +
+                        "Source: " + source + ".");
             }
             // Clean-up
             output.writingFinished();
@@ -325,7 +293,7 @@ public class ST_ShortestPath extends AbstractTableFunction {
      */
     @Override
     public String getName() {
-        return "ST_ShortestPath";
+        return "ST_ShortestPathTree";
     }
 
     /**
@@ -335,8 +303,8 @@ public class ST_ShortestPath extends AbstractTableFunction {
      */
     @Override
     public String getSqlOrder() {
-        return "SELECT * from  ST_ShortestPath(input_table, source_vertex, " +
-                "target_vertex, 'weights_column'[, "
+        return "SELECT * from  ST_ShortestPathTree(input_table, source_vertex, " +
+                "'weights_column'[, "
                 + ST_ShortestPathLength.POSSIBLE_ORIENTATIONS + "]);";
     }
 
@@ -347,15 +315,14 @@ public class ST_ShortestPath extends AbstractTableFunction {
      */
     @Override
     public String getDescription() {
-        return "Calculates the shortest path between two vertices of a "
+        return "Calculates the shortest path tree from a given vertex of a "
                 + "graph using Dijkstra's algorithm. The input_table is the "
                 + "output_table_prefix.edges table produced by the ST_Graph "
                 + "function, except that an extra column must be added to "
                 + "specify the weight of each edge ('weights_column'). An additional "
                 + "column may be added to specify individual edge orientations "
                 + "by integers: 1 for directed, -1 for reversed, and 0 for bidirectional. "
-                + "The source_vertex and the "
-                + "target_vertex are specified by an integer. The "
+                + "The source_vertex is specified by an integer. The "
                 + "'weights_column' is a string specifying the name of the "
                 + "column of the input table that gives the weight of each "
                 + "edge. The optional parameter orientation is a string specifying the "
@@ -399,12 +366,10 @@ public class ST_ShortestPath extends AbstractTableFunction {
                         TableDefinition.GEOMETRY,
                         new TableArgument(TableDefinition.GEOMETRY),
                         ScalarArgument.INT,
-                        ScalarArgument.INT,
                         ScalarArgument.STRING),
                 new TableFunctionSignature(
                         TableDefinition.GEOMETRY,
                         new TableArgument(TableDefinition.GEOMETRY),
-                        ScalarArgument.INT,
                         ScalarArgument.INT,
                         ScalarArgument.STRING,
                         ScalarArgument.STRING)

@@ -31,20 +31,9 @@ package org.gdms.gdmstopology;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import org.gdms.gdmstopology.centrality.ST_Accessibility;
-import org.gdms.gdmstopology.function.ST_BlockIdentity;
+import org.gdms.gdmstopology.function.*;
 import org.gdms.gdmstopology.centrality.ST_GraphAnalysis;
 import org.gdms.gdmstopology.centrality.ST_StrahlerStreamOrder;
-import org.gdms.gdmstopology.function.ST_ConnectedComponents;
-import org.gdms.gdmstopology.function.ST_ShortestPathLength;
-import org.gdms.gdmstopology.function.ST_FindReachableEdges;
-import org.gdms.gdmstopology.function.ST_Graph;
-import org.gdms.gdmstopology.function.ST_MFindReachableEdges;
-import org.gdms.gdmstopology.function.ST_MShortestPath;
-import org.gdms.gdmstopology.function.ST_PlanarGraph;
-import org.gdms.gdmstopology.function.ST_ShortestPath;
-import org.gdms.gdmstopology.function.ST_StronglyConnectedComponents;
-import org.gdms.gdmstopology.function.ST_SubGraphStatistics;
-import org.gdms.gdmstopology.function.ST_ToLineNoder;
 import org.gdms.sql.function.Function;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
@@ -75,6 +64,7 @@ public class Activator implements BundleActivator {
         reg(new ST_GraphAnalysis());
         reg(new ST_StrahlerStreamOrder());
         reg(new ST_ShortestPathLength());
+        reg(new ST_ShortestPathTree());
         reg(new ST_Accessibility());
     }
 
