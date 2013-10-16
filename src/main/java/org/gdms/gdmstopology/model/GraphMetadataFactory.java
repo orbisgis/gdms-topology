@@ -110,24 +110,21 @@ public final class GraphMetadataFactory {
     public static Metadata createEdgeMetadataShortestPath() {
         Metadata md = new DefaultMetadata(
                 new Type[]{
-            TypeFactory.createType(
-            Type.GEOMETRY,
-            new Constraint[]{
-                new GeometryDimensionConstraint(
-                GeometryDimensionConstraint.DIMENSION_CURVE)
-            }),
-            TypeFactory.createType(Type.INT),
-            TypeFactory.createType(Type.INT),
-            TypeFactory.createType(Type.INT),
-            TypeFactory.createType(Type.INT),
-            TypeFactory.createType(Type.DOUBLE)},
+            TypeFactory.createType(Type.GEOMETRY,
+                    new Constraint[]{new GeometryDimensionConstraint(
+                            GeometryDimensionConstraint.DIMENSION_CURVE)}),
+                        TypeFactory.createType(Type.INT),
+                        TypeFactory.createType(Type.INT),
+                        TypeFactory.createType(Type.INT),
+                        TypeFactory.createType(Type.INT),
+                        TypeFactory.createType(Type.DOUBLE)},
                 new String[]{
-            "the_geom",
-            GraphSchema.ID,
-            GraphSchema.PATH_ID,
-            GraphSchema.START_NODE,
-            GraphSchema.END_NODE,
-            GraphSchema.WEIGHT});
+                        "the_geom",
+                        GraphSchema.ID,
+                        GraphSchema.PATH_ID,
+                        GraphSchema.START_NODE,
+                        GraphSchema.END_NODE,
+                        GraphSchema.WEIGHT});
         return md;
     }
 
