@@ -80,7 +80,7 @@
                                                 <Bundle-Activator>org.gdms.gdmstopology.Activator</Bundle-Activator>
                                                 <Bundle-Vendor>IRSTV - FR CNRS 2488</Bundle-Vendor>
                                                 <Bundle-Category>OrbisGIS,Network Analysis</Bundle-Category>
-						<Bundle-Icon>icon.png;size=32</Bundle-Icon>
+                                                <Bundle-Icon>icon.png;size=32</Bundle-Icon>
                                         </instructions>
                                 </configuration>
                         </plugin>
