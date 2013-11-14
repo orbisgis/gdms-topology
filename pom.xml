@@ -12,6 +12,11 @@
                 <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
                 <netbeans.hint.license>gdms-topology</netbeans.hint.license>
         </properties>
+        <parent>
+                <groupId>org.orbisgis</groupId>
+                <artifactId>orbisgis-nexus</artifactId>
+                <version>1</version>
+        </parent>
         <dependencies>
                 <dependency>
                         <groupId>junit</groupId>
