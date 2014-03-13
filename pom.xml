@@ -77,6 +77,7 @@
                                                 <Bundle-Vendor>IRSTV - FR CNRS 2488</Bundle-Vendor>
                                                 <Bundle-Category>OrbisGIS,Network Analysis</Bundle-Category>
                                                 <Bundle-Icon>icon.png;size=32</Bundle-Icon>
+                                                <Import-Package>org.slf4j;version="[1.6.0,1.7.5]",*</Import-Package>
                                         </instructions>
                                 </configuration>
                         </plugin>
